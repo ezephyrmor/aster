@@ -1,8 +1,16 @@
 import bcrypt from "bcryptjs";
 
+// Load .env file if not already loaded (for standalone scripts)
+// Note: Next.js automatically loads .env.local, but standalone scripts need this
+if (typeof process !== "undefined" && !process.env.PASSWORD_PEPPER) {
+  import("dotenv")
+    .then((dotenv) => dotenv.config({ path: ".env" }))
+    .catch(() => {});
+}
+
 const SALT_ROUNDS = 12;
 export const PEPPER =
-  process.env.PASSWORD_PEPPER || "change-this-pepper-in-production";
+  process.env.PASSWORD_PEPPER || "change-this-to-a-random-secret-in-production";
 
 /**
  * Generate a cryptographic salt for password hashing

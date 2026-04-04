@@ -1,5 +1,5 @@
 /**
- * Seed script to create an admin user in the database
+ * Seed script to create admin and HR users in the database
  * Run with: npx tsx scripts/seed-admin.ts
  *
  * This script demonstrates secure password hashing with:
@@ -11,20 +11,112 @@
 import mysql from "mysql2/promise";
 import { generateSalt, hashPassword } from "../src/lib/password";
 
-async function main() {
-  console.log("🌱 Seeding admin user...");
-  console.log("🔐 Using salt + pepper + bcrypt for secure password hashing\n");
+interface UserProfile {
+  firstName: string;
+  lastName: string;
+  position?: string;
+  department?: string;
+}
 
-  const username = "admin";
-  const password = "password123";
-
+async function createOrUpdateUser(
+  connection: mysql.Connection,
+  username: string,
+  password: string,
+  role: string,
+  profile: UserProfile,
+) {
   // Generate explicit salt for demonstration
   const salt = generateSalt();
-  console.log(`🧂 Generated salt: ${salt.substring(0, 29)}...`);
 
   // Hash password with salt and pepper
   const passwordHash = await hashPassword(password, salt);
-  console.log(`🔒 Hashed password: ${passwordHash.substring(0, 30)}...`);
+
+  // Check if user exists
+  const [rows] = await connection.execute(
+    "SELECT id, username FROM users WHERE username = ?",
+    [username],
+  );
+
+  const existingUser =
+    Array.isArray(rows) && rows.length > 0 ? (rows[0] as any) : null;
+
+  if (existingUser) {
+    // Update existing user
+    await connection.execute(
+      "UPDATE users SET password_hash = ?, salt = ?, role = ? WHERE username = ?",
+      [passwordHash, salt, role, username],
+    );
+
+    // Update or create profile
+    const [profileRows] = await connection.execute(
+      "SELECT id FROM employee_profiles WHERE user_id = ?",
+      [existingUser.id],
+    );
+
+    const existingProfile =
+      Array.isArray(profileRows) && profileRows.length > 0
+        ? (profileRows[0] as any)
+        : null;
+
+    if (existingProfile) {
+      await connection.execute(
+        `UPDATE employee_profiles SET 
+         first_name = ?, last_name = ?, position = ?, department = ?, updated_at = NOW()
+         WHERE user_id = ?`,
+        [
+          profile.firstName,
+          profile.lastName,
+          profile.position,
+          profile.department,
+          existingUser.id,
+        ],
+      );
+    } else {
+      await connection.execute(
+        `INSERT INTO employee_profiles 
+         (user_id, first_name, last_name, position, department, created_at, updated_at) 
+         VALUES (?, ?, ?, ?, ?, NOW(), NOW())`,
+        [
+          existingUser.id,
+          profile.firstName,
+          profile.lastName,
+          profile.position,
+          profile.department,
+        ],
+      );
+    }
+
+    return { updated: true, userId: existingUser.id };
+  } else {
+    // Create new user
+    const [result] = await connection.execute(
+      "INSERT INTO users (username, password_hash, salt, role) VALUES (?, ?, ?, ?)",
+      [username, passwordHash, salt, role],
+    );
+
+    const userId = (result as mysql.ResultSetHeader).insertId;
+
+    // Create profile
+    await connection.execute(
+      `INSERT INTO employee_profiles 
+       (user_id, first_name, last_name, position, department, created_at, updated_at) 
+       VALUES (?, ?, ?, ?, ?, NOW(), NOW())`,
+      [
+        userId,
+        profile.firstName,
+        profile.lastName,
+        profile.position,
+        profile.department,
+      ],
+    );
+
+    return { created: true, userId };
+  }
+}
+
+async function main() {
+  console.log("🌱 Seeding users...\n");
+  console.log("🔐 Using salt + pepper + bcrypt for secure password hashing\n");
 
   // Connect to MySQL
   const connection = await mysql.createConnection({
@@ -35,42 +127,54 @@ async function main() {
   });
 
   try {
-    // Check if admin user already exists
-    const [rows] = await connection.execute(
-      "SELECT id, username, password_hash, salt FROM users WHERE username = ?",
-      [username],
+    // Create admin user
+    console.log("📋 Creating Admin User...");
+    const adminResult = await createOrUpdateUser(
+      connection,
+      "admin",
+      "password123",
+      "admin",
+      {
+        firstName: "System",
+        lastName: "Administrator",
+        position: "System Administrator",
+        department: "IT",
+      },
+    );
+    console.log(
+      `✅ Admin user ${adminResult.updated ? "updated" : "created"} successfully`,
     );
 
-    const existingUser = Array.isArray(rows) ? rows[0] : null;
-
-    if (existingUser) {
-      console.log(
-        "⚠️  Admin user already exists. Updating password and salt...",
-      );
-      await connection.execute(
-        "UPDATE users SET password_hash = ?, salt = ? WHERE username = ?",
-        [passwordHash, salt, username],
-      );
-      console.log("✅ Admin password and salt updated successfully");
-    } else {
-      // Create admin user with salt
-      await connection.execute(
-        "INSERT INTO users (username, password_hash, salt) VALUES (?, ?, ?)",
-        [username, passwordHash, salt],
-      );
-      console.log("✅ Admin user created successfully");
-    }
+    // Create HR user
+    console.log("\n📋 Creating HR User...");
+    const hrResult = await createOrUpdateUser(
+      connection,
+      "hr",
+      "password123",
+      "hr",
+      {
+        firstName: "Human",
+        lastName: "Resources",
+        position: "HR Manager",
+        department: "Human Resources",
+      },
+    );
+    console.log(
+      `✅ HR user ${hrResult.updated ? "updated" : "created"} successfully`,
+    );
 
     console.log("\n📋 Login credentials:");
-    console.log(`   Username: ${username}`);
-    console.log(`   Password: ${password}`);
+    console.log("   Admin: username='admin', password='password123'");
+    console.log("   HR: username='hr', password='password123'");
+
     console.log("\n🔐 Security features demonstrated:");
     console.log("   • Salt: Explicitly stored in database (unique per user)");
     console.log(
       "   • Pepper: Secret value from PASSWORD_PEPPER environment variable",
     );
     console.log("   • Bcrypt: 12 rounds of hashing");
-    console.log("\n🔒 Remember to change the password in production!");
+
+    console.log("\n🔒 Remember to change the passwords in production!");
   } finally {
     await connection.end();
   }

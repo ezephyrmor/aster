@@ -1,3 +1,6 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -7,12 +10,67 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  admin
+  hr
+  employee
+}
+
 model User {
-  id           Int      @id @default(autoincrement())
-  username     String   @unique @db.VarChar(50)
-  passwordHash String   @map("password_hash") @db.VarChar(255)
-  salt         String   @db.VarChar(255)
-  createdAt    DateTime @default(now()) @map("created_at")
+  id           Int               @id @default(autoincrement())
+  username     String            @unique @db.VarChar(50)
+  passwordHash String            @map("password_hash") @db.VarChar(255)
+  salt         String            @db.VarChar(255)
+  role         Role              @default(employee)
+  createdAt    DateTime          @default(now()) @map("created_at")
+
+  // One-to-one relationship with employee profile
+  employeeProfile EmployeeProfile?
 
   @@map("users")
+}
+
+model EmployeeProfile {
+  id                        Int       @id @default(autoincrement())
+  userId                    Int       @unique @map("user_id")
+
+  // Personal Information
+  firstName                 String    @map("first_name") @db.VarChar(100)
+  lastName                  String    @map("last_name") @db.VarChar(100)
+  middleName                String?   @map("middle_name") @db.VarChar(100)
+  dateOfBirth               DateTime? @map("date_of_birth")
+
+  // Contact Information
+  contactNumber             String?   @map("contact_number") @db.VarChar(20)
+  personalEmail             String?   @map("personal_email") @db.VarChar(255)
+  address                   String?   @db.Text
+
+  // Employment Information
+  position                  String?   @db.VarChar(100)
+  department                String?   @db.VarChar(100)
+  hireDate                  DateTime? @map("hire_date")
+
+  // Emergency Contact
+  emergencyContactName      String?   @map("emergency_contact_name") @db.VarChar(200)
+  emergencyContactNumber    String?   @map("emergency_contact_number") @db.VarChar(20)
+  emergencyContactRelation  String?   @map("emergency_contact_relation") @db.VarChar(50)
+
+  // Status (active, on-leave, terminated, inactive)
+  status                    EmployeeStatus @default(active)
+
+  // Timestamps
+  createdAt                 DateTime  @default(now()) @map("created_at")
+  updatedAt                 DateTime  @updatedAt @map("updated_at")
+
+  // Relationship to User
+  user                      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("employee_profiles")
+}
+
+enum EmployeeStatus {
+  active
+  on_leave
+  terminated
+  inactive
 }
