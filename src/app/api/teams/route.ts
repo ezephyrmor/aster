@@ -38,13 +38,26 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, description, leaderId, performedBy } = body;
+    const { name, description, brandId, leaderId, performedBy } = body;
 
     if (!name) {
       return NextResponse.json(
         { error: "Team name is required" },
         { status: 400 },
       );
+    }
+
+    if (!brandId) {
+      return NextResponse.json({ error: "Brand is required" }, { status: 400 });
+    }
+
+    // Check if brand exists
+    const brand = await prisma.brand.findUnique({
+      where: { id: brandId },
+    });
+
+    if (!brand) {
+      return NextResponse.json({ error: "Brand not found" }, { status: 400 });
     }
 
     // Check if team name already exists
@@ -64,6 +77,7 @@ export async function POST(request: NextRequest) {
       data: {
         name,
         description,
+        brandId,
       },
     });
 
