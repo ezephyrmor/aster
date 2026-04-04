@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import UserList from "@/components/UserList";
+import DashboardLayout from "@/components/DashboardLayout";
 
 async function getUsers() {
   try {
@@ -32,11 +33,13 @@ export default async function UsersPage() {
   const users = await getUsers();
 
   return (
-    <div>
-      <div className="sm:flex sm:items-center">
+    <DashboardLayout
+      title="Users"
+      subtitle="Manage employee accounts and profiles"
+    >
+      <div className="sm:flex sm:items-center mb-8">
         <div className="sm:flex-auto">
-          <h1 className="text-2xl font-semibold text-gray-900">Users</h1>
-          <p className="mt-2 text-sm text-gray-700">
+          <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
             A list of all users in the system including their name, role, and
             status.
           </p>
@@ -64,11 +67,9 @@ export default async function UsersPage() {
         </div>
       </div>
 
-      <div className="mt-8">
-        <Suspense fallback={<LoadingSpinner />}>
-          <UserList users={users} />
-        </Suspense>
-      </div>
-    </div>
+      <Suspense fallback={<LoadingSpinner />}>
+        <UserList users={users} />
+      </Suspense>
+    </DashboardLayout>
   );
 }
