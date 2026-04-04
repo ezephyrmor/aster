@@ -1,4 +1,4 @@
-"use client";
+Failed to fetch user"use client";
 
 import { useState, useEffect } from "react";
 
@@ -118,11 +118,15 @@ export default function UserForm({
               id="username"
               value={formData.username || ""}
               onChange={handleChange}
-              readOnly={!isEditMode}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm bg-gray-50 dark:bg-gray-800"
-              placeholder={isEditMode ? "john.doe" : "Auto-generated"}
+              readOnly
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm bg-gray-100 dark:bg-gray-800 cursor-not-allowed"
+              placeholder={isEditMode ? "Locked" : "Auto-generated"}
             />
-            {!isEditMode && (
+            {isEditMode ? (
+              <p className="mt-1 text-xs text-gray-500">
+                Username cannot be changed
+              </p>
+            ) : (
               <p className="mt-1 text-xs text-gray-500">
                 Auto-generated from name (e.g., djoe-a7k9)
               </p>

@@ -157,7 +157,7 @@ export default function UserList({ users }: UserListProps) {
                     href={`/dashboard/users/${user.id}`}
                     className="text-indigo-600 hover:text-indigo-900"
                   >
-                    View
+                    Edit
                   </Link>
                 </td>
               </tr>
