@@ -14,13 +14,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Find user in database
+    // Find user in database (including salt for password verification)
     const user = await prisma.user.findUnique({
       where: { username },
       select: {
         id: true,
         username: true,
         passwordHash: true,
+        salt: true,
       },
     });
 
@@ -31,8 +32,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify password
-    const isValidPassword = await comparePassword(password, user.passwordHash);
+    // Verify password using stored salt
+    const isValidPassword = await comparePassword(
+      password,
+      user.passwordHash,
+      user.salt,
+    );
 
     if (!isValidPassword) {
       return NextResponse.json(

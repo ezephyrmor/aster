@@ -1,21 +1,30 @@
 /**
  * Seed script to create an admin user in the database
  * Run with: npx tsx scripts/seed-admin.ts
+ *
+ * This script demonstrates secure password hashing with:
+ * - Salt: Explicitly generated and stored in the database
+ * - Pepper: Secret value from environment variable
+ * - Bcrypt: Industry-standard hashing algorithm
  */
 
 import mysql from "mysql2/promise";
-import bcrypt from "bcryptjs";
+import { generateSalt, hashPassword } from "../src/lib/password";
 
 async function main() {
   console.log("🌱 Seeding admin user...");
+  console.log("🔐 Using salt + pepper + bcrypt for secure password hashing\n");
 
   const username = "admin";
   const password = "password123";
-  const saltRounds = 12;
 
-  // Hash the password
-  const passwordHash = await bcrypt.hash(password, saltRounds);
-  console.log("🔒 Password hashed successfully");
+  // Generate explicit salt for demonstration
+  const salt = generateSalt();
+  console.log(`🧂 Generated salt: ${salt.substring(0, 29)}...`);
+
+  // Hash password with salt and pepper
+  const passwordHash = await hashPassword(password, salt);
+  console.log(`🔒 Hashed password: ${passwordHash.substring(0, 30)}...`);
 
   // Connect to MySQL
   const connection = await mysql.createConnection({
@@ -28,24 +37,26 @@ async function main() {
   try {
     // Check if admin user already exists
     const [rows] = await connection.execute(
-      "SELECT id, username, password_hash FROM users WHERE username = ?",
+      "SELECT id, username, password_hash, salt FROM users WHERE username = ?",
       [username],
     );
 
     const existingUser = Array.isArray(rows) ? rows[0] : null;
 
     if (existingUser) {
-      console.log("⚠️  Admin user already exists. Updating password...");
-      await connection.execute(
-        "UPDATE users SET password_hash = ? WHERE username = ?",
-        [passwordHash, username],
+      console.log(
+        "⚠️  Admin user already exists. Updating password and salt...",
       );
-      console.log("✅ Admin password updated successfully");
-    } else {
-      // Create admin user
       await connection.execute(
-        "INSERT INTO users (username, password_hash) VALUES (?, ?)",
-        [username, passwordHash],
+        "UPDATE users SET password_hash = ?, salt = ? WHERE username = ?",
+        [passwordHash, salt, username],
+      );
+      console.log("✅ Admin password and salt updated successfully");
+    } else {
+      // Create admin user with salt
+      await connection.execute(
+        "INSERT INTO users (username, password_hash, salt) VALUES (?, ?, ?)",
+        [username, passwordHash, salt],
       );
       console.log("✅ Admin user created successfully");
     }
@@ -53,6 +64,12 @@ async function main() {
     console.log("\n📋 Login credentials:");
     console.log(`   Username: ${username}`);
     console.log(`   Password: ${password}`);
+    console.log("\n🔐 Security features demonstrated:");
+    console.log("   • Salt: Explicitly stored in database (unique per user)");
+    console.log(
+      "   • Pepper: Secret value from PASSWORD_PEPPER environment variable",
+    );
+    console.log("   • Bcrypt: 12 rounds of hashing");
     console.log("\n🔒 Remember to change the password in production!");
   } finally {
     await connection.end();

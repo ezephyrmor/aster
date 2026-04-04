@@ -7,7 +7,9 @@ A modern, secure admin dashboard built with Next.js 16.2.2, TypeScript, and Pris
 ### 🔐 **Secure Authentication**
 
 - **JWT-based session management** with HTTP-only cookies
-- **Password security** using bcryptjs with 12 salt rounds
+- **Password security** with salt + pepper + bcryptjs (12 rounds)
+- **Explicit salt storage** for educational demonstration
+- **Pepper protection** via environment variable
 - **Protected routes** with automatic redirect to login
 - **Session validation** and secure logout functionality
 
@@ -249,13 +251,22 @@ npm run test:coverage  # Generate coverage report
 
 ## 🔒 Security
 
-### Security Features
+### Password Security (Salt + Pepper + Bcrypt)
+
+This project demonstrates enterprise-level password security:
+
+- **Salt**: Unique cryptographic salt generated per user and stored in database
+- **Pepper**: Secret value stored in environment variable (never in database)
+- **Bcrypt**: Industry-standard hashing with 12 rounds
+
+**Formula**: `bcrypt.hash(password + pepper, salt)`
+
+### Additional Security Features
 
 - **HTTPS enforcement** in production
-- **CSRF protection** with NextAuth.js
-- **Password hashing** with bcryptjs
-- **Session management** with secure cookies
-- **Input validation** with Zod schemas
+- **CSRF protection** with secure cookies
+- **Session management** with HTTP-only cookies
+- **Input validation** with type safety
 - **SQL injection protection** with Prisma ORM
 
 ### Security Headers
@@ -302,7 +313,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Authentication & Authorization** implementation
 - **Database design** and ORM usage
 - **Responsive UI/UX** design principles
-- **Security best practices** implementation
+- **Security best practices** implementation (salt, pepper, bcrypt)
 - **Docker containerization** for development
 - **Git workflow** and version control
 

@@ -16,12 +16,13 @@ CREATE DATABASE aster_db;
 
 ### Configure Database Connection
 
-Update the `.env` file with your MySQL credentials:
+Update the `.env` file with your MySQL credentials and security settings:
 
 ```env
 DATABASE_URL="mysql://username:password@localhost:3306/aster_db"
 NEXTAUTH_SECRET="your-secret-key-here-change-in-production"
 NEXTAUTH_URL="http://localhost:3000"
+PASSWORD_PEPPER="your-secret-pepper-here-change-in-production"
 ```
 
 Replace:
@@ -29,6 +30,7 @@ Replace:
 - `username` with your MySQL username
 - `password` with your MySQL password
 - `your-secret-key-here-change-in-production` with a secure random string (generate with: `openssl rand -base64 32`)
+- `your-secret-pepper-here-change-in-production` with a different secure random string for password security
 
 ## 2. Install Dependencies
 
@@ -103,19 +105,31 @@ src/
 
 ## Security Features
 
-- ✅ Passwords hashed with bcryptjs (12 salt rounds)
+### Password Security (Salt + Pepper + Bcrypt)
+
+This project demonstrates enterprise-level password security:
+
+- **Salt**: A unique cryptographic salt is generated for each user and explicitly stored in the database. This prevents rainbow table attacks.
+- **Pepper**: A secret value stored in the `PASSWORD_PEPPER` environment variable (never in the database). This adds an extra layer of security even if the database is compromised.
+- **Bcrypt**: Industry-standard hashing algorithm with 12 salt rounds.
+
+**Formula**: `bcrypt.hash(password + pepper, salt)`
+
+### Additional Security
+
 - ✅ SQL injection protection via Prisma ORM
 - ✅ HTTP-only cookies for session management
-- ✅ Dark mode support
 - ✅ Protected routes (dashboard requires authentication)
+- ✅ Dark mode support
 
 ## Production Deployment
 
 1. Set a strong `NEXTAUTH_SECRET` in production
-2. Use a strong database password
-3. Change the default admin password
-4. Enable HTTPS
-5. Set `NODE_ENV=production`
+2. Set a strong `PASSWORD_PEPPER` (generate with: `openssl rand -base64 32`)
+3. Use a strong database password
+4. Change the default admin password
+5. Enable HTTPS
+6. Set `NODE_ENV=production`
 
 ## Troubleshooting
 
