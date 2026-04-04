@@ -1,4 +1,4 @@
-Failed to fetch user"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 
