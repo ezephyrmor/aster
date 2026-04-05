@@ -25,6 +25,11 @@ interface TeamHistory {
   id: number;
   action: string;
   reason?: string | null;
+  metadata?: {
+    name?: { old: string; new: string };
+    description?: { old: string | null; new: string | null };
+    brandId?: { old: number; new: number };
+  } | null;
   createdAt: string;
   teamMember?: {
     user: {
@@ -224,6 +229,27 @@ export default function TeamDetailPage({
       updated: "Updated",
     };
     return labels[action] || action;
+  };
+
+  const getUpdateDetails = (event: TeamHistory) => {
+    if (event.action !== "updated" || !event.metadata) return null;
+
+    const details: string[] = [];
+    const metadata = event.metadata;
+
+    if (metadata.name) {
+      details.push(`Name: "${metadata.name.old}" → "${metadata.name.new}"`);
+    }
+    if (metadata.brandId) {
+      details.push(`Brand: ${metadata.brandId.old} → ${metadata.brandId.new}`);
+    }
+    if (metadata.description) {
+      const oldDesc = metadata.description.old || "(none)";
+      const newDesc = metadata.description.new || "(none)";
+      details.push(`Description updated`);
+    }
+
+    return details;
   };
 
   const getActionColor = (action: string) => {
@@ -445,7 +471,16 @@ export default function TeamDetailPage({
                                   : "System"}{" "}
                                 - {getActionLabel(event.action)}
                               </p>
-                              {event.reason && (
+                              {event.action === "updated" && event.metadata && (
+                                <ul className="mt-1 text-xs text-gray-500 dark:text-gray-400 space-y-0.5">
+                                  {getUpdateDetails(event)?.map(
+                                    (detail, idx) => (
+                                      <li key={idx}>• {detail}</li>
+                                    ),
+                                  )}
+                                </ul>
+                              )}
+                              {event.reason && event.action !== "updated" && (
                                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                                   Reason: {event.reason}
                                 </p>

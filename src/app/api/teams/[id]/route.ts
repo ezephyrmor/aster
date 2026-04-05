@@ -75,7 +75,7 @@ export async function PUT(
     const { id } = await params;
     const teamId = parseInt(id);
     const body = await request.json();
-    const { name, description, performedBy } = body;
+    const { name, description, brandId, performedBy } = body;
 
     if (isNaN(teamId)) {
       return NextResponse.json({ error: "Invalid team ID" }, { status: 400 });
@@ -104,6 +104,28 @@ export async function PUT(
       }
     }
 
+    // Track changes for history
+    const changes: string[] = [];
+    const metadata: Record<string, any> = {};
+
+    if (name && name !== existingTeam.name) {
+      changes.push("name");
+      metadata.name = { old: existingTeam.name, new: name };
+    }
+
+    if (description !== undefined && description !== existingTeam.description) {
+      changes.push("description");
+      metadata.description = {
+        old: existingTeam.description,
+        new: description,
+      };
+    }
+
+    if (brandId !== undefined && parseInt(brandId) !== existingTeam.brandId) {
+      changes.push("brand");
+      metadata.brandId = { old: existingTeam.brandId, new: parseInt(brandId) };
+    }
+
     // Update team
     const team = await prisma.team.update({
       where: { id: teamId },
@@ -111,21 +133,23 @@ export async function PUT(
         name: name || existingTeam.name,
         description:
           description !== undefined ? description : existingTeam.description,
+        brandId:
+          brandId !== undefined ? parseInt(brandId) : existingTeam.brandId,
       },
     });
 
-    // Log history
-    await prisma.teamHistory.create({
-      data: {
-        teamId,
-        action: "updated",
-        performedBy: performedBy || 1,
-        metadata: {
-          name,
-          description,
+    // Log history if any changes were made
+    if (changes.length > 0) {
+      await prisma.teamHistory.create({
+        data: {
+          teamId,
+          action: "updated",
+          performedBy: performedBy || 1,
+          reason: changes.join(", "),
+          metadata,
         },
-      },
-    });
+      });
+    }
 
     return NextResponse.json(team);
   } catch (error) {
