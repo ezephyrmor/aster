@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,131 +7,169 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role {
-  admin
-  hr
-  employee
+model Position {
+  id               Int               @id @default(autoincrement())
+  name             String            @unique @db.VarChar(100)
+  description      String?           @db.Text
+  createdAt        DateTime          @default(now()) @map("created_at")
+  employeeProfiles EmployeeProfile[]
+
+  @@map("positions")
+}
+
+model Department {
+  id               Int               @id @default(autoincrement())
+  name             String            @unique @db.VarChar(100)
+  description      String?           @db.Text
+  createdAt        DateTime          @default(now()) @map("created_at")
+  employeeProfiles EmployeeProfile[]
+
+  @@map("departments")
+}
+
+model Role {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique @db.VarChar(50)
+  description String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+  users       User[]
+
+  @@map("roles")
+}
+
+model EmployeeStatusModel {
+  id               Int               @id @default(autoincrement())
+  name             String            @unique @db.VarChar(50)
+  description      String?           @db.Text
+  createdAt        DateTime          @default(now()) @map("created_at")
+  employeeProfiles EmployeeProfile[]
+
+  @@map("employee_statuses")
+}
+
+model Industry {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique @db.VarChar(100)
+  description String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+  brands      Brand[]
+
+  @@map("industries")
 }
 
 model User {
-  id           Int               @id @default(autoincrement())
-  username     String            @unique @db.VarChar(50)
-  passwordHash String            @map("password_hash") @db.VarChar(255)
-  salt         String            @db.VarChar(255)
-  role         Role              @default(employee)
-  createdAt    DateTime          @default(now()) @map("created_at")
-
-  // One-to-one relationship with employee profile
+  id              Int              @id @default(autoincrement())
+  username        String           @unique @db.VarChar(50)
+  passwordHash    String           @map("password_hash") @db.VarChar(255)
+  salt            String           @db.VarChar(255)
+  createdAt       DateTime         @default(now()) @map("created_at")
+  roleId          Int              @default(3) @map("role_id")
   employeeProfile EmployeeProfile?
+  teamMembers     TeamMember[]
+  role            Role             @relation(fields: [roleId], references: [id])
 
-  // One-to-one relationship with team member
-  teamMember   TeamMember?
-
+  @@index([roleId], map: "users_role_id_fkey")
   @@map("users")
 }
 
 model EmployeeProfile {
-  id                        Int       @id @default(autoincrement())
-  userId                    Int       @unique @map("user_id")
+  id            Int                 @id @default(autoincrement())
+  userId        Int                 @unique @map("user_id")
+  firstName     String              @map("first_name") @db.VarChar(100)
+  lastName      String              @map("last_name") @db.VarChar(100)
+  middleName    String?             @map("middle_name") @db.VarChar(100)
+  dateOfBirth   DateTime?           @map("date_of_birth")
+  contactNumber String?             @map("contact_number") @db.VarChar(20)
+  personalEmail String?             @map("personal_email") @db.VarChar(255)
+  address       String?             @db.Text
+  hireDate      DateTime?           @map("hire_date")
+  createdAt     DateTime            @default(now()) @map("created_at")
+  updatedAt     DateTime            @updatedAt @map("updated_at")
+  departmentId  Int?                @map("department_id")
+  positionId    Int?                @map("position_id")
+  statusId      Int                 @default(1) @map("status_id")
+  department    Department?         @relation(fields: [departmentId], references: [id])
+  position      Position?           @relation(fields: [positionId], references: [id])
+  status        EmployeeStatusModel @relation(fields: [statusId], references: [id])
+  user          User                @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Personal Information
-  firstName                 String    @map("first_name") @db.VarChar(100)
-  lastName                  String    @map("last_name") @db.VarChar(100)
-  middleName                String?   @map("middle_name") @db.VarChar(100)
-  dateOfBirth               DateTime? @map("date_of_birth")
-
-  // Contact Information
-  contactNumber             String?   @map("contact_number") @db.VarChar(20)
-  personalEmail             String?   @map("personal_email") @db.VarChar(255)
-  address                   String?   @db.Text
-
-  // Employment Information
-  position                  String?   @db.VarChar(100)
-  department                String?   @db.VarChar(100)
-  hireDate                  DateTime? @map("hire_date")
-
-  // Emergency Contact
-  emergencyContactName      String?   @map("emergency_contact_name") @db.VarChar(200)
-  emergencyContactNumber    String?   @map("emergency_contact_number") @db.VarChar(20)
-  emergencyContactRelation  String?   @map("emergency_contact_relation") @db.VarChar(50)
-
-  // Status (active, on-leave, terminated, inactive)
-  status                    EmployeeStatus @default(active)
-
-  // Timestamps
-  createdAt                 DateTime  @default(now()) @map("created_at")
-  updatedAt                 DateTime  @updatedAt @map("updated_at")
-
-  // Relationship to User
-  user                      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-
+  @@index([departmentId], map: "employee_profiles_department_id_fkey")
+  @@index([positionId], map: "employee_profiles_position_id_fkey")
+  @@index([statusId], map: "employee_profiles_status_id_fkey")
   @@map("employee_profiles")
 }
 
-enum EmployeeStatus {
-  active
-  on_leave
-  terminated
-  inactive
-}
-
-// Brand/Client Management Models
-enum BrandStatus {
-  active
-  inactive
-  archived
-}
-
 model Brand {
-  id          Int              @id @default(autoincrement())
-  name        String           @unique @db.VarChar(100)
-  description String?          @db.Text
-  logo        String?          @db.VarChar(500)
-  website     String?          @db.VarChar(255)
-  industry    String?          @db.VarChar(100)
-  status      BrandStatus      @default(active)
-  createdAt   DateTime         @default(now()) @map("created_at")
-  updatedAt   DateTime         @updatedAt @map("updated_at")
-  createdBy   Int              @map("created_by") // User ID who created the brand
-
-  // Relations
+  id          Int         @id @default(autoincrement())
+  name        String      @unique @db.VarChar(100)
+  description String?     @db.Text
+  logo        String?     @db.VarChar(500)
+  website     String?     @db.VarChar(255)
+  status      BrandStatus @default(active)
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+  createdBy   Int         @map("created_by")
+  industryId  Int?        @map("industry_id")
+  industry    Industry?   @relation(fields: [industryId], references: [id])
   teams       Team[]
 
+  @@index([industryId], map: "brands_industry_id_fkey")
   @@map("brands")
 }
 
-// Team Management Models
 model Team {
-  id          Int              @id @default(autoincrement())
-  name        String           @unique @db.VarChar(100)
-  description String?          @db.Text
-  brandId     Int              @map("brand_id") // Required - every team belongs to a brand
-  createdAt   DateTime         @default(now()) @map("created_at")
-  updatedAt   DateTime         @updatedAt @map("updated_at")
-
-  // Relations
-  brand       Brand            @relation(fields: [brandId], references: [id])
-  members     TeamMember[]
+  id          Int           @id @default(autoincrement())
+  name        String        @unique @db.VarChar(100)
+  description String?       @db.Text
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+  brandId     Int           @map("brand_id")
   history     TeamHistory[]
+  members     TeamMember[]
+  brand       Brand         @relation(fields: [brandId], references: [id])
 
+  @@index([brandId], map: "teams_brand_id_fkey")
   @@map("teams")
 }
 
 model TeamMember {
-  id        Int              @id @default(autoincrement())
-  teamId    Int              @map("team_id")
-  userId    Int              @unique @map("user_id")
-  isLeader  Boolean          @default(false) @map("is_leader")
-  status    TeamMemberStatus @default(active)
-  joinedAt  DateTime         @default(now()) @map("joined_at")
-  leftAt    DateTime?        @map("left_at")
+  id       Int              @id @default(autoincrement())
+  teamId   Int              @map("team_id")
+  userId   Int              @map("user_id")
+  isLeader Boolean          @default(false) @map("is_leader")
+  status   TeamMemberStatus @default(active)
+  joinedAt DateTime         @default(now()) @map("joined_at")
+  leftAt   DateTime?        @map("left_at")
+  history  TeamHistory[]
+  team     Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Relations
-  team      Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  history   TeamHistory[]
-
+  @@index([teamId], map: "team_members_team_id_fkey")
+  @@index([userId], map: "team_members_user_id_fkey")
   @@map("team_members")
+}
+
+model TeamHistory {
+  id           Int               @id @default(autoincrement())
+  teamId       Int               @map("team_id")
+  teamMemberId Int?              @map("team_member_id")
+  action       TeamHistoryAction
+  performedBy  Int               @map("performed_by")
+  reason       String?           @db.Text
+  metadata     Json?
+  createdAt    DateTime          @default(now()) @map("created_at")
+  team         Team              @relation(fields: [teamId], references: [id])
+  teamMember   TeamMember?       @relation(fields: [teamMemberId], references: [id])
+
+  @@index([teamId], map: "team_history_team_id_fkey")
+  @@index([teamMemberId], map: "team_history_team_member_id_fkey")
+  @@map("team_history")
+}
+
+enum BrandStatus {
+  active
+  inactive
+  archived
 }
 
 enum TeamMemberStatus {
@@ -143,28 +178,11 @@ enum TeamMemberStatus {
 }
 
 enum TeamHistoryAction {
-  joined    // Employee joined team
-  left      // Employee left team (for attrition)
-  promoted  // Became team leader
-  demoted   // Removed as team leader
-  removed   // Admin removed from team
-  created   // Team created
-  updated   // Team details updated
-}
-
-model TeamHistory {
-  id           Int                @id @default(autoincrement())
-  teamId       Int                @map("team_id")
-  teamMemberId Int?               @map("team_member_id")
-  action       TeamHistoryAction
-  performedBy  Int                @map("performed_by") // User ID who performed the action
-  reason       String?            @db.Text
-  metadata     Json?
-  createdAt    DateTime           @default(now()) @map("created_at")
-
-  // Relations
-  team         Team               @relation(fields: [teamId], references: [id])
-  teamMember   TeamMember?        @relation(fields: [teamMemberId], references: [id])
-
-  @@map("team_history")
+  joined
+  left
+  promoted
+  demoted
+  removed
+  created
+  updated
 }

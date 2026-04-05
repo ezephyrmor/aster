@@ -178,7 +178,43 @@ npm run lint         # Run ESLint
 npm run format       # Format code with Prettier
 ```
 
-## 🔧 Customization
+### Database Seeding Scripts
+
+The project includes comprehensive seeding scripts to populate the database with initial data:
+
+```bash
+npm run db:seed:lookup   # Seed lookup tables (roles, positions, departments, statuses, industries)
+npm run db:seed:admin    # Create admin and HR users with secure passwords
+npm run db:seed:dummy    # Create dummy users, brands, and teams
+npm run db:seed:members  # Assign team members to existing teams
+npm run db:seed:all      # Run all seed scripts in order
+npm run db:reset         # Reset database and seed all data (use with caution!)
+```
+
+**Seeding Order:**
+
+1. **Lookup Tables** - Creates roles (admin, hr, employee), positions, departments, employee statuses, and industries
+2. **Admin Users** - Creates admin and HR users with employee profiles
+3. **Dummy Data** - Creates 10 employees, 10 brands, and teams for each brand
+4. **Team Members** - Assigns employees to teams with designated team leaders
+
+**Example: Full Database Reset**
+
+```bash
+npm run db:reset
+```
+
+This will drop and recreate the database, run all migrations, and populate it with fresh seed data.
+
+**Running Individual Scripts**
+
+If you only need to populate team members (e.g., after adding new teams):
+
+```bash
+npm run db:seed:members
+```
+
+## � Customization
 
 ### Adding New Pages
 
@@ -201,7 +237,7 @@ npx prisma generate
 - Component styles: Use Tailwind classes
 - Dark mode: Built-in support with `dark:` prefix
 
-## 🚀 Deployment
+## �🚀 Deployment
 
 ### Vercel (Recommended)
 

@@ -33,14 +33,14 @@ export async function GET(request: NextRequest) {
     // Build where clause for filtering
     const whereClauses: any[] = [];
 
-    // Role filter
+    // Role filter (by role name)
     if (role) {
-      whereClauses.push({ role });
+      whereClauses.push({ role: { name: role } });
     }
 
-    // Status filter (through employeeProfile)
+    // Status filter (through employeeProfile, by status name)
     if (status) {
-      whereClauses.push({ employeeProfile: { status } });
+      whereClauses.push({ employeeProfile: { status: { name: status } } });
     }
 
     // Search filter (employee name only) - case insensitive for SQLite
@@ -80,22 +80,56 @@ export async function GET(request: NextRequest) {
         : sortBy === "employeeProfile.lastName"
           ? { employeeProfile: { lastName: sortOrder as "asc" | "desc" } }
           : sortBy === "employeeProfile.status"
-            ? { employeeProfile: { status: sortOrder as "asc" | "desc" } }
+            ? {
+                employeeProfile: {
+                  status: { name: sortOrder as "asc" | "desc" },
+                },
+              }
             : { [sortBy]: sortOrder };
 
-    // Get users with pagination
+    // Get users with pagination, including related data
     const users = await prisma.user.findMany({
       where,
       include: {
-        employeeProfile: true,
+        employeeProfile: {
+          include: {
+            position: true,
+            department: true,
+            status: true,
+          },
+        },
+        role: true,
       },
       skip,
       take: limit,
       orderBy,
     });
 
+    // Format response to maintain backward compatibility
+    const formattedUsers = users.map((user) => ({
+      id: user.id,
+      username: user.username,
+      createdAt: user.createdAt,
+      role: user.role.name,
+      employeeProfile: user.employeeProfile
+        ? {
+            firstName: user.employeeProfile.firstName,
+            lastName: user.employeeProfile.lastName,
+            middleName: user.employeeProfile.middleName,
+            dateOfBirth: user.employeeProfile.dateOfBirth,
+            contactNumber: user.employeeProfile.contactNumber,
+            personalEmail: user.employeeProfile.personalEmail,
+            address: user.employeeProfile.address,
+            hireDate: user.employeeProfile.hireDate,
+            position: user.employeeProfile.position?.name || null,
+            department: user.employeeProfile.department?.name || null,
+            status: user.employeeProfile.status?.name || "active",
+          }
+        : null,
+    }));
+
     return NextResponse.json({
-      users,
+      users: formattedUsers,
       pagination: {
         total,
         page,
@@ -133,6 +167,7 @@ export async function POST(request: NextRequest) {
       emergencyContactName,
       emergencyContactNumber,
       emergencyContactRelation,
+      status,
     } = body;
 
     // Validate required fields
@@ -182,13 +217,79 @@ export async function POST(request: NextRequest) {
     const salt = generateSalt();
     const hashedPassword = await hashPassword(generatedPassword, salt);
 
+    // Get role ID
+    const roleRecord = await prisma.role.findUnique({
+      where: { name: role || "employee" },
+    });
+
+    if (!roleRecord) {
+      return NextResponse.json(
+        { error: "Invalid role specified" },
+        { status: 400 },
+      );
+    }
+
+    // Get position ID if provided
+    let positionId: number | null = null;
+    if (position) {
+      // Try to find by name first
+      let positionRecord = await prisma.position.findUnique({
+        where: { name: position },
+      });
+
+      // If not found and position is a number, try by ID
+      if (!positionRecord && !isNaN(parseInt(position))) {
+        positionRecord = await prisma.position.findUnique({
+          where: { id: parseInt(position) },
+        });
+      }
+
+      positionId = positionRecord?.id || null;
+    }
+
+    // Get department ID if provided
+    let departmentId: number | null = null;
+    if (department) {
+      // Try to find by name first
+      let departmentRecord = await prisma.department.findUnique({
+        where: { name: department },
+      });
+
+      // If not found and department is a number, try by ID
+      if (!departmentRecord && !isNaN(parseInt(department))) {
+        departmentRecord = await prisma.department.findUnique({
+          where: { id: parseInt(department) },
+        });
+      }
+
+      departmentId = departmentRecord?.id || null;
+    }
+
+    // Get status ID if provided
+    let statusId: number | null = null;
+    if (status) {
+      // Try to find by name first
+      let statusRecord = await prisma.employeeStatusModel.findUnique({
+        where: { name: status },
+      });
+
+      // If not found and status is a number, try by ID
+      if (!statusRecord && !isNaN(parseInt(status))) {
+        statusRecord = await prisma.employeeStatusModel.findUnique({
+          where: { id: parseInt(status) },
+        });
+      }
+
+      statusId = statusRecord?.id || null;
+    }
+
     // Create user and employee profile in a transaction
     const user = await prisma.user.create({
       data: {
         username: generatedUsername,
         passwordHash: hashedPassword,
         salt,
-        role: role || "employee",
+        roleId: roleRecord.id,
         employeeProfile: {
           create: {
             firstName,
@@ -198,17 +299,22 @@ export async function POST(request: NextRequest) {
             personalEmail,
             address,
             dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
-            position,
-            department,
+            positionId,
+            departmentId,
             hireDate: hireDate ? new Date(hireDate) : null,
-            emergencyContactName,
-            emergencyContactNumber,
-            emergencyContactRelation,
+            statusId: statusId || 1, // Default to "active" status
           },
         },
       },
       include: {
-        employeeProfile: true,
+        employeeProfile: {
+          include: {
+            position: true,
+            department: true,
+            status: true,
+          },
+        },
+        role: true,
       },
     });
 

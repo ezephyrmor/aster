@@ -8,21 +8,23 @@
  * - Bcrypt: Industry-standard hashing algorithm
  */
 
-import mysql from "mysql2/promise";
+import { PrismaClient } from "@prisma/client";
 import { generateSalt, hashPassword } from "../src/lib/password";
+
+const prisma = new PrismaClient();
 
 interface UserProfile {
   firstName: string;
   lastName: string;
-  position?: string;
-  department?: string;
+  positionId: number;
+  departmentId: number;
+  statusId: number;
 }
 
 async function createOrUpdateUser(
-  connection: mysql.Connection,
   username: string,
   password: string,
-  role: string,
+  roleId: number,
   profile: UserProfile,
 ) {
   // Generate explicit salt for demonstration
@@ -32,85 +34,69 @@ async function createOrUpdateUser(
   const passwordHash = await hashPassword(password, salt);
 
   // Check if user exists
-  const [rows] = await connection.execute(
-    "SELECT id, username FROM users WHERE username = ?",
-    [username],
-  );
-
-  const existingUser =
-    Array.isArray(rows) && rows.length > 0 ? (rows[0] as any) : null;
+  const existingUser = await prisma.user.findUnique({
+    where: { username },
+    include: { employeeProfile: true },
+  });
 
   if (existingUser) {
     // Update existing user
-    await connection.execute(
-      "UPDATE users SET password_hash = ?, salt = ?, role = ? WHERE username = ?",
-      [passwordHash, salt, role, username],
-    );
+    await prisma.user.update({
+      where: { username },
+      data: {
+        passwordHash,
+        salt,
+        roleId,
+      },
+    });
 
     // Update or create profile
-    const [profileRows] = await connection.execute(
-      "SELECT id FROM employee_profiles WHERE user_id = ?",
-      [existingUser.id],
-    );
-
-    const existingProfile =
-      Array.isArray(profileRows) && profileRows.length > 0
-        ? (profileRows[0] as any)
-        : null;
-
-    if (existingProfile) {
-      await connection.execute(
-        `UPDATE employee_profiles SET 
-         first_name = ?, last_name = ?, position = ?, department = ?, updated_at = NOW()
-         WHERE user_id = ?`,
-        [
-          profile.firstName,
-          profile.lastName,
-          profile.position,
-          profile.department,
-          existingUser.id,
-        ],
-      );
+    if (existingUser.employeeProfile) {
+      await prisma.employeeProfile.update({
+        where: { userId: existingUser.id },
+        data: {
+          firstName: profile.firstName,
+          lastName: profile.lastName,
+          positionId: profile.positionId,
+          departmentId: profile.departmentId,
+          statusId: profile.statusId,
+        },
+      });
     } else {
-      await connection.execute(
-        `INSERT INTO employee_profiles 
-         (user_id, first_name, last_name, position, department, created_at, updated_at) 
-         VALUES (?, ?, ?, ?, ?, NOW(), NOW())`,
-        [
-          existingUser.id,
-          profile.firstName,
-          profile.lastName,
-          profile.position,
-          profile.department,
-        ],
-      );
+      await prisma.employeeProfile.create({
+        data: {
+          userId: existingUser.id,
+          firstName: profile.firstName,
+          lastName: profile.lastName,
+          positionId: profile.positionId,
+          departmentId: profile.departmentId,
+          statusId: profile.statusId,
+        },
+      });
     }
 
     return { updated: true, userId: existingUser.id };
   } else {
     // Create new user
-    const [result] = await connection.execute(
-      "INSERT INTO users (username, password_hash, salt, role) VALUES (?, ?, ?, ?)",
-      [username, passwordHash, salt, role],
-    );
+    const user = await prisma.user.create({
+      data: {
+        username,
+        passwordHash,
+        salt,
+        roleId,
+        employeeProfile: {
+          create: {
+            firstName: profile.firstName,
+            lastName: profile.lastName,
+            positionId: profile.positionId,
+            departmentId: profile.departmentId,
+            statusId: profile.statusId,
+          },
+        },
+      },
+    });
 
-    const userId = (result as mysql.ResultSetHeader).insertId;
-
-    // Create profile
-    await connection.execute(
-      `INSERT INTO employee_profiles 
-       (user_id, first_name, last_name, position, department, created_at, updated_at) 
-       VALUES (?, ?, ?, ?, ?, NOW(), NOW())`,
-      [
-        userId,
-        profile.firstName,
-        profile.lastName,
-        profile.position,
-        profile.department,
-      ],
-    );
-
-    return { created: true, userId };
+    return { created: true, userId: user.id };
   }
 }
 
@@ -118,27 +104,40 @@ async function main() {
   console.log("🌱 Seeding users...\n");
   console.log("🔐 Using salt + pepper + bcrypt for secure password hashing\n");
 
-  // Connect to MySQL
-  const connection = await mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    password: "aster_root_password",
-    database: "aster_db",
-  });
-
   try {
+    // Get lookup table IDs
+    const roles = await prisma.role.findMany();
+    const positions = await prisma.position.findMany();
+    const departments = await prisma.department.findMany();
+    const statuses = await prisma.employeeStatusModel.findMany();
+
+    const adminRole = roles.find((r) => r.name === "admin");
+    const hrRole = roles.find((r) => r.name === "hr");
+    const activeStatus = statuses.find((s) => s.name === "active");
+
+    if (!adminRole || !hrRole || !activeStatus) {
+      console.error(
+        "❌ Required lookup data not found. Please run seed-lookup-tables.ts first.",
+      );
+      process.exit(1);
+    }
+
     // Create admin user
     console.log("📋 Creating Admin User...");
     const adminResult = await createOrUpdateUser(
-      connection,
       "admin",
       "password123",
-      "admin",
+      adminRole.id,
       {
         firstName: "System",
         lastName: "Administrator",
-        position: "System Administrator",
-        department: "IT",
+        positionId:
+          positions.find((p) => p.name === "Engineering Manager")?.id ||
+          positions[0].id,
+        departmentId:
+          departments.find((d) => d.name === "Engineering")?.id ||
+          departments[0].id,
+        statusId: activeStatus.id,
       },
     );
     console.log(
@@ -147,18 +146,17 @@ async function main() {
 
     // Create HR user
     console.log("\n📋 Creating HR User...");
-    const hrResult = await createOrUpdateUser(
-      connection,
-      "hr",
-      "password123",
-      "hr",
-      {
-        firstName: "Human",
-        lastName: "Resources",
-        position: "HR Manager",
-        department: "Human Resources",
-      },
-    );
+    const hrResult = await createOrUpdateUser("hr", "password123", hrRole.id, {
+      firstName: "Human",
+      lastName: "Resources",
+      positionId:
+        positions.find((p) => p.name === "Engineering Manager")?.id ||
+        positions[0].id,
+      departmentId:
+        departments.find((d) => d.name === "Human Resources")?.id ||
+        departments[0].id,
+      statusId: activeStatus.id,
+    });
     console.log(
       `✅ HR user ${hrResult.updated ? "updated" : "created"} successfully`,
     );
@@ -175,12 +173,17 @@ async function main() {
     console.log("   • Bcrypt: 12 rounds of hashing");
 
     console.log("\n🔒 Remember to change the passwords in production!");
-  } finally {
-    await connection.end();
+  } catch (err) {
+    console.error("❌ Error seeding database:", err);
+    process.exit(1);
   }
 }
 
-main().catch((e) => {
-  console.error("❌ Error seeding database:", e);
-  process.exit(1);
-});
+main()
+  .catch((e) => {
+    console.error("❌ Error seeding database:", e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

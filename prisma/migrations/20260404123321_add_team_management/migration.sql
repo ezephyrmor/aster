@@ -20,7 +20,7 @@ CREATE TABLE `team_members` (
     `joined_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `left_at` DATETIME(3) NULL,
 
-    UNIQUE INDEX `team_members_user_id_key`(`user_id`),
+    INDEX `team_members_user_id_fkey`(`user_id`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 

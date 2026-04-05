@@ -17,7 +17,14 @@ export async function GET(
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {
-        employeeProfile: true,
+        employeeProfile: {
+          include: {
+            position: true,
+            department: true,
+            status: true,
+          },
+        },
+        role: true,
       },
     });
 
@@ -25,7 +32,20 @@ export async function GET(
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    return NextResponse.json(user);
+    // Format response to maintain backward compatibility
+    const formattedUser = {
+      ...user,
+      employeeProfile: user.employeeProfile
+        ? {
+            ...user.employeeProfile,
+            position: user.employeeProfile.position?.name || null,
+            department: user.employeeProfile.department?.name || null,
+            status: user.employeeProfile.status?.name || "active",
+          }
+        : null,
+    };
+
+    return NextResponse.json(formattedUser);
   } catch (error) {
     console.error("Error fetching user:", error);
     return NextResponse.json(
@@ -70,55 +90,167 @@ export async function PUT(
     // Check if user exists
     const existingUser = await prisma.user.findUnique({
       where: { id: userId },
+      include: {
+        employeeProfile: true,
+      },
     });
 
     if (!existingUser) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    // Get role ID if role is provided
+    let roleId: number | undefined;
+    if (role) {
+      const roleRecord = await prisma.role.findUnique({
+        where: { name: role },
+      });
+      if (roleRecord) {
+        roleId = roleRecord.id;
+      }
+    }
+
     // Update user (only role can be changed, username is locked)
+    interface UpdateUserData {
+      roleId?: number;
+    }
+    const updateUserData: UpdateUserData = {};
+    if (roleId !== undefined) {
+      updateUserData.roleId = roleId;
+    }
+
     const updatedUser = await prisma.user.update({
       where: { id: userId },
-      data: {
-        role: role || existingUser.role,
-      },
+      data: updateUserData,
       include: {
-        employeeProfile: true,
+        employeeProfile: {
+          include: {
+            position: true,
+            department: true,
+            status: true,
+          },
+        },
+        role: true,
       },
     });
 
     // Update employee profile if it exists
     if (updatedUser.employeeProfile) {
+      const updateProfileData: {
+        firstName?: string | null;
+        lastName?: string | null;
+        middleName?: string | null;
+        contactNumber?: string | null;
+        personalEmail?: string | null;
+        address?: string | null;
+        dateOfBirth?: Date | null;
+        hireDate?: Date | null;
+        positionId?: number | null;
+        departmentId?: number | null;
+        statusId?: number;
+      } = {
+        firstName,
+        lastName,
+        middleName,
+        contactNumber,
+        personalEmail,
+        address,
+        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+        hireDate: hireDate ? new Date(hireDate) : null,
+      };
+
+      // Handle position (can be name or ID)
+      if (position !== undefined) {
+        if (position === null || position === "") {
+          updateProfileData.positionId = null;
+        } else {
+          let positionRecord = await prisma.position.findUnique({
+            where: { name: position },
+          });
+          if (!positionRecord && !isNaN(parseInt(position))) {
+            positionRecord = await prisma.position.findUnique({
+              where: { id: parseInt(position) },
+            });
+          }
+          updateProfileData.positionId = positionRecord?.id || null;
+        }
+      }
+
+      // Handle department (can be name or ID)
+      if (department !== undefined) {
+        if (department === null || department === "") {
+          updateProfileData.departmentId = null;
+        } else {
+          let departmentRecord = await prisma.department.findUnique({
+            where: { name: department },
+          });
+          if (!departmentRecord && !isNaN(parseInt(department))) {
+            departmentRecord = await prisma.department.findUnique({
+              where: { id: parseInt(department) },
+            });
+          }
+          updateProfileData.departmentId = departmentRecord?.id || null;
+        }
+      }
+
+      // Handle status (can be name or ID)
+      if (status !== undefined) {
+        let statusRecord = await prisma.employeeStatusModel.findUnique({
+          where: { name: status },
+        });
+        if (!statusRecord && !isNaN(parseInt(status))) {
+          statusRecord = await prisma.employeeStatusModel.findUnique({
+            where: { id: parseInt(status) },
+          });
+        }
+        if (statusRecord) {
+          updateProfileData.statusId = statusRecord.id;
+        }
+      }
+
       await prisma.employeeProfile.update({
         where: { userId: userId },
-        data: {
-          firstName,
-          lastName,
-          middleName,
-          contactNumber,
-          personalEmail,
-          address,
-          dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
-          position,
-          department,
-          hireDate: hireDate ? new Date(hireDate) : null,
-          emergencyContactName,
-          emergencyContactNumber,
-          emergencyContactRelation,
-          status: status || updatedUser.employeeProfile.status,
-        },
+        data: updateProfileData as any,
       });
     }
 
     // Fetch updated user
-    const user = await prisma.user.findUnique({
+    const updatedUserResult = await prisma.user.findUnique({
       where: { id: userId },
       include: {
-        employeeProfile: true,
+        employeeProfile: {
+          include: {
+            position: true,
+            department: true,
+            status: true,
+          },
+        },
+        role: true,
       },
     });
 
-    return NextResponse.json(user);
+    if (!updatedUserResult) {
+      return NextResponse.json(
+        { error: "User not found after update" },
+        { status: 404 },
+      );
+    }
+
+    // Format response to maintain backward compatibility
+    const formattedUser = {
+      ...updatedUserResult,
+      employeeProfile: updatedUserResult.employeeProfile
+        ? {
+            ...updatedUserResult.employeeProfile,
+            position: updatedUserResult.employeeProfile.position?.name || null,
+            department:
+              updatedUserResult.employeeProfile.department?.name || null,
+            status: updatedUserResult.employeeProfile.status?.name || "active",
+          }
+        : null,
+    };
+
+    return NextResponse.json(formattedUser);
   } catch (error) {
     console.error("Error updating user:", error);
     return NextResponse.json(
@@ -153,12 +285,17 @@ export async function DELETE(
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    // Get terminated status
+    const terminatedStatus = await prisma.employeeStatusModel.findUnique({
+      where: { name: "terminated" },
+    });
+
     // Soft delete - set employee status to terminated
-    if (existingUser.employeeProfile) {
+    if (existingUser.employeeProfile && terminatedStatus) {
       await prisma.employeeProfile.update({
         where: { userId: userId },
         data: {
-          status: "terminated",
+          statusId: terminatedStatus.id,
         },
       });
     }

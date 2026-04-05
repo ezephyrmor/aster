@@ -153,8 +153,9 @@ export default function UserList() {
     }
   };
 
-  const formatStatus = (status: string) => {
-    return status.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase());
+  const formatStatus = (status: string | null | undefined) => {
+    if (!status) return "Unknown";
+    return status.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
   };
 
   return (
@@ -349,12 +350,6 @@ export default function UserList() {
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <Link
                         href={`/dashboard/users/${user.id}`}
-                        className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 mr-3"
-                      >
-                        View
-                      </Link>
-                      <Link
-                        href={`/dashboard/users/${user.id}/edit`}
                         className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
                       >
                         Edit

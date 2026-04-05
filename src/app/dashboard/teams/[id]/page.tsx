@@ -49,6 +49,14 @@ interface UserSearchResult {
   displayName: string;
   position: string | null;
   department: string | null;
+  currentTeam?: {
+    teamId: number;
+    teamName: string;
+    brandName: string;
+    isLeader: boolean;
+    status: string;
+    isInSpecifiedTeam: boolean;
+  } | null;
 }
 
 interface PendingMember {
@@ -659,36 +667,60 @@ export default function TeamDetailPage({
                   {showSearchResults && searchResults.length > 0 && (
                     <ul
                       ref={searchResultsRef}
-                      className="absolute z-10 w-full mt-1 bg-white dark:bg-zinc-700 rounded-md shadow-lg max-h-60 overflow-auto border border-gray-200 dark:border-zinc-600"
+                      className="absolute z-10 w-full mt-1 bg-white dark:bg-zinc-700 rounded-md shadow-lg max-h-80 overflow-auto border border-gray-200 dark:border-zinc-600"
                     >
                       {searchResults.map((user) => (
                         <li
                           key={user.id}
                           onClick={() => handleAddToPending(user)}
-                          className="px-4 py-3 hover:bg-gray-50 dark:hover:bg-zinc-600 cursor-pointer flex items-center justify-between"
+                          className="px-4 py-3 hover:bg-gray-50 dark:hover:bg-zinc-600 cursor-pointer"
                         >
-                          <div>
-                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                              {user.displayName}
-                            </p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                              {user.position || user.username}
-                              {user.department && ` • ${user.department}`}
-                            </p>
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                  {user.displayName}
+                                </p>
+                                {user.currentTeam && (
+                                  <span
+                                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                      user.currentTeam.isInSpecifiedTeam
+                                        ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                                        : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
+                                    }`}
+                                  >
+                                    {user.currentTeam.isInSpecifiedTeam
+                                      ? "✓ Already in team"
+                                      : "In another team"}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
+                                {user.position || user.username}
+                                {user.department && ` • ${user.department}`}
+                              </p>
+                              {user.currentTeam && (
+                                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                                  Current: {user.currentTeam.teamName} (
+                                  {user.currentTeam.brandName})
+                                  {user.currentTeam.isLeader && " • Leader"}
+                                </p>
+                              )}
+                            </div>
+                            <svg
+                              className="h-5 w-5 text-gray-400 flex-shrink-0 ml-2"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 4.5v15m7.5-7.5h-15"
+                              />
+                            </svg>
                           </div>
-                          <svg
-                            className="h-5 w-5 text-gray-400"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M12 4.5v15m7.5-7.5h-15"
-                            />
-                          </svg>
                         </li>
                       ))}
                     </ul>

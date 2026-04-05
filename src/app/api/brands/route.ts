@@ -29,9 +29,9 @@ export async function GET(request: NextRequest) {
       whereClauses.push({ status });
     }
 
-    // Industry filter
+    // Industry filter (by industry name)
     if (industry) {
-      whereClauses.push({ industry });
+      whereClauses.push({ industry: { name: industry } });
     }
 
     // Search filter (brand name)
@@ -52,37 +52,49 @@ export async function GET(request: NextRequest) {
     // Get total count for pagination
     const total = await prisma.brand.count({ where });
 
+    // Build orderBy
+    let orderBy: any;
+    if (sortBy === "industry") {
+      orderBy = { industry: { name: sortOrder } };
+    } else {
+      orderBy = { [sortBy]: sortOrder };
+    }
+
     // Get brands with pagination
     const brands = await prisma.brand.findMany({
       where,
       include: {
+        industry: true,
         _count: {
           select: { teams: true },
         },
       },
       skip,
       take: limit,
-      orderBy: {
-        [sortBy]: sortOrder,
-      },
+      orderBy,
     });
 
     // Get unique industries for filter
-    const industries = await prisma.brand.findMany({
-      select: { industry: true },
-      distinct: ["industry"],
-      where: { industry: { not: null } },
+    const industries = await prisma.industry.findMany({
+      select: { name: true },
+      orderBy: { name: "asc" },
     });
 
+    // Format brands to maintain backward compatibility
+    const formattedBrands = brands.map((brand) => ({
+      ...brand,
+      industry: brand.industry?.name || null,
+    }));
+
     return NextResponse.json({
-      brands,
+      brands: formattedBrands,
       pagination: {
         total,
         page,
         limit,
         totalPages: Math.ceil(total / limit),
       },
-      industries: industries.map((b) => b.industry).filter(Boolean),
+      industries: industries.map((i) => i.name),
     });
   } catch (error) {
     console.error("Error fetching brands:", error);
@@ -118,18 +130,45 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get industry ID if industry is provided
+    let industryId: number | null = null;
+    if (industry) {
+      // Try to find by name first
+      let industryRecord = await prisma.industry.findUnique({
+        where: { name: industry },
+      });
+
+      // If not found and industry is a number, try by ID
+      if (!industryRecord && !isNaN(parseInt(industry))) {
+        industryRecord = await prisma.industry.findUnique({
+          where: { id: parseInt(industry) },
+        });
+      }
+
+      industryId = industryRecord?.id || null;
+    }
+
     const brand = await prisma.brand.create({
       data: {
         name,
         description,
         logo,
         website,
-        industry,
+        industryId,
         createdBy: createdBy || 1, // Default to admin if not provided
+      },
+      include: {
+        industry: true,
       },
     });
 
-    return NextResponse.json(brand, { status: 201 });
+    // Format response to maintain backward compatibility
+    const formattedBrand = {
+      ...brand,
+      industry: brand.industry?.name || null,
+    };
+
+    return NextResponse.json(formattedBrand, { status: 201 });
   } catch (error) {
     console.error("Error creating brand:", error);
     return NextResponse.json(

@@ -2,14 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 
 // GET /api/users/search - Search for employees (for team member autocomplete)
-// Query params: q (search query), teamId (optional - exclude members of this team)
+// Query params: q (search query), teamId (optional - to show if user is already in this team)
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("q") || "";
     const teamId = searchParams.get("teamId");
 
-    // Build where clause
+    // Build where clause for search
     const whereClauses: {
       OR?: Array<{
         employeeProfile?: {
@@ -18,7 +18,6 @@ export async function GET(request: NextRequest) {
         };
         username?: { contains: string };
       }>;
-      teamMember?: { is: null };
     }[] = [];
 
     // Search filter (employee name or username)
@@ -43,18 +42,6 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Exclude users who are already members of the specified team
-    if (teamId) {
-      const teamIdNum = parseInt(teamId);
-      if (!isNaN(teamIdNum)) {
-        whereClauses.push({
-          teamMember: {
-            is: null, // Only users who are NOT team members
-          },
-        });
-      }
-    }
-
     // Combine all where clauses with AND
     const where =
       whereClauses.length > 0
@@ -63,29 +50,70 @@ export async function GET(request: NextRequest) {
           : { AND: whereClauses }
         : {};
 
-    // Get users with employee profile
+    // Get users with employee profile and team members
     const users = await prisma.user.findMany({
       where,
       include: {
-        employeeProfile: true,
+        employeeProfile: {
+          include: {
+            position: true,
+            department: true,
+          },
+        },
+        teamMembers: {
+          where: {
+            leftAt: null, // Only active team memberships
+          },
+          include: {
+            team: {
+              include: {
+                brand: true,
+              },
+            },
+          },
+        },
       },
-      take: 10, // Limit results for autocomplete
+      take: 20, // Limit results for autocomplete
       orderBy: [
         { employeeProfile: { firstName: "asc" } },
         { employeeProfile: { lastName: "asc" } },
       ],
     });
 
+    // Parse teamId if provided
+    const teamIdNum = teamId ? parseInt(teamId) : null;
+
     // Format response for autocomplete
-    const results = users.map((user) => ({
-      id: user.id,
-      username: user.username,
-      displayName: user.employeeProfile
-        ? `${user.employeeProfile.firstName} ${user.employeeProfile.lastName}`
-        : user.username,
-      position: user.employeeProfile?.position || null,
-      department: user.employeeProfile?.department || null,
-    }));
+    const results = users.map((user) => {
+      // Get active team membership (if any)
+      const activeMembership = user.teamMembers.find(
+        (tm) => tm.leftAt === null,
+      );
+
+      // Check if user is already in the specified team
+      const isInSpecifiedTeam =
+        teamIdNum && activeMembership && activeMembership.teamId === teamIdNum;
+
+      return {
+        id: user.id,
+        username: user.username,
+        displayName: user.employeeProfile
+          ? `${user.employeeProfile.firstName} ${user.employeeProfile.lastName}`
+          : user.username,
+        position: user.employeeProfile?.position?.name || null,
+        department: user.employeeProfile?.department?.name || null,
+        currentTeam: activeMembership
+          ? {
+              teamId: activeMembership.teamId,
+              teamName: activeMembership.team.name,
+              brandName: activeMembership.team.brand.name,
+              isLeader: activeMembership.isLeader,
+              status: activeMembership.status,
+              isInSpecifiedTeam: isInSpecifiedTeam || false,
+            }
+          : null,
+      };
+    });
 
     return NextResponse.json(results);
   } catch (error) {
