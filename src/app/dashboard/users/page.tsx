@@ -1,37 +1,8 @@
-import { Suspense } from "react";
 import Link from "next/link";
 import UserList from "@/components/UserList";
 import DashboardLayout from "@/components/DashboardLayout";
 
-async function getUsers() {
-  try {
-    const res = await fetch(
-      `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/api/users`,
-      {
-        cache: "no-cache",
-      },
-    );
-    if (!res.ok) {
-      return [];
-    }
-    return res.json();
-  } catch (error) {
-    console.error("Error fetching users:", error);
-    return [];
-  }
-}
-
-function LoadingSpinner() {
-  return (
-    <div className="flex justify-center items-center py-12">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-    </div>
-  );
-}
-
-export default async function UsersPage() {
-  const users = await getUsers();
-
+export default function UsersPage() {
   return (
     <DashboardLayout
       title="Users"
@@ -67,9 +38,7 @@ export default async function UsersPage() {
         </div>
       </div>
 
-      <Suspense fallback={<LoadingSpinner />}>
-        <UserList users={users} />
-      </Suspense>
+      <UserList />
     </DashboardLayout>
   );
 }
