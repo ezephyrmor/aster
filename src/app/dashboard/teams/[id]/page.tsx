@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect, use, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -43,6 +43,19 @@ interface TeamHistory {
   } | null;
 }
 
+interface UserSearchResult {
+  id: number;
+  username: string;
+  displayName: string;
+  position: string | null;
+  department: string | null;
+}
+
+interface PendingMember {
+  user: UserSearchResult;
+  isLeader: boolean;
+}
+
 interface Team {
   id: number;
   name: string;
@@ -65,8 +78,80 @@ export default function TeamDetailPage({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
-  const [selectedUserId, setSelectedUserId] = useState("");
   const [isLeader, setIsLeader] = useState(false);
+
+  // Autocomplete search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<UserSearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchResultsRef = useRef<HTMLUListElement>(null);
+
+  // Pending members (staging list)
+  const [pendingMembers, setPendingMembers] = useState<PendingMember[]>([]);
+  const [isAddingMembers, setIsAddingMembers] = useState(false);
+
+  // Debounced search
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Fetch search results when debounced search changes
+  useEffect(() => {
+    if (debouncedSearch.length >= 2) {
+      const fetchSearchResults = async () => {
+        setIsSearching(true);
+        try {
+          const response = await fetch(
+            `/api/users/search?q=${encodeURIComponent(debouncedSearch)}&teamId=${resolvedParams.id}`,
+          );
+          if (response.ok) {
+            const data = await response.json();
+            // Filter out users already in pending list
+            const filtered = data.filter(
+              (user: UserSearchResult) =>
+                !pendingMembers.some((pm) => pm.user.id === user.id),
+            );
+            setSearchResults(filtered);
+            setShowSearchResults(true);
+          }
+        } catch (err) {
+          console.error("Error searching users:", err);
+        } finally {
+          setIsSearching(false);
+        }
+      };
+
+      fetchSearchResults();
+    } else {
+      setSearchResults([]);
+      setShowSearchResults(false);
+    }
+  }, [debouncedSearch, pendingMembers, resolvedParams.id]);
+
+  // Close search results when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        searchInputRef.current &&
+        !searchInputRef.current.contains(event.target as Node) &&
+        searchResultsRef.current &&
+        !searchResultsRef.current.contains(event.target as Node)
+      ) {
+        setShowSearchResults(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const fetchTeam = async () => {
@@ -87,24 +172,53 @@ export default function TeamDetailPage({
     fetchTeam();
   }, [resolvedParams.id]);
 
-  const handleAddMember = async () => {
-    if (!selectedUserId) return;
+  const handleAddToPending = (user: UserSearchResult) => {
+    if (!pendingMembers.some((pm) => pm.user.id === user.id)) {
+      setPendingMembers((prev) => [...prev, { user, isLeader: false }]);
+    }
+    setSearchQuery("");
+    setSearchResults([]);
+    setShowSearchResults(false);
+    searchInputRef.current?.focus();
+  };
 
+  const handleRemoveFromPending = (userId: number) => {
+    setPendingMembers((prev) => prev.filter((pm) => pm.user.id !== userId));
+  };
+
+  const handleTogglePendingLeader = (userId: number) => {
+    setPendingMembers((prev) =>
+      prev.map((pm) =>
+        pm.user.id === userId ? { ...pm, isLeader: !pm.isLeader } : pm,
+      ),
+    );
+  };
+
+  const handleAddMembers = async () => {
+    if (pendingMembers.length === 0) return;
+
+    setIsAddingMembers(true);
     try {
-      const response = await fetch(`/api/teams/${resolvedParams.id}/members`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId: parseInt(selectedUserId),
-          isLeader,
-        }),
-      });
+      // Add all pending members
+      for (const pm of pendingMembers) {
+        const response = await fetch(
+          `/api/teams/${resolvedParams.id}/members`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              userId: pm.user.id,
+              isLeader: pm.isLeader,
+            }),
+          },
+        );
 
-      if (!response.ok) {
-        const result = await response.json();
-        throw new Error(result.error || "Failed to add member");
+        if (!response.ok) {
+          const result = await response.json();
+          throw new Error(result.error || "Failed to add member");
+        }
       }
 
       // Refresh team data
@@ -113,11 +227,23 @@ export default function TeamDetailPage({
       );
       setTeam(updatedTeam);
       setShowAddMemberModal(false);
-      setSelectedUserId("");
+      setPendingMembers([]);
+      setSearchQuery("");
+      setSearchResults([]);
       setIsLeader(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
+    } finally {
+      setIsAddingMembers(false);
     }
+  };
+
+  const handleCloseModal = () => {
+    setShowAddMemberModal(false);
+    setPendingMembers([]);
+    setSearchQuery("");
+    setSearchResults([]);
+    setIsLeader(false);
   };
 
   const handleRemoveMember = async (memberId: number) => {
@@ -244,8 +370,6 @@ export default function TeamDetailPage({
       details.push(`Brand: ${metadata.brandId.old} → ${metadata.brandId.new}`);
     }
     if (metadata.description) {
-      const oldDesc = metadata.description.old || "(none)";
-      const newDesc = metadata.description.new || "(none)";
       details.push(`Description updated`);
     }
 
@@ -503,66 +627,168 @@ export default function TeamDetailPage({
         </div>
       </div>
 
-      {/* Add Member Modal */}
+      {/* Add Member Modal with Autocomplete */}
       {showAddMemberModal && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex min-h-full items-center justify-center p-4">
             <div
               className="fixed inset-0 bg-black bg-opacity-25"
-              onClick={() => setShowAddMemberModal(false)}
+              onClick={handleCloseModal}
             />
-            <div className="relative bg-white dark:bg-zinc-800 rounded-lg p-6 max-w-md w-full shadow-xl">
+            <div className="relative bg-white dark:bg-zinc-800 rounded-lg p-6 max-w-lg w-full shadow-xl">
               <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
-                Add Team Member
+                Add Team Members
               </h3>
 
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Select User
+                {/* Search Input */}
+                <div className="relative">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Search Employees
                   </label>
-                  <select
-                    value={selectedUserId}
-                    onChange={(e) => setSelectedUserId(e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-zinc-700 dark:border-zinc-600"
-                  >
-                    <option value="">Select a user...</option>
-                    {/* This would be populated from an API call to get unassigned users */}
-                    <option value="1">admin (System Administrator)</option>
-                    <option value="2">hr (Human Resources)</option>
-                  </select>
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Type to search employees..."
+                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-zinc-700 dark:border-zinc-600"
+                  />
+
+                  {/* Search Results Dropdown */}
+                  {showSearchResults && searchResults.length > 0 && (
+                    <ul
+                      ref={searchResultsRef}
+                      className="absolute z-10 w-full mt-1 bg-white dark:bg-zinc-700 rounded-md shadow-lg max-h-60 overflow-auto border border-gray-200 dark:border-zinc-600"
+                    >
+                      {searchResults.map((user) => (
+                        <li
+                          key={user.id}
+                          onClick={() => handleAddToPending(user)}
+                          className="px-4 py-3 hover:bg-gray-50 dark:hover:bg-zinc-600 cursor-pointer flex items-center justify-between"
+                        >
+                          <div>
+                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                              {user.displayName}
+                            </p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              {user.position || user.username}
+                              {user.department && ` • ${user.department}`}
+                            </p>
+                          </div>
+                          <svg
+                            className="h-5 w-5 text-gray-400"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 4.5v15m7.5-7.5h-15"
+                            />
+                          </svg>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+
+                  {showSearchResults && isSearching && (
+                    <div className="absolute z-10 w-full mt-1 bg-white dark:bg-zinc-700 rounded-md shadow-lg p-4 text-center">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-indigo-600 mx-auto"></div>
+                    </div>
+                  )}
                 </div>
 
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="isLeader"
-                    checked={isLeader}
-                    onChange={(e) => setIsLeader(e.target.checked)}
-                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                  />
-                  <label
-                    htmlFor="isLeader"
-                    className="ml-2 block text-sm text-gray-900 dark:text-gray-300"
-                  >
-                    Make team leader
-                  </label>
-                </div>
+                {/* Pending Members List */}
+                {pendingMembers.length > 0 && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Members to Add ({pendingMembers.length})
+                    </label>
+                    <ul className="border border-gray-200 dark:border-zinc-600 rounded-md divide-y divide-gray-200 dark:divide-zinc-600">
+                      {pendingMembers.map((pm) => (
+                        <li
+                          key={pm.user.id}
+                          className="px-4 py-3 flex items-center justify-between"
+                        >
+                          <div className="flex items-center flex-1">
+                            <div className="h-8 w-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center mr-3">
+                              <span className="text-xs font-bold text-white">
+                                {pm.user.displayName.charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                {pm.user.displayName}
+                              </p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
+                                {pm.user.position || pm.user.username}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <label className="flex items-center text-xs text-gray-600 dark:text-gray-400">
+                              <input
+                                type="checkbox"
+                                checked={pm.isLeader}
+                                onChange={() =>
+                                  handleTogglePendingLeader(pm.user.id)
+                                }
+                                className="mr-1 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                              />
+                              Leader
+                            </label>
+                            <button
+                              onClick={() =>
+                                handleRemoveFromPending(pm.user.id)
+                              }
+                              className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
+                            >
+                              <svg
+                                className="h-5 w-5"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M6 18L18 6M6 6l12 12"
+                                />
+                              </svg>
+                            </button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {pendingMembers.length === 0 && searchQuery.length < 2 && (
+                  <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
+                    Type at least 2 characters to search for employees
+                  </p>
+                )}
               </div>
 
               <div className="mt-6 flex justify-end space-x-3">
                 <button
-                  onClick={() => setShowAddMemberModal(false)}
+                  onClick={handleCloseModal}
                   className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:bg-zinc-700 dark:text-gray-300 dark:border-zinc-600 dark:hover:bg-zinc-600"
                 >
                   Cancel
                 </button>
                 <button
-                  onClick={handleAddMember}
-                  disabled={!selectedUserId}
+                  onClick={handleAddMembers}
+                  disabled={isAddingMembers || pendingMembers.length === 0}
                   className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Add Member
+                  {isAddingMembers
+                    ? "Adding..."
+                    : `Add ${pendingMembers.length} Member${pendingMembers.length !== 1 ? "s" : ""}`}
                 </button>
               </div>
             </div>
