@@ -25,7 +25,7 @@ export default function CreateTeamPage() {
         const response = await fetch("/api/brands");
         if (response.ok) {
           const data = await response.json();
-          setBrands(data);
+          setBrands(data.brands || []);
         }
       } catch (err) {
         console.error("Error fetching brands:", err);
