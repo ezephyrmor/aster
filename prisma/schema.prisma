@@ -67,6 +67,7 @@ model User {
   employeeProfile EmployeeProfile?
   teamMembers     TeamMember[]
   role            Role             @relation(fields: [roleId], references: [id])
+  calendarEvents  CalendarEvent[]
 
   @@index([roleId], map: "users_role_id_fkey")
   @@map("users")
@@ -185,4 +186,21 @@ enum TeamHistoryAction {
   removed
   created
   updated
+}
+
+model CalendarEvent {
+  id          Int      @id @default(autoincrement())
+  title       String   @db.VarChar(200)
+  description String?  @db.Text
+  startDate   DateTime @map("start_date")
+  endDate     DateTime @map("end_date")
+  color       String   @default("blue") @db.VarChar(20)
+  createdBy   Int      @map("created_by")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  user        User     @relation(fields: [createdBy], references: [id])
+
+  @@index([startDate], map: "calendar_events_start_date_idx")
+  @@index([createdBy], map: "calendar_events_created_by_idx")
+  @@map("calendar_events")
 }
