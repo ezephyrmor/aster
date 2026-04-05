@@ -2,6 +2,7 @@
 
 import { useAuth } from "@/lib/auth";
 import DashboardLayout from "@/components/DashboardLayout";
+import CalendarWidget from "@/components/CalendarWidget";
 
 export default function DashboardPage() {
   const { user, isLoading } = useAuth();
@@ -16,30 +17,31 @@ export default function DashboardPage() {
 
   return (
     <DashboardLayout title="Dashboard" subtitle="Welcome to your workspace">
+      {/* Top Row: Welcome, Calendar, Account Info */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Welcome Card */}
-        <div className="lg:col-span-2">
-          <div className="bg-white dark:bg-zinc-800 rounded-2xl shadow-xl p-8 border border-zinc-200 dark:border-zinc-700">
-            <div className="flex items-center gap-6 mb-6">
-              <div className="h-20 w-20 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center shadow-2xl">
-                <span className="text-3xl font-bold text-white">
+        <div className="lg:col-span-1">
+          <div className="bg-white dark:bg-zinc-800 rounded-2xl shadow-xl p-6 border border-zinc-200 dark:border-zinc-700 h-full">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="h-16 w-16 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center shadow-2xl flex-shrink-0">
+                <span className="text-2xl font-bold text-white">
                   {user.username.charAt(0).toUpperCase()}
                 </span>
               </div>
               <div>
-                <h2 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100 mb-2">
+                <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
                   Welcome back, {user.username}!
                 </h2>
-                <p className="text-zinc-600 dark:text-zinc-400 text-lg">
-                  You are successfully logged in to your dashboard.
+                <p className="text-zinc-600 dark:text-zinc-400 text-sm">
+                  You are logged in.
                 </p>
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-4">
-              <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400">
+            <div className="flex flex-wrap gap-2">
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400">
                 <svg
-                  className="w-4 h-4 mr-2"
+                  className="w-3 h-3 mr-1"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -51,11 +53,11 @@ export default function DashboardPage() {
                     d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                Secure Session
+                Secure
               </span>
-              <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400">
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400">
                 <svg
-                  className="w-4 h-4 mr-2"
+                  className="w-3 h-3 mr-1"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -67,20 +69,25 @@ export default function DashboardPage() {
                     d="M13 10V3L4 14h7v7l9-11h-7z"
                   />
                 </svg>
-                Active Now
+                Active
               </span>
             </div>
           </div>
         </div>
 
+        {/* Calendar Widget */}
+        <div className="lg:col-span-1">
+          <CalendarWidget />
+        </div>
+
         {/* User Info Card */}
         <div className="lg:col-span-1">
-          <div className="bg-white dark:bg-zinc-800 rounded-2xl shadow-xl p-6 border border-zinc-200 dark:border-zinc-700">
+          <div className="bg-white dark:bg-zinc-800 rounded-2xl shadow-xl p-6 border border-zinc-200 dark:border-zinc-700 h-full">
             <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 mb-4">
               Account Info
             </h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 rounded-lg bg-zinc-50 dark:bg-zinc-700/50">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-zinc-50 dark:bg-zinc-700/50">
                 <div className="text-sm text-zinc-600 dark:text-zinc-400">
                   User ID
                 </div>
@@ -88,7 +95,7 @@ export default function DashboardPage() {
                   #{user.id}
                 </div>
               </div>
-              <div className="flex items-center justify-between p-4 rounded-lg bg-zinc-50 dark:bg-zinc-700/50">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-zinc-50 dark:bg-zinc-700/50">
                 <div className="text-sm text-zinc-600 dark:text-zinc-400">
                   Username
                 </div>
@@ -96,7 +103,7 @@ export default function DashboardPage() {
                   {user.username}
                 </div>
               </div>
-              <div className="flex items-center justify-between p-4 rounded-lg bg-zinc-50 dark:bg-zinc-700/50">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-zinc-50 dark:bg-zinc-700/50">
                 <div className="text-sm text-zinc-600 dark:text-zinc-400">
                   Status
                 </div>
