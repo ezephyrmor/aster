@@ -1,10 +1,57 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 
-// GET /api/teams - List all teams
-export async function GET() {
+// GET /api/teams - List all teams with pagination, search, and filtering
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "10");
+    const search = searchParams.get("search") || "";
+    const brandId = searchParams.get("brandId") || "";
+    let sortBy = searchParams.get("sortBy") || "createdAt";
+    const sortOrder = searchParams.get("sortOrder") || "desc";
+
+    const skip = (page - 1) * limit;
+
+    // Validate sortBy to prevent invalid fields
+    const validSortFields = ["name", "createdAt"];
+    if (!validSortFields.includes(sortBy)) {
+      sortBy = "createdAt";
+    }
+
+    // Build where clause for filtering
+    const whereClauses: any[] = [];
+
+    // Brand filter
+    if (brandId) {
+      const brandIdNum = parseInt(brandId);
+      if (!isNaN(brandIdNum)) {
+        whereClauses.push({ brandId: brandIdNum });
+      }
+    }
+
+    // Search filter (team name)
+    if (search) {
+      whereClauses.push({
+        name: { contains: search.toLowerCase() },
+      });
+    }
+
+    // Combine all where clauses with AND
+    const where =
+      whereClauses.length > 0
+        ? whereClauses.length === 1
+          ? whereClauses[0]
+          : { AND: whereClauses }
+        : {};
+
+    // Get total count for pagination
+    const total = await prisma.team.count({ where });
+
+    // Get teams with pagination
     const teams = await prisma.team.findMany({
+      where,
       include: {
         members: {
           include: {
@@ -15,16 +62,34 @@ export async function GET() {
             },
           },
         },
+        brand: true,
         _count: {
           select: { members: true },
         },
       },
+      skip,
+      take: limit,
       orderBy: {
-        createdAt: "desc",
+        [sortBy]: sortOrder,
       },
     });
 
-    return NextResponse.json(teams);
+    // Get brands for filter
+    const brands = await prisma.brand.findMany({
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    });
+
+    return NextResponse.json({
+      teams,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+      brands,
+    });
   } catch (error) {
     console.error("Error fetching teams:", error);
     return NextResponse.json(
