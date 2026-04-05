@@ -68,6 +68,9 @@ model User {
   teamMembers     TeamMember[]
   role            Role             @relation(fields: [roleId], references: [id])
   calendarEvents  CalendarEvent[]
+  leaveCredits    LeaveCredit[]
+  leaveRequests   LeaveRequest[]
+  reviewedLeaves  LeaveRequest[] @relation("ReviewedLeaves")
 
   @@index([roleId], map: "users_role_id_fkey")
   @@map("users")
@@ -203,4 +206,84 @@ model CalendarEvent {
   @@index([startDate], map: "calendar_events_start_date_idx")
   @@index([createdBy], map: "calendar_events_created_by_idx")
   @@map("calendar_events")
+}
+
+model LeaveType {
+  id               Int           @id @default(autoincrement())
+  name             String        @unique @db.VarChar(50)
+  description      String?       @db.Text
+  defaultDaysLimit Int?          @map("default_days_limit")
+  color            String        @default("purple") @db.VarChar(20)
+  isActive         Boolean       @default(true) @map("is_active")
+  createdAt        DateTime      @default(now()) @map("created_at")
+  leaveRequests    LeaveRequest[]
+
+  @@map("leave_types")
+}
+
+model LeaveStatus {
+  id            Int           @id @default(autoincrement())
+  name          String        @unique @db.VarChar(50)
+  description   String?       @db.Text
+  color         String        @default("gray") @db.VarChar(20)
+  isFinal       Boolean       @default(false) @map("is_final")
+  createdAt     DateTime      @default(now()) @map("created_at")
+  leaveRequests LeaveRequest[]
+
+  @@map("leave_statuses")
+}
+
+model LeaveCredit {
+  id         Int           @id @default(autoincrement())
+  userId     Int           @map("user_id")
+  earnedDate DateTime      @map("earned_date")
+  usedDate   DateTime?     @map("used_date")
+  createdAt  DateTime      @default(now()) @map("created_at")
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  leaveUsage LeaveUsage[]
+
+  @@index([userId], map: "leave_credits_user_id_idx")
+  @@index([earnedDate], map: "leave_credits_earned_date_idx")
+  @@map("leave_credits")
+}
+
+model LeaveRequest {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  leaveTypeId Int      @map("leave_type_id")
+  statusId    Int      @default(1) @map("status_id")
+  startDate   DateTime @map("start_date")
+  endDate     DateTime @map("end_date")
+  reason      String?  @db.Text
+  reviewedBy  Int?     @map("reviewed_by")
+  reviewedAt  DateTime? @map("reviewed_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user        User         @relation(fields: [userId], references: [id])
+  leaveType   LeaveType    @relation(fields: [leaveTypeId], references: [id])
+  status      LeaveStatus  @relation(fields: [statusId], references: [id])
+  reviewer    User?        @relation("ReviewedLeaves", fields: [reviewedBy], references: [id])
+  leaveUsage  LeaveUsage[]
+
+  @@index([userId], map: "leave_requests_user_id_idx")
+  @@index([statusId], map: "leave_requests_status_id_idx")
+  @@index([leaveTypeId], map: "leave_requests_leave_type_id_idx")
+  @@index([startDate], map: "leave_requests_start_date_idx")
+  @@map("leave_requests")
+}
+
+model LeaveUsage {
+  id            Int          @id @default(autoincrement())
+  leaveRequestId Int         @map("leave_request_id")
+  leaveCreditId  Int         @map("leave_credit_id")
+  createdAt     DateTime     @default(now()) @map("created_at")
+
+  leaveRequest  LeaveRequest @relation(fields: [leaveRequestId], references: [id], onDelete: Cascade)
+  leaveCredit   LeaveCredit  @relation(fields: [leaveCreditId], references: [id], onDelete: Cascade)
+
+  @@unique([leaveRequestId, leaveCreditId])
+  @@index([leaveRequestId], map: "leave_usage_leave_request_id_idx")
+  @@index([leaveCreditId], map: "leave_usage_leave_credit_id_idx")
+  @@map("leave_usage")
 }

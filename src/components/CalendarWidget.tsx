@@ -9,6 +9,8 @@ interface CalendarEvent {
   startDate: string;
   endDate: string;
   color: string;
+  status?: string;
+  statusColor?: string;
 }
 
 interface CalendarDay {
@@ -18,14 +20,18 @@ interface CalendarDay {
   events: CalendarEvent[];
 }
 
-export default function CalendarWidget() {
+interface CalendarWidgetProps {
+  userId?: number; // Optional: if provided, only show this user's leaves
+}
+
+export default function CalendarWidget({ userId }: CalendarWidgetProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchEvents();
-  }, [currentDate]);
+  }, [currentDate, userId]);
 
   const fetchEvents = async () => {
     setLoading(true);
@@ -41,9 +47,12 @@ export default function CalendarWidget() {
         0,
       );
 
-      const response = await fetch(
-        `/api/calendar/events?startDate=${startOfMonth.toISOString()}&endDate=${endOfMonth.toISOString()}`,
-      );
+      let url = `/api/calendar/events?startDate=${startOfMonth.toISOString()}&endDate=${endOfMonth.toISOString()}`;
+      if (userId) {
+        url += `&userId=${userId}&includeLeaves=true`;
+      }
+
+      const response = await fetch(url);
       if (response.ok) {
         const data = await response.json();
         setEvents(data);
