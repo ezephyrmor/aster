@@ -65,6 +65,11 @@ export async function GET(request: NextRequest) {
       where,
       include: {
         industry: true,
+        manager: {
+          include: {
+            employeeProfile: true,
+          },
+        },
         _count: {
           select: { teams: true },
         },

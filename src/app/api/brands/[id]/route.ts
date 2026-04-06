@@ -17,11 +17,17 @@ export async function GET(
     const brand = await prisma.brand.findUnique({
       where: { id: brandId },
       include: {
+        industry: true,
         teams: {
           include: {
             _count: {
               select: { members: true },
             },
+          },
+        },
+        manager: {
+          include: {
+            employeeProfile: true,
           },
         },
         _count: {
