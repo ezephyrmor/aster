@@ -2,13 +2,37 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 
 // GET /api/leaves/requests - Get leave requests
-// Query params: userId (for employee's own requests), teamId (for manager to see team requests), statusId
+// Query params: userId, teamId, statusId, page, limit, search, leaveType, isPaid, sortBy, sortOrder
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("userId");
     const teamId = searchParams.get("teamId");
     const statusId = searchParams.get("statusId");
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "10");
+    const search = searchParams.get("search") || "";
+    const leaveType = searchParams.get("leaveType") || "";
+    const status = searchParams.get("status") || "";
+    const isPaid = searchParams.get("isPaid") || "";
+    let sortBy = searchParams.get("sortBy") || "createdAt";
+    const sortOrder = searchParams.get("sortOrder") || "desc";
+
+    const skip = (page - 1) * limit;
+
+    // Validate sortBy to prevent invalid fields
+    const validSortFields = [
+      "createdAt",
+      "startDate",
+      "endDate",
+      "isPaid",
+      "user.employeeProfile.firstName",
+      "leaveType.name",
+      "status.name",
+    ];
+    if (!validSortFields.includes(sortBy)) {
+      sortBy = "createdAt";
+    }
 
     // Build where clause dynamically
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -31,6 +55,51 @@ export async function GET(request: NextRequest) {
       whereClause.userId = { in: teamMembers.map((m) => m.userId) };
     }
 
+    // Search by employee name
+    if (search) {
+      whereClause.user = {
+        OR: [
+          { username: { contains: search } },
+          { employeeProfile: { firstName: { contains: search } } },
+          { employeeProfile: { lastName: { contains: search } } },
+        ],
+      };
+    }
+
+    // Filter by leave type name
+    if (leaveType) {
+      whereClause.leaveType = {
+        name: { equals: leaveType.replace(/_/g, " ") },
+      };
+    }
+
+    // Filter by status name
+    if (status) {
+      whereClause.status = {
+        name: { equals: status.charAt(0).toUpperCase() + status.slice(1) },
+      };
+    }
+
+    // Filter by paid/unpaid
+    if (isPaid) {
+      whereClause.isPaid = isPaid === "true";
+    }
+
+    // Get total count for pagination
+    const total = await prisma.leaveRequest.count({ where: whereClause });
+
+    // Build order by clause
+    const orderByClause: any = {};
+    if (sortBy === "user.employeeProfile.firstName") {
+      orderByClause.user = { employeeProfile: { firstName: sortOrder } };
+    } else if (sortBy === "leaveType.name") {
+      orderByClause.leaveType = { name: sortOrder };
+    } else if (sortBy === "status.name") {
+      orderByClause.status = { name: sortOrder };
+    } else {
+      orderByClause[sortBy] = sortOrder;
+    }
+
     const leaveRequests = await prisma.leaveRequest.findMany({
       where: whereClause,
       include: {
@@ -47,10 +116,20 @@ export async function GET(request: NextRequest) {
           },
         },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: orderByClause,
+      skip,
+      take: limit,
     });
 
-    return NextResponse.json(leaveRequests);
+    return NextResponse.json({
+      requests: leaveRequests,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
   } catch (error) {
     console.error("Error fetching leave requests:", error);
     return NextResponse.json(
@@ -64,7 +143,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { userId, leaveTypeId, startDate, endDate, reason } = body;
+    const { userId, leaveTypeId, startDate, endDate, reason, isPaid } = body;
 
     // Validate required fields
     if (!userId || !leaveTypeId || !startDate || !endDate) {
@@ -91,23 +170,25 @@ export async function POST(request: NextRequest) {
     const daysRequested =
       Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
-    // Check if user has enough leave credits
-    const userCredits = await prisma.leaveCredit.findMany({
-      where: {
-        userId: parseInt(userId),
-        usedDate: null, // Only unused credits
-      },
-    });
-
-    if (userCredits.length < daysRequested) {
-      return NextResponse.json(
-        {
-          error: "Insufficient leave credits",
-          availableCredits: userCredits.length,
-          requestedDays: daysRequested,
+    // Only check leave credits if this is a paid leave
+    if (isPaid !== false) {
+      const userCredits = await prisma.leaveCredit.findMany({
+        where: {
+          userId: parseInt(userId),
+          usedDate: null, // Only unused credits
         },
-        { status: 400 },
-      );
+      });
+
+      if (userCredits.length < daysRequested) {
+        return NextResponse.json(
+          {
+            error: "Insufficient leave credits",
+            availableCredits: userCredits.length,
+            requestedDays: daysRequested,
+          },
+          { status: 400 },
+        );
+      }
     }
 
     // Check for overlapping approved leaves
@@ -190,6 +271,7 @@ export async function POST(request: NextRequest) {
         startDate: start,
         endDate: end,
         reason: reason || null,
+        isPaid: isPaid !== false, // Default to true if not specified
       },
       include: {
         user: true,

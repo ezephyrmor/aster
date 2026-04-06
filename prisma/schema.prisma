@@ -248,23 +248,25 @@ model LeaveCredit {
 }
 
 model LeaveRequest {
-  id          Int      @id @default(autoincrement())
-  userId      Int      @map("user_id")
-  leaveTypeId Int      @map("leave_type_id")
-  statusId    Int      @default(1) @map("status_id")
-  startDate   DateTime @map("start_date")
-  endDate     DateTime @map("end_date")
-  reason      String?  @db.Text
-  reviewedBy  Int?     @map("reviewed_by")
-  reviewedAt  DateTime? @map("reviewed_at")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id            Int       @id @default(autoincrement())
+  userId        Int       @map("user_id")
+  leaveTypeId   Int       @map("leave_type_id")
+  statusId      Int       @default(1) @map("status_id")
+  startDate     DateTime  @map("start_date")
+  endDate       DateTime  @map("end_date")
+  reason        String?   @db.Text
+  isPaid        Boolean   @default(true) @map("is_paid")
+  reviewedBy    Int?      @map("reviewed_by")
+  reviewedAt    DateTime? @map("reviewed_at")
+  reviewComment String?   @map("review_comment") @db.Text
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
 
-  user        User         @relation(fields: [userId], references: [id])
-  leaveType   LeaveType    @relation(fields: [leaveTypeId], references: [id])
-  status      LeaveStatus  @relation(fields: [statusId], references: [id])
-  reviewer    User?        @relation("ReviewedLeaves", fields: [reviewedBy], references: [id])
-  leaveUsage  LeaveUsage[]
+  user          User         @relation(fields: [userId], references: [id])
+  leaveType     LeaveType    @relation(fields: [leaveTypeId], references: [id])
+  status        LeaveStatus  @relation(fields: [statusId], references: [id])
+  reviewer      User?        @relation("ReviewedLeaves", fields: [reviewedBy], references: [id])
+  leaveUsage    LeaveUsage[]
 
   @@index([userId], map: "leave_requests_user_id_idx")
   @@index([statusId], map: "leave_requests_status_id_idx")

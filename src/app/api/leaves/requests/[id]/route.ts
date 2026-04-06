@@ -9,7 +9,7 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { statusId, reviewedBy, reason } = body;
+    const { statusId, reviewedBy, reviewComment } = body;
 
     if (!statusId) {
       return NextResponse.json(
@@ -59,6 +59,7 @@ export async function PATCH(
         statusId,
         reviewedBy: reviewedBy ? parseInt(reviewedBy) : null,
         reviewedAt: new Date(),
+        reviewComment: reviewComment || null,
       },
       include: {
         user: true,
@@ -68,8 +69,8 @@ export async function PATCH(
       },
     });
 
-    // If approved, mark the leave credits as used
-    if (newStatus.name === "Approved") {
+    // If approved and this is a paid leave, mark the leave credits as used
+    if (newStatus.name === "Approved" && leaveRequest.isPaid) {
       // Calculate days requested
       const start = new Date(leaveRequest.startDate);
       const end = new Date(leaveRequest.endDate);
@@ -102,27 +103,31 @@ export async function PATCH(
         });
       }
     } else if (newStatus.name === "Denied" || newStatus.name === "Cancelled") {
-      // If denied or cancelled, release any reserved credits
-      await prisma.leaveUsage.deleteMany({
-        where: { leaveRequestId: leaveRequest.id },
-      });
+      // If denied or cancelled, release any reserved credits (only for paid leaves)
+      if (leaveRequest.isPaid) {
+        // First delete the leave usage records
+        await prisma.leaveUsage.deleteMany({
+          where: { leaveRequestId: leaveRequest.id },
+        });
 
-      // Reset usedDate on the credits
-      const usageCredits = await prisma.leaveUsage.findMany({
-        where: { leaveRequestId: leaveRequest.id },
-        select: { leaveCreditId: true },
-      });
+        // Reset usedDate on the credits that were used for this request
+        const usageCredits = await prisma.leaveUsage.findMany({
+          where: { leaveRequestId: leaveRequest.id },
+          select: { leaveCreditId: true },
+        });
 
-      for (const usage of usageCredits) {
-        await prisma.leaveCredit.update({
-          where: { id: usage.leaveCreditId },
-          data: { usedDate: null },
+        for (const usage of usageCredits) {
+          await prisma.leaveCredit.update({
+            where: { id: usage.leaveCreditId },
+            data: { usedDate: null },
+          });
+        }
+
+        // Delete again to ensure cleanup
+        await prisma.leaveUsage.deleteMany({
+          where: { leaveRequestId: leaveRequest.id },
         });
       }
-
-      await prisma.leaveUsage.deleteMany({
-        where: { leaveRequestId: leaveRequest.id },
-      });
     }
 
     return NextResponse.json(updatedLeaveRequest);

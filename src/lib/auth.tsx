@@ -9,9 +9,17 @@ import React, {
   type ReactNode,
 } from "react";
 
+interface Role {
+  id: number;
+  name: string;
+  description: string | null;
+}
+
 interface User {
   id: number;
   username: string;
+  roleId: number;
+  role: Role;
 }
 
 interface AuthContextType {

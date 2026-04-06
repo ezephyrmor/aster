@@ -52,6 +52,7 @@ export default function LeaveRequestPage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [reason, setReason] = useState("");
+  const [isPaid, setIsPaid] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -84,7 +85,8 @@ export default function LeaveRequestPage() {
       const response = await fetch(`/api/leaves/requests?userId=${user?.id}`);
       if (response.ok) {
         const data = await response.json();
-        setMyRequests(data);
+        // Handle both old array format and new paginated format
+        setMyRequests(Array.isArray(data) ? data : data.requests || []);
       }
     } catch (error) {
       console.error("Error fetching leave requests:", error);
@@ -132,6 +134,7 @@ export default function LeaveRequestPage() {
           startDate,
           endDate,
           reason,
+          isPaid,
         }),
       });
 
@@ -277,6 +280,20 @@ export default function LeaveRequestPage() {
                   placeholder="Provide a reason for your leave request..."
                   className="w-full px-4 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+                  Payment Type
+                </label>
+                <select
+                  value={isPaid ? "paid" : "unpaid"}
+                  onChange={(e) => setIsPaid(e.target.value === "paid")}
+                  className="w-full px-4 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="paid">Paid (uses leave credits)</option>
+                  <option value="unpaid">Unpaid (no credits used)</option>
+                </select>
               </div>
 
               <button
