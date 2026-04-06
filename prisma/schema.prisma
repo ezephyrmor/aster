@@ -76,6 +76,9 @@ model User {
   infractions     Infraction[]     @relation("InfractionUsers")
   createdInfractions Infraction[]  @relation("InfractionCreators")
   acknowledgedInfractions Infraction[] @relation("InfractionAckUsers")
+  managedBrands   Brand[]          @relation("BrandManagers")
+  brandManagerHistory BrandManagerHistory[] @relation("BrandManagerHistoryPerformedBy")
+  managedBrandsHistory BrandManagerHistory[] @relation("BrandManagerHistoryUsers")
 
   @@index([roleId], map: "users_role_id_fkey")
   @@map("users")
@@ -118,12 +121,43 @@ model Brand {
   createdAt   DateTime    @default(now()) @map("created_at")
   updatedAt   DateTime    @updatedAt @map("updated_at")
   createdBy   Int         @map("created_by")
+  managerId   Int?        @map("manager_id")
+  manager     User?       @relation("BrandManagers", fields: [managerId], references: [id])
   industryId  Int?        @map("industry_id")
   industry    Industry?   @relation(fields: [industryId], references: [id])
   teams       Team[]
+  managerHistory BrandManagerHistory[]
 
   @@index([industryId], map: "brands_industry_id_fkey")
+  @@index([managerId], map: "brands_manager_id_fkey")
   @@map("brands")
+}
+
+enum BrandManagerAction {
+  ASSIGNED
+  REMOVED
+}
+
+model BrandManagerHistory {
+  id              Int                 @id @default(autoincrement())
+  brandId         Int
+  brand           Brand               @relation(fields: [brandId], references: [id])
+  userId          Int?                @map("user_id")
+  user            User?               @relation("BrandManagerHistoryUsers", fields: [userId], references: [id])
+  action          BrandManagerAction
+  performedBy     Int                 @map("performed_by")
+  performedByUser User                @relation("BrandManagerHistoryPerformedBy", fields: [performedBy], references: [id])
+  timestamp       DateTime            @default(now())
+  previousManagerId Int?              @map("previous_manager_id")
+  reason          String?             @db.Text
+  ipAddress       String?             @map("ip_address") @db.VarChar(45)
+  userAgent       String?             @map("user_agent") @db.Text
+
+  @@index([brandId], map: "brand_manager_history_brand_id_fkey")
+  @@index([userId], map: "brand_manager_history_user_id_fkey")
+  @@index([performedBy], map: "brand_manager_history_performed_by_fkey")
+  @@index([timestamp], map: "brand_manager_history_timestamp_fkey")
+  @@map("brand_manager_history")
 }
 
 model Team {

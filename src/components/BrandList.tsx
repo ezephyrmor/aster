@@ -3,6 +3,18 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 
+interface EmployeeProfile {
+  id: number;
+  firstName: string;
+  lastName: string;
+}
+
+interface Manager {
+  id: number;
+  username: string;
+  employeeProfile: EmployeeProfile | null;
+}
+
 interface Brand {
   id: number;
   name: string;
@@ -11,6 +23,7 @@ interface Brand {
   website?: string | null;
   industry?: string | null;
   status: string;
+  manager?: Manager | null;
   _count: {
     teams: number;
   };
@@ -138,6 +151,14 @@ export default function BrandList() {
     }
   };
 
+  const getManagerName = (manager: Manager | null | undefined) => {
+    if (!manager) return "-";
+    if (manager.employeeProfile) {
+      return `${manager.employeeProfile.firstName} ${manager.employeeProfile.lastName}`;
+    }
+    return manager.username;
+  };
+
   return (
     <div className="space-y-4">
       {/* Filters */}
@@ -233,9 +254,15 @@ export default function BrandList() {
                 </th>
                 <th
                   scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider hidden lg:table-cell"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider hidden xl:table-cell"
                 >
                   Website
+                </th>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider hidden lg:table-cell"
+                >
+                  Manager
                 </th>
                 <th
                   scope="col"
@@ -248,7 +275,7 @@ export default function BrandList() {
             <tbody className="bg-white dark:bg-zinc-800 divide-y divide-gray-200 dark:divide-zinc-700">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center">
+                  <td colSpan={7} className="px-6 py-12 text-center">
                     <div className="flex justify-center items-center">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
                     </div>
@@ -257,7 +284,7 @@ export default function BrandList() {
               ) : error ? (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={7}
                     className="px-6 py-12 text-center text-red-600"
                   >
                     {error}
@@ -266,7 +293,7 @@ export default function BrandList() {
               ) : brands.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={7}
                     className="px-6 py-12 text-center text-gray-500 dark:text-gray-400"
                   >
                     No brands found
@@ -309,7 +336,7 @@ export default function BrandList() {
                         {brand._count.teams} teams
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap hidden lg:table-cell">
+                    <td className="px-6 py-4 whitespace-nowrap hidden xl:table-cell">
                       {brand.website ? (
                         <a
                           href={brand.website}
@@ -325,6 +352,11 @@ export default function BrandList() {
                       ) : (
                         <span className="text-sm text-gray-400">-</span>
                       )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap hidden lg:table-cell">
+                      <div className="text-sm text-gray-900 dark:text-gray-100">
+                        {getManagerName(brand.manager)}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <Link
