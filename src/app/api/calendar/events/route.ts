@@ -1,30 +1,72 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 
-// GET - Fetch all calendar events (optionally filtered by date range)
+interface LeaveRequestWithRelations {
+  id: number;
+  userId: number;
+  leaveTypeId: number;
+  statusId: number;
+  startDate: Date;
+  endDate: Date;
+  reason: string | null;
+  reviewedBy: number | null;
+  reviewedAt: Date | null;
+  createdAt: Date;
+  user: {
+    id: number;
+    username: string;
+    employeeProfile: {
+      firstName: string | null;
+      lastName: string | null;
+    } | null;
+  };
+  leaveType: {
+    id: number;
+    name: string;
+    description: string | null;
+    color: string;
+  };
+  status: {
+    id: number;
+    name: string;
+    color: string;
+  };
+}
+
+// GET - Fetch calendar events (and optionally leave requests)
+// Query params: startDate, endDate, userId (optional), includeLeaves (optional, default: false)
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
+    const userId = searchParams.get("userId");
+    const includeLeaves = searchParams.get("includeLeaves") === "true";
 
-    const where: {
+    const dateWhere: {
       startDate?: { gte?: Date; lte?: Date };
+      createdBy?: number;
     } = {};
 
     if (startDate && endDate) {
-      where.startDate = {
+      dateWhere.startDate = {
         gte: new Date(startDate),
         lte: new Date(endDate),
       };
     } else if (startDate) {
-      where.startDate = { gte: new Date(startDate) };
+      dateWhere.startDate = { gte: new Date(startDate) };
     } else if (endDate) {
-      where.startDate = { lte: new Date(endDate) };
+      dateWhere.startDate = { lte: new Date(endDate) };
     }
 
+    // If userId is provided, filter calendar events by that user
+    if (userId) {
+      dateWhere.createdBy = parseInt(userId);
+    }
+
+    // Fetch calendar events
     const events = await prisma.calendarEvent.findMany({
-      where,
+      where: dateWhere,
       include: {
         user: {
           select: {
@@ -38,6 +80,55 @@ export async function GET(request: NextRequest) {
       },
     });
 
+    // Build leave query - if userId is provided, only show that user's leaves
+    // Otherwise show all leaves (for managers/admins)
+    const leaveWhere: {
+      startDate?: { gte?: Date; lte?: Date };
+      userId?: number;
+    } = {};
+
+    if (startDate && endDate) {
+      leaveWhere.startDate = {
+        gte: new Date(startDate),
+        lte: new Date(endDate),
+      };
+    } else if (startDate) {
+      leaveWhere.startDate = { gte: new Date(startDate) };
+    } else if (endDate) {
+      leaveWhere.startDate = { lte: new Date(endDate) };
+    }
+
+    if (userId) {
+      leaveWhere.userId = parseInt(userId);
+    }
+
+    // Only fetch leave requests if includeLeaves is true
+    let leaveRequests: LeaveRequestWithRelations[] = [];
+    if (includeLeaves) {
+      leaveRequests = await prisma.leaveRequest.findMany({
+        where: leaveWhere,
+        include: {
+          user: {
+            select: {
+              id: true,
+              username: true,
+              employeeProfile: {
+                select: {
+                  firstName: true,
+                  lastName: true,
+                },
+              },
+            },
+          },
+          leaveType: true,
+          status: true,
+        },
+        orderBy: {
+          startDate: "asc",
+        },
+      });
+    }
+
     // Transform events for the frontend
     const formattedEvents = events.map((event) => ({
       id: event.id,
@@ -49,9 +140,39 @@ export async function GET(request: NextRequest) {
       createdBy: event.createdBy,
       creatorName: event.user.username,
       createdAt: event.createdAt.toISOString(),
+      type: "event",
     }));
 
-    return NextResponse.json(formattedEvents);
+    // Transform leave requests for the frontend
+    const formattedLeaves = leaveRequests.map((leave) => {
+      const isOwnLeave = !userId || leave.userId === parseInt(userId);
+      return {
+        id: leave.id,
+        title: isOwnLeave
+          ? leave.leaveType.name
+          : `${leave.user.employeeProfile?.firstName || leave.user.username} ${leave.user.employeeProfile?.lastName || ""} - ${leave.leaveType.name}`,
+        description:
+          leave.reason || `${leave.leaveType.name} - ${leave.status.name}`,
+        startDate: leave.startDate.toISOString(),
+        endDate: leave.endDate.toISOString(),
+        color: leave.leaveType.color,
+        createdBy: leave.userId,
+        creatorName:
+          `${leave.user.employeeProfile?.firstName || leave.user.username} ${leave.user.employeeProfile?.lastName || ""}`.trim(),
+        createdAt: leave.createdAt.toISOString(),
+        type: "leave",
+        status: leave.status.name,
+        statusColor: leave.status.color,
+      };
+    });
+
+    // Combine and sort by start date
+    const allEvents = [...formattedEvents, ...formattedLeaves].sort(
+      (a, b) =>
+        new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
+    );
+
+    return NextResponse.json(allEvents);
   } catch (error) {
     console.error("Calendar events GET error:", error);
     return NextResponse.json(

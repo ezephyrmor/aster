@@ -77,7 +77,7 @@ export default function DashboardPage() {
 
         {/* Calendar Widget */}
         <div className="lg:col-span-1">
-          <CalendarWidget />
+          <CalendarWidget userId={user.id} />
         </div>
 
         {/* User Info Card */}
