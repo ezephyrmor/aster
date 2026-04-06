@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 
 // Admin role ID
@@ -9,9 +9,19 @@ const ADMIN_ROLE_ID = 1;
 
 export default function Sidebar() {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, logout } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Check if any href in a group is active
+  const isGroupActive = (hrefs: string[]) => {
+    return hrefs.some((href) => pathname === href);
+  };
+
+  // Group toggle states
+  const [isPersonalOpen, setIsPersonalOpen] = useState(false);
+  const [isManageOpen, setIsManageOpen] = useState(false);
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -19,10 +29,33 @@ export default function Sidebar() {
     router.push("/login");
   };
 
-  const navigationItems = [
+  // Personal group items with hrefs for active state checking
+  const personalItemsHrefs = [
+    "/dashboard/leaves/request",
+    "/dashboard/my-infractions",
+  ];
+
+  // Manage group items with hrefs for active state checking
+  const manageItemsHrefs = [
+    "/dashboard/users",
+    "/dashboard/brands",
+    "/dashboard/teams",
+    "/dashboard/calendar",
+    "/dashboard/leaves/approve",
+    "/dashboard/schedules",
+    "/dashboard/infractions",
+  ];
+
+  // Auto-expand groups when a child item is active
+  const shouldPersonalBeOpen =
+    isPersonalOpen || isGroupActive(personalItemsHrefs);
+  const shouldManageBeOpen = isManageOpen || isGroupActive(manageItemsHrefs);
+
+  // Personal group items with icons
+  const personalItems = [
     {
-      name: "Dashboard",
-      href: "/dashboard",
+      name: "Request Leave",
+      href: "/dashboard/leaves/request",
       icon: (
         <svg
           className="w-5 h-5"
@@ -34,11 +67,34 @@ export default function Sidebar() {
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth={2}
-            d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
           />
         </svg>
       ),
     },
+    {
+      name: "My Infractions",
+      href: "/dashboard/my-infractions",
+      icon: (
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
+        </svg>
+      ),
+    },
+  ];
+
+  // Manage group items
+  const manageItems = [
     {
       name: "Users",
       href: "/dashboard/users",
@@ -97,31 +153,6 @@ export default function Sidebar() {
       ),
     },
     {
-      name: "Settings",
-      href: "/dashboard/settings",
-      icon: (
-        <svg
-          className="w-5 h-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-          />
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-          />
-        </svg>
-      ),
-    },
-    {
       name: "Calendar",
       href: "/dashboard/calendar",
       icon: (
@@ -141,26 +172,7 @@ export default function Sidebar() {
       ),
     },
     {
-      name: "Request Leave",
-      href: "/dashboard/leaves/request",
-      icon: (
-        <svg
-          className="w-5 h-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-          />
-        </svg>
-      ),
-    },
-    {
-      name: "Leave Manager",
+      name: "Leave",
       href: "/dashboard/leaves/approve",
       icon: (
         <svg
@@ -198,6 +210,48 @@ export default function Sidebar() {
       ),
     },
     {
+      name: "Infractions",
+      href: "/dashboard/infractions",
+      icon: (
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+          />
+        </svg>
+      ),
+    },
+  ];
+
+  // Top-level navigation items (Dashboard, Analytics, Settings)
+  const topLevelItems = [
+    {
+      name: "Dashboard",
+      href: "/dashboard",
+      icon: (
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"
+          />
+        </svg>
+      ),
+    },
+    {
       name: "Analytics",
       href: "/dashboard/analytics",
       icon: (
@@ -216,36 +270,115 @@ export default function Sidebar() {
         </svg>
       ),
     },
-    // Admin-only navigation items
-    ...(user?.roleId === ADMIN_ROLE_ID
-      ? [
-          {
-            name: "Admin Settings",
-            href: "/dashboard/admin/settings",
-            icon: (
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-              </svg>
-            ),
-          },
-        ]
-      : []),
+    {
+      name: "Settings",
+      href: "/dashboard/settings",
+      icon: (
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+          />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+          />
+        </svg>
+      ),
+    },
+  ];
+
+  // Coming Soon navigation items
+  const comingSoonItems = [
+    {
+      name: "Coachings",
+      href: null,
+      comingSoon: true,
+      icon: (
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857m-7.5 3.5a5 5 0 014-8h1a5 5 0 015 5v1m-6-3v6m0 0l-3-3m3 3l3-3"
+          />
+        </svg>
+      ),
+    },
+    {
+      name: "Reports",
+      href: null,
+      comingSoon: true,
+      icon: (
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
+        </svg>
+      ),
+    },
+    {
+      name: "Payroll",
+      href: null,
+      comingSoon: true,
+      icon: (
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+          />
+        </svg>
+      ),
+    },
+    {
+      name: "Handbook",
+      href: null,
+      comingSoon: true,
+      icon: (
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+          />
+        </svg>
+      ),
+    },
   ];
 
   return (
@@ -328,18 +461,280 @@ export default function Sidebar() {
 
         {/* Navigation */}
         <nav className="mt-4 space-y-1 px-2 flex-1 overflow-y-auto">
-          {navigationItems.map((item) => (
-            <a
-              key={item.name}
-              href={item.href}
-              className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+          {/* Dashboard */}
+          {topLevelItems
+            .filter((item) => item.name === "Dashboard")
+            .map((item) => (
+              <div
+                key={item.name}
+                className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg cursor-pointer transition-colors ${
+                  pathname === item.href
+                    ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
+                    : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100"
+                }`}
+                onClick={() => {
+                  if (item.href) {
+                    router.push(item.href);
+                  }
+                }}
+              >
+                <span
+                  className={
+                    pathname === item.href
+                      ? "text-blue-600 dark:text-blue-400"
+                      : "text-zinc-500 dark:text-zinc-400"
+                  }
+                >
+                  {item.icon}
+                </span>
+                <span className="flex-1">{item.name}</span>
+              </div>
+            ))}
+
+          {/* Personal collapsible group */}
+          <div className="mt-2">
+            <div
+              className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg cursor-pointer transition-colors ${
+                isGroupActive(personalItemsHrefs)
+                  ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
+                  : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100"
+              }`}
+              onClick={() => setIsPersonalOpen(!isPersonalOpen)}
+            >
+              <span
+                className={
+                  isGroupActive(personalItemsHrefs)
+                    ? "text-blue-600 dark:text-blue-400"
+                    : "text-zinc-500 dark:text-zinc-400"
+                }
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                  />
+                </svg>
+              </span>
+              <span className="flex-1">Personal</span>
+              <svg
+                className={`w-4 h-4 transition-transform duration-200 ${
+                  shouldPersonalBeOpen ? "rotate-180" : ""
+                } ${isGroupActive(personalItemsHrefs) ? "text-blue-600 dark:text-blue-400" : "text-zinc-500 dark:text-zinc-400"}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </div>
+
+            {/* Personal sub-items */}
+            {shouldPersonalBeOpen && (
+              <div className="ml-4 pl-4 border-l border-zinc-200 dark:border-zinc-700 space-y-1">
+                {personalItems.map((item) => (
+                  <div
+                    key={item.name}
+                    className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg cursor-pointer transition-colors ${
+                      pathname === item.href
+                        ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
+                        : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100"
+                    }`}
+                    onClick={() => {
+                      if (item.href) {
+                        router.push(item.href);
+                      }
+                    }}
+                  >
+                    <span
+                      className={
+                        pathname === item.href
+                          ? "text-blue-600 dark:text-blue-400"
+                          : "text-zinc-400 dark:text-zinc-500"
+                      }
+                    >
+                      {item.icon}
+                    </span>
+                    <span className="flex-1">{item.name}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Manage collapsible group */}
+          <div className="mt-2">
+            <div
+              className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg cursor-pointer transition-colors ${
+                isGroupActive(manageItemsHrefs)
+                  ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
+                  : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100"
+              }`}
+              onClick={() => setIsManageOpen(!isManageOpen)}
+            >
+              <span
+                className={
+                  isGroupActive(manageItemsHrefs)
+                    ? "text-blue-600 dark:text-blue-400"
+                    : "text-zinc-500 dark:text-zinc-400"
+                }
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+                  />
+                </svg>
+              </span>
+              <span className="flex-1">Manage</span>
+              <svg
+                className={`w-4 h-4 transition-transform duration-200 ${
+                  shouldManageBeOpen ? "rotate-180" : ""
+                } ${isGroupActive(manageItemsHrefs) ? "text-blue-600 dark:text-blue-400" : "text-zinc-500 dark:text-zinc-400"}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </div>
+
+            {/* Manage sub-items */}
+            {shouldManageBeOpen && (
+              <div className="ml-4 pl-4 border-l border-zinc-200 dark:border-zinc-700 space-y-1">
+                {manageItems.map((item) => (
+                  <div
+                    key={item.name}
+                    className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg cursor-pointer transition-colors ${
+                      pathname === item.href
+                        ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
+                        : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100"
+                    }`}
+                    onClick={() => {
+                      if (item.href) {
+                        router.push(item.href);
+                      }
+                    }}
+                  >
+                    <span
+                      className={
+                        pathname === item.href
+                          ? "text-blue-600 dark:text-blue-400"
+                          : "text-zinc-400 dark:text-zinc-500"
+                      }
+                    >
+                      {item.icon}
+                    </span>
+                    <span className="flex-1">{item.name}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Analytics and Settings */}
+          {topLevelItems
+            .filter((item) => item.name !== "Dashboard")
+            .map((item) => (
+              <div
+                key={item.name}
+                className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg cursor-pointer transition-colors ${
+                  pathname === item.href
+                    ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
+                    : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100"
+                }`}
+                onClick={() => {
+                  if (item.href) {
+                    router.push(item.href);
+                  }
+                }}
+              >
+                <span
+                  className={
+                    pathname === item.href
+                      ? "text-blue-600 dark:text-blue-400"
+                      : "text-zinc-500 dark:text-zinc-400"
+                  }
+                >
+                  {item.icon}
+                </span>
+                <span className="flex-1">{item.name}</span>
+              </div>
+            ))}
+
+          {/* Coming Soon items */}
+          <div className="mt-2">
+            {comingSoonItems.map((item) => (
+              <div
+                key={item.name}
+                className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-zinc-400 dark:text-zinc-500 rounded-lg cursor-not-allowed"
+              >
+                <span className="text-zinc-400 dark:text-zinc-500">
+                  {item.icon}
+                </span>
+                <span className="flex-1">{item.name}</span>
+                <span className="text-xs px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 font-medium">
+                  Soon
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* Admin-only navigation items */}
+          {user?.roleId === ADMIN_ROLE_ID && (
+            <div
+              className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100 cursor-pointer transition-colors"
+              onClick={() => {
+                router.push("/dashboard/admin/settings");
+              }}
             >
               <span className="text-zinc-500 dark:text-zinc-400">
-                {item.icon}
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                </svg>
               </span>
-              {item.name}
-            </a>
-          ))}
+              <span className="flex-1">Admin Settings</span>
+            </div>
+          )}
         </nav>
 
         {/* User Section */}
