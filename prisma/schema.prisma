@@ -70,7 +70,9 @@ model User {
   calendarEvents  CalendarEvent[]
   leaveCredits    LeaveCredit[]
   leaveRequests   LeaveRequest[]
-  reviewedLeaves  LeaveRequest[] @relation("ReviewedLeaves")
+  reviewedLeaves  LeaveRequest[]   @relation("ReviewedLeaves")
+  workSchedules   WorkSchedule[]
+  attendance      Attendance[]
 
   @@index([roleId], map: "users_role_id_fkey")
   @@map("users")
@@ -276,16 +278,67 @@ model LeaveRequest {
 }
 
 model LeaveUsage {
-  id            Int          @id @default(autoincrement())
-  leaveRequestId Int         @map("leave_request_id")
-  leaveCreditId  Int         @map("leave_credit_id")
-  createdAt     DateTime     @default(now()) @map("created_at")
+  id             Int          @id @default(autoincrement())
+  leaveRequestId Int          @map("leave_request_id")
+  leaveCreditId  Int          @map("leave_credit_id")
+  createdAt      DateTime     @default(now()) @map("created_at")
 
-  leaveRequest  LeaveRequest @relation(fields: [leaveRequestId], references: [id], onDelete: Cascade)
-  leaveCredit   LeaveCredit  @relation(fields: [leaveCreditId], references: [id], onDelete: Cascade)
+  leaveRequest   LeaveRequest @relation(fields: [leaveRequestId], references: [id], onDelete: Cascade)
+  leaveCredit    LeaveCredit  @relation(fields: [leaveCreditId], references: [id], onDelete: Cascade)
 
   @@unique([leaveRequestId, leaveCreditId])
   @@index([leaveRequestId], map: "leave_usage_leave_request_id_idx")
   @@index([leaveCreditId], map: "leave_usage_leave_credit_id_idx")
   @@map("leave_usage")
+}
+
+model WorkSchedule {
+  id           Int          @id @default(autoincrement())
+  userId       Int          @map("user_id")
+  dayOfWeek    Int          @map("day_of_week") // 0=Sunday, 1=Monday, ..., 6=Saturday
+  startTime    String       @map("start_time") // Format: "HH:MM" (24-hour)
+  endTime      String       @map("end_time") // Format: "HH:MM" (24-hour)
+  breakMinutes Int          @default(60) @map("break_minutes")
+  effectiveFrom DateTime    @map("effective_from")
+  effectiveTo  DateTime?    @map("effective_to") // NULL = indefinitely
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  attendance   Attendance[]
+
+  @@index([userId], map: "work_schedules_user_id_idx")
+  @@index([dayOfWeek], map: "work_schedules_day_of_week_idx")
+  @@map("work_schedules")
+}
+
+model Attendance {
+  id            Int          @id @default(autoincrement())
+  userId        Int          @map("user_id")
+  scheduleId    Int?         @map("schedule_id")
+  date          DateTime     @db.Date
+  clockIn       DateTime?    @map("clock_in")
+  clockOut      DateTime?    @map("clock_out")
+  status        AttendanceStatus @default(present)
+  lateMinutes   Int          @default(0) @map("late_minutes")
+  undertimeMinutes Int       @default(0) @map("undertime_minutes")
+  notes         String?      @db.Text
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+  user          User         @relation(fields: [userId], references: [id])
+  schedule      WorkSchedule? @relation(fields: [scheduleId], references: [id])
+
+  @@unique([userId, date])
+  @@index([userId], map: "attendance_user_id_idx")
+  @@index([date], map: "attendance_date_idx")
+  @@index([status], map: "attendance_status_idx")
+  @@map("attendance")
+}
+
+enum AttendanceStatus {
+  present
+  absent
+  late
+  undertime
+  on_leave
+  holiday
 }

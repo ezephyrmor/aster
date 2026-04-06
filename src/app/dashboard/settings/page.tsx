@@ -29,6 +29,37 @@ export default function SettingsPage() {
     twoFactorAuth: false,
   });
 
+  // Timezone state
+  const [selectedTimezone, setSelectedTimezone] = useState("Asia/Manila");
+
+  // Common timezones
+  const timezones = [
+    { value: "Pacific/Pago_Pago", label: "(UTC-11:00) Pago Pago" },
+    { value: "Pacific/Honolulu", label: "(UTC-10:00) Honolulu" },
+    { value: "America/Anchorage", label: "(UTC-09:00) Anchorage" },
+    { value: "America/Los_Angeles", label: "(UTC-08:00) Los Angeles" },
+    { value: "America/Denver", label: "(UTC-07:00) Denver" },
+    { value: "America/Chicago", label: "(UTC-06:00) Chicago" },
+    { value: "America/New_York", label: "(UTC-05:00) New York" },
+    { value: "America/Sao_Paulo", label: "(UTC-03:00) São Paulo" },
+    { value: "Atlantic/South_Georgia", label: "(UTC-02:00) South Georgia" },
+    { value: "Atlantic/Azores", label: "(UTC-01:00) Azores" },
+    { value: "Europe/London", label: "(UTC+00:00) London" },
+    { value: "Europe/Paris", label: "(UTC+01:00) Paris" },
+    { value: "Europe/Helsinki", label: "(UTC+02:00) Helsinki" },
+    { value: "Europe/Moscow", label: "(UTC+03:00) Moscow" },
+    { value: "Asia/Dubai", label: "(UTC+04:00) Dubai" },
+    { value: "Asia/Karachi", label: "(UTC+05:00) Karachi" },
+    { value: "Asia/Dhaka", label: "(UTC+06:00) Dhaka" },
+    { value: "Asia/Bangkok", label: "(UTC+07:00) Bangkok" },
+    { value: "Asia/Manila", label: "(UTC+08:00) Manila" },
+    { value: "Asia/Singapore", label: "(UTC+08:00) Singapore" },
+    { value: "Asia/Tokyo", label: "(UTC+09:00) Tokyo" },
+    { value: "Australia/Sydney", label: "(UTC+10:00) Sydney" },
+    { value: "Pacific/Noumea", label: "(UTC+11:00) Noumea" },
+    { value: "Pacific/Auckland", label: "(UTC+12:00) Auckland" },
+  ];
+
   const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setProfileData((prev) => ({ ...prev, [name]: value }));
@@ -41,6 +72,12 @@ export default function SettingsPage() {
 
   const handlePreferenceChange = (key: keyof typeof preferences) => {
     setPreferences((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const handleTimezoneChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const timezone = e.target.value;
+    setSelectedTimezone(timezone);
+    localStorage.setItem("companyTimezone", timezone);
   };
 
   const handleProfileSubmit = async (e: React.FormEvent) => {
@@ -120,78 +157,32 @@ export default function SettingsPage() {
             Profile Information
           </h2>
 
-          <form onSubmit={handleProfileSubmit} className="space-y-4">
+          <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
                   Username
                 </label>
-                <input
-                  type="text"
-                  name="username"
-                  value={profileData.username}
-                  onChange={handleProfileChange}
-                  className="w-full px-4 py-3 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                />
+                <div className="w-full px-4 py-3 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400">
+                  {user.username}
+                </div>
+                <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                  Contact HR to update your username
+                </p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
                   Email Address
                 </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={profileData.email}
-                  onChange={handleProfileChange}
-                  className="w-full px-4 py-3 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                />
+                <div className="w-full px-4 py-3 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400">
+                  Not set
+                </div>
+                <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                  Contact HR to update your email
+                </p>
               </div>
             </div>
-
-            <div className="flex items-center justify-between pt-4">
-              <div>
-                {saveMessage && (
-                  <p
-                    className={`text-sm ${saveMessage.includes("success") ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
-                  >
-                    {saveMessage}
-                  </p>
-                )}
-              </div>
-              <button
-                type="submit"
-                disabled={isSaving}
-                className="px-6 py-3 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-zinc-900 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-              >
-                {isSaving ? (
-                  <div className="flex items-center gap-2">
-                    <svg
-                      className="animate-spin h-5 w-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      />
-                    </svg>
-                    Saving...
-                  </div>
-                ) : (
-                  "Save Changes"
-                )}
-              </button>
-            </div>
-          </form>
+          </div>
         </div>
 
         {/* Change Password */}
