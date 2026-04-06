@@ -9,7 +9,10 @@ interface Employee {
   employeeProfile: {
     firstName: string;
     lastName: string;
+    department?: string | null;
+    position?: string | null;
   } | null;
+  teams?: { name: string }[];
 }
 
 interface WorkSchedule {
@@ -47,6 +50,9 @@ const getFullName = (
 
 export default function SchedulesPage() {
   const [schedules, setSchedules] = useState<WorkSchedule[]>([]);
+  const [filteredSchedules, setFilteredSchedules] = useState<WorkSchedule[]>(
+    [],
+  );
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -55,6 +61,22 @@ export default function SchedulesPage() {
   );
   const [employeeSearch, setEmployeeSearch] = useState("");
   const [showEmployeeDropdown, setShowEmployeeDropdown] = useState(false);
+
+  // Filter states
+  const [searchName, setSearchName] = useState("");
+  const [departmentFilter, setDepartmentFilter] = useState("");
+  const [teamFilter, setTeamFilter] = useState("");
+
+  // Debounced search
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchName);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchName]);
   const [formData, setFormData] = useState({
     userId: "",
     dayOfWeek: [1], // Array of selected days
@@ -88,6 +110,7 @@ export default function SchedulesPage() {
       if (response.ok) {
         const data = await response.json();
         setSchedules(data);
+        setFilteredSchedules(data);
       }
     } catch (error) {
       console.error("Error fetching schedules:", error);
@@ -112,10 +135,66 @@ export default function SchedulesPage() {
     }
   }, []);
 
+  // Apply filters when they change
+  useEffect(() => {
+    let filtered = [...schedules];
+
+    // Filter by name search
+    if (debouncedSearch) {
+      const searchLower = debouncedSearch.toLowerCase();
+      filtered = filtered.filter((schedule) => {
+        const fullName = getFullName(
+          schedule.user.employeeProfile,
+          schedule.user.username,
+        ).toLowerCase();
+        return (
+          fullName.includes(searchLower) ||
+          schedule.user.username.toLowerCase().includes(searchLower)
+        );
+      });
+    }
+
+    // Filter by department
+    if (departmentFilter) {
+      filtered = filtered.filter((schedule) => {
+        const emp = employees.find((e) => e.id === schedule.userId);
+        return emp?.employeeProfile?.department === departmentFilter;
+      });
+    }
+
+    // Filter by team
+    if (teamFilter) {
+      filtered = filtered.filter((schedule) => {
+        const emp = employees.find((e) => e.id === schedule.userId);
+        return emp?.teams?.some((t) => t.name === teamFilter);
+      });
+    }
+
+    setFilteredSchedules(filtered);
+  }, [debouncedSearch, departmentFilter, teamFilter, schedules, employees]);
+
   useEffect(() => {
     fetchSchedules();
     fetchEmployees();
   }, [fetchSchedules, fetchEmployees]);
+
+  // Get unique departments from employees
+  const departments = Array.from(
+    new Set(
+      employees
+        .map((emp) => emp.employeeProfile?.department)
+        .filter((d): d is string => !!d),
+    ),
+  ).sort();
+
+  // Get unique teams from employees
+  const teams = Array.from(
+    new Set(
+      employees
+        .flatMap((emp) => emp.teams?.map((t) => t.name) || [])
+        .filter((t): t is string => !!t),
+    ),
+  ).sort();
 
   const openModal = (schedule?: WorkSchedule) => {
     if (schedule) {
@@ -250,13 +329,79 @@ export default function SchedulesPage() {
       title="Work Schedules"
       subtitle="Manage employee work schedules"
     >
-      <div className="mb-6 flex justify-end">
-        <button
-          onClick={() => openModal()}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
-        >
-          + Add Schedule
-        </button>
+      {/* Header with Add button */}
+      <div className="sm:flex sm:items-center mb-6">
+        <div className="sm:flex-auto">
+          <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
+            Manage employee work schedules including working days, hours, and
+            break times.
+          </p>
+        </div>
+        <div className="mt-4 sm:mt-0 sm:flex-none">
+          <button
+            onClick={() => openModal()}
+            className="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:w-auto"
+          >
+            + Add Schedule
+          </button>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="bg-white dark:bg-zinc-800 rounded-lg shadow p-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {/* Search */}
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Search
+            </label>
+            <input
+              type="text"
+              value={searchName}
+              onChange={(e) => setSearchName(e.target.value)}
+              placeholder="Search by employee name..."
+              className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-zinc-700 dark:border-zinc-600"
+            />
+          </div>
+
+          {/* Department Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Department
+            </label>
+            <select
+              value={departmentFilter}
+              onChange={(e) => setDepartmentFilter(e.target.value)}
+              className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-zinc-700 dark:border-zinc-600"
+            >
+              <option value="">All Departments</option>
+              {departments.map((dept) => (
+                <option key={dept} value={dept}>
+                  {dept}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Team Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Team
+            </label>
+            <select
+              value={teamFilter}
+              onChange={(e) => setTeamFilter(e.target.value)}
+              className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-zinc-700 dark:border-zinc-600"
+            >
+              <option value="">All Teams</option>
+              {teams.map((team) => (
+                <option key={team} value={team}>
+                  {team}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
       </div>
 
       {loading ? (
@@ -295,7 +440,7 @@ export default function SchedulesPage() {
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-zinc-800 divide-y divide-gray-200 dark:divide-zinc-700">
-              {schedules.map((schedule) => (
+              {filteredSchedules.map((schedule) => (
                 <tr
                   key={schedule.id}
                   className="hover:bg-gray-50 dark:hover:bg-zinc-700/50"

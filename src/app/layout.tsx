@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Aster - Login System",
-  description: "A secure login system built with Next.js and MySQL",
+  title: "Aster - HR System",
+  description: "A secure HR system built with Next.js and MySQL",
 };
 
 export default function RootLayout({
