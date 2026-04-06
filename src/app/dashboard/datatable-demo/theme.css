@@ -16,7 +16,7 @@
   --accent-foreground: #0f172a;
   --destructive: #ef4444;
   --destructive-foreground: #f8fafc;
-  --border: #e4e4e7;
+  --border: transparent;
   --input: #e4e4e7;
   --ring: #a1a1aa;
   --radius: 0.5rem;
@@ -27,6 +27,7 @@
 
 /* Dark theme - zinc-800 background matching dashboard */
 .shadcn-theme.dark {
+  border-radius: 0.5rem;
   --background: #27272a;
   --foreground: #fafafa;
   --card: #27272a;
@@ -43,7 +44,7 @@
   --accent-foreground: #fafafa;
   --destructive: #dc2626;
   --destructive-foreground: #fafafa;
-  --border: #3f3f46;
+  --border: transparent;
   --input: #3f3f46;
   --ring: #52525b;
   --radius: 0.5rem;
@@ -58,6 +59,12 @@
   color: var(--foreground);
 }
 
+/* Override border color and radius for all elements inside the datatable component */
+.shadcn-theme *,
+.shadcn-theme ::before,
+.shadcn-theme ::after {
+  border-color: transparent;
+}
 .shadcn-theme .bg-background {
   background-color: var(--background);
 }
