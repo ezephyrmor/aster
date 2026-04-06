@@ -1,0 +1,201 @@
+/* Light theme - white background matching dashboard */
+.shadcn-theme {
+  --background: #ffffff;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --primary: #0f172a;
+  --primary-foreground: #f8fafc;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #0f172a;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --accent: #f1f5f9;
+  --accent-foreground: #0f172a;
+  --destructive: #ef4444;
+  --destructive-foreground: #f8fafc;
+  --border: #e4e4e7;
+  --input: #e4e4e7;
+  --ring: #a1a1aa;
+  --radius: 0.5rem;
+  --table-header-bg: #f9fafb;
+  --table-row-hover: #f9fafb;
+  --table-border: #e4e4e7;
+}
+
+/* Dark theme - zinc-800 background matching dashboard */
+.shadcn-theme.dark {
+  --background: #27272a;
+  --foreground: #fafafa;
+  --card: #27272a;
+  --card-foreground: #fafafa;
+  --popover: #27272a;
+  --popover-foreground: #fafafa;
+  --primary: #fafafa;
+  --primary-foreground: #18181b;
+  --secondary: #3f3f46;
+  --secondary-foreground: #fafafa;
+  --muted: #3f3f46;
+  --muted-foreground: #a1a1aa;
+  --accent: #3f3f46;
+  --accent-foreground: #fafafa;
+  --destructive: #dc2626;
+  --destructive-foreground: #fafafa;
+  --border: #3f3f46;
+  --input: #3f3f46;
+  --ring: #52525b;
+  --radius: 0.5rem;
+  --table-header-bg: #18181b;
+  --table-row-hover: #3f3f46;
+  --table-border: #3f3f46;
+}
+
+/* Apply theme */
+.shadcn-theme {
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+.shadcn-theme .bg-background {
+  background-color: var(--background);
+}
+
+.shadcn-theme .bg-card {
+  background-color: var(--card);
+}
+
+.shadcn-theme .text-card-foreground {
+  color: var(--card-foreground);
+}
+
+.shadcn-theme .text-foreground {
+  color: var(--foreground);
+}
+
+.shadcn-theme .text-muted-foreground {
+  color: var(--muted-foreground);
+}
+
+.shadcn-theme .bg-muted {
+  background-color: var(--muted);
+}
+
+.shadcn-theme .border-border {
+  border-color: var(--border);
+}
+
+.shadcn-theme .bg-primary {
+  background-color: var(--primary);
+}
+
+.shadcn-theme .text-primary-foreground {
+  color: var(--primary-foreground);
+}
+
+.shadcn-theme .bg-secondary {
+  background-color: var(--secondary);
+}
+
+.shadcn-theme .text-secondary-foreground {
+  color: var(--secondary-foreground);
+}
+
+.shadcn-theme .bg-accent {
+  background-color: var(--accent);
+}
+
+.shadcn-theme .text-accent-foreground {
+  color: var(--accent-foreground);
+}
+
+/* Table specific styles */
+.shadcn-theme table {
+  background-color: var(--card);
+}
+
+.shadcn-theme thead {
+  background-color: var(--table-header-bg);
+}
+
+.shadcn-theme tbody tr {
+  border-bottom-color: var(--table-border);
+}
+
+.shadcn-theme tbody tr:hover {
+  background-color: var(--table-row-hover);
+}
+
+/* Input styles */
+.shadcn-theme input,
+.shadcn-theme select {
+  background-color: var(--card);
+  border-color: var(--border);
+  color: var(--foreground);
+}
+
+.shadcn-theme input::placeholder {
+  color: var(--muted-foreground);
+}
+
+.shadcn-theme input:focus,
+.shadcn-theme select:focus {
+  border-color: var(--ring);
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+/* Button styles */
+.shadcn-theme button {
+  color: var(--foreground);
+}
+
+.shadcn-theme .btn-outline {
+  border-color: var(--border);
+  background-color: transparent;
+}
+
+.shadcn-theme .btn-outline:hover {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.shadcn-theme .btn-ghost:hover {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+/* Dropdown menu styles */
+.shadcn-theme [role="menu"],
+.shadcn-theme [role="listbox"] {
+  background-color: var(--popover);
+  border-color: var(--border);
+}
+
+.shadcn-theme [role="menuitem"],
+.shadcn-theme [role="option"] {
+  color: var(--popover-foreground);
+}
+
+.shadcn-theme [role="menuitem"]:hover,
+.shadcn-theme [role="option"]:hover {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+/* Pagination styles */
+.shadcn-theme .pagination-button {
+  background-color: var(--card);
+  border-color: var(--border);
+  color: var(--foreground);
+}
+
+.shadcn-theme .pagination-button:hover:not(:disabled) {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.shadcn-theme .pagination-button[data-active="true"] {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+}
