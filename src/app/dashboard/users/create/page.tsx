@@ -80,17 +80,19 @@ export default function CreateUserPage() {
       subtitle="Create a new employee account"
     >
       {error && (
-        <div className="mb-6 rounded-md bg-red-50 p-4">
+        <div className="mb-6 rounded-md bg-red-50 dark:bg-red-900/20 p-4">
           <div className="flex">
             <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800">{error}</h3>
+              <h3 className="text-sm font-medium text-red-800 dark:text-red-300">
+                {error}
+              </h3>
             </div>
           </div>
         </div>
       )}
 
       {generatedCredentials ? (
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white dark:bg-zinc-800 rounded-lg shadow p-6">
           <div className="mb-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
@@ -108,24 +110,24 @@ export default function CreateUserPage() {
                   />
                 </svg>
               </div>
-              <h2 className="text-xl font-semibold text-gray-900">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-zinc-100">
                 User Created Successfully!
               </h2>
             </div>
-            <p className="text-gray-600 mb-4">
+            <p className="text-gray-600 dark:text-zinc-400 mb-4">
               The user has been created with auto-generated credentials. Please
               share these credentials with the user securely.
             </p>
           </div>
 
-          <div className="bg-gray-50 rounded-lg p-6 mb-6">
+          <div className="bg-gray-50 dark:bg-zinc-700 rounded-lg p-6 mb-6">
             <div className="flex justify-between items-start mb-4">
-              <h3 className="text-lg font-medium text-gray-900">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-zinc-100">
                 Generated Credentials
               </h3>
               <button
                 onClick={handleCopyCredentials}
-                className="text-sm text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
+                className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 flex items-center gap-1"
               >
                 <svg
                   className="h-4 w-4"
@@ -145,14 +147,18 @@ export default function CreateUserPage() {
             </div>
             <div className="space-y-3">
               <div>
-                <span className="text-sm text-gray-500">Username:</span>
-                <p className="text-lg font-mono font-medium text-gray-900 ml-2">
+                <span className="text-sm text-gray-500 dark:text-zinc-400">
+                  Username:
+                </span>
+                <p className="text-lg font-mono font-medium text-gray-900 dark:text-zinc-100 ml-2">
                   {generatedCredentials.username}
                 </p>
               </div>
               <div>
-                <span className="text-sm text-gray-500">Password:</span>
-                <p className="text-lg font-mono font-medium text-gray-900 ml-2">
+                <span className="text-sm text-gray-500 dark:text-zinc-400">
+                  Password:
+                </span>
+                <p className="text-lg font-mono font-medium text-gray-900 dark:text-zinc-100 ml-2">
                   {generatedCredentials.password}
                 </p>
               </div>
@@ -172,7 +178,7 @@ export default function CreateUserPage() {
             </button>
             <button
               onClick={() => setGeneratedCredentials(null)}
-              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+              className="px-4 py-2 border border-gray-300 dark:border-zinc-600 text-gray-700 dark:text-zinc-300 rounded-md hover:bg-gray-50 dark:hover:bg-zinc-700"
             >
               Create Another User
             </button>
