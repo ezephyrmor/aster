@@ -86,7 +86,11 @@ export default function LeaveRequestPage() {
       if (response.ok) {
         const data = await response.json();
         // Handle both old array format and new paginated format
-        setMyRequests(Array.isArray(data) ? data : data.requests || []);
+        // Demo API returns leaveRequests, regular API returns requests
+        const requests = Array.isArray(data)
+          ? data
+          : data.leaveRequests || data.requests || [];
+        setMyRequests(requests);
       }
     } catch (error) {
       console.error("Error fetching leave requests:", error);

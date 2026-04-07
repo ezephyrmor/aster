@@ -83,10 +83,20 @@ export function useScheduleColumns({ onAction }: UseScheduleColumnsProps = {}) {
       },
       cell: ({ row }) => {
         const user = row.original.user;
+        if (!user) {
+          return (
+            <div>
+              <div className="font-medium">Unknown</div>
+              <div className="text-sm text-muted-foreground">
+                User ID: {row.original.userId}
+              </div>
+            </div>
+          );
+        }
         return (
           <div>
             <div className="font-medium">
-              {getFullName(user.employeeProfile, user.username)}
+              {getFullName(user.employeeProfile || null, user.username)}
             </div>
             <div className="text-sm text-muted-foreground">{user.username}</div>
           </div>
@@ -210,10 +220,20 @@ export const columns: ColumnDef<WorkSchedule>[] = [
     header: () => <div>Employee</div>,
     cell: ({ row }) => {
       const user = row.original.user;
+      if (!user) {
+        return (
+          <div>
+            <div className="font-medium">Unknown</div>
+            <div className="text-sm text-muted-foreground">
+              User ID: {row.original.userId}
+            </div>
+          </div>
+        );
+      }
       return (
         <div>
           <div className="font-medium">
-            {getFullName(user.employeeProfile, user.username)}
+            {getFullName(user.employeeProfile || null, user.username)}
           </div>
           <div className="text-sm text-muted-foreground">{user.username}</div>
         </div>

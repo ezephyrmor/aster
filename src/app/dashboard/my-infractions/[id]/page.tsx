@@ -55,7 +55,28 @@ export default function ViewMyInfractionPage() {
       const response = await fetch(`/api/my-infractions/${params.id}`);
       if (response.ok) {
         const data = await response.json();
-        setInfraction(data);
+        // Normalize infraction to add missing nested objects for demo compatibility
+        const normalizedInfraction = {
+          ...data,
+          type: data.type || {
+            id: data.typeId || 1,
+            name: data.typeName || "Tardiness",
+            color: "yellow",
+            description: null,
+          },
+          offense: data.offense || {
+            id: 1,
+            name: data.description || "Minor offense",
+            severityLevel: 1,
+            description: null,
+            type: {
+              id: data.typeId || 1,
+              name: data.typeName || "Tardiness",
+              color: "yellow",
+            },
+          },
+        };
+        setInfraction(normalizedInfraction);
       } else if (response.status === 401) {
         window.location.href = "/login";
       } else if (response.status === 404) {

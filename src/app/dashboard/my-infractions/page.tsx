@@ -56,7 +56,44 @@ export default function MyInfractionsPage() {
       const response = await fetch(`/api/my-infractions?${params.toString()}`);
       if (response.ok) {
         const data = await response.json();
-        setInfractions(data);
+        // Handle both array response and paginated response
+        const infractionsArray = Array.isArray(data)
+          ? data
+          : data.infractions || [];
+        // Normalize infractions to add missing nested objects for demo compatibility
+        const normalizedInfractions = infractionsArray.map(
+          (infraction: {
+            id: number;
+            typeId?: number;
+            typeName?: string;
+            description?: string;
+            type?: { id: number; name: string; color: string };
+            offense?: {
+              id: number;
+              name: string;
+              severityLevel: number;
+              type: { id: number; name: string; color: string };
+            };
+          }) => ({
+            ...infraction,
+            type: infraction.type || {
+              id: infraction.typeId || 1,
+              name: infraction.typeName || "Tardiness",
+              color: "yellow",
+            },
+            offense: infraction.offense || {
+              id: 1,
+              name: infraction.description || "Minor offense",
+              severityLevel: 1,
+              type: {
+                id: infraction.typeId || 1,
+                name: infraction.typeName || "Tardiness",
+                color: "yellow",
+              },
+            },
+          }),
+        );
+        setInfractions(normalizedInfractions);
       } else if (response.status === 401) {
         // Not authenticated, redirect to login
         window.location.href = "/login";

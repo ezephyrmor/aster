@@ -1,0 +1,169 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "admin@demo.com",
+      "email": "admin@demo.com",
+      "password": "demo123",
+      "firstName": "Admin",
+      "lastName": "User",
+      "role": "admin",
+      "position": "HR Manager",
+      "department": "Human Resources",
+      "hireDate": "2023-01-15",
+      "status": "active"
+    },
+    {
+      "id": 2,
+      "username": "juan@demo.com",
+      "email": "juan@demo.com",
+      "password": "demo123",
+      "firstName": "Juan",
+      "lastName": "Dela Cruz",
+      "role": "employee",
+      "position": "Software Engineer",
+      "department": "Engineering",
+      "hireDate": "2023-03-20",
+      "status": "active",
+      "teamId": 1
+    },
+    {
+      "id": 3,
+      "username": "maria@demo.com",
+      "email": "maria@demo.com",
+      "password": "demo123",
+      "firstName": "Maria",
+      "lastName": "Santos",
+      "role": "manager",
+      "position": "Marketing Manager",
+      "department": "Marketing",
+      "hireDate": "2022-11-10",
+      "status": "active",
+      "teamId": 2
+    }
+  ],
+  "teams": [
+    {
+      "id": 1,
+      "name": "Engineering",
+      "description": "Software Development Team",
+      "leaderId": 2
+    },
+    {
+      "id": 2,
+      "name": "Marketing",
+      "description": "Marketing and Communications",
+      "leaderId": 3
+    }
+  ],
+  "brands": [
+    {
+      "id": 1,
+      "name": "Aster HR",
+      "description": "Main HR Management System",
+      "logo": "/logo.png",
+      "status": "active"
+    },
+    {
+      "id": 2,
+      "name": "Aster Portal",
+      "description": "Employee Self-Service Portal",
+      "logo": "/logo.png",
+      "status": "active"
+    }
+  ],
+  "schedules": [
+    {
+      "id": 1,
+      "name": "Standard Schedule",
+      "startTime": "09:00",
+      "endTime": "18:00",
+      "breakMinutes": 60,
+      "days": [1, 2, 3, 4, 5],
+      "userId": 2
+    },
+    {
+      "id": 2,
+      "name": "Flexible Schedule",
+      "startTime": "08:00",
+      "endTime": "17:00",
+      "breakMinutes": 60,
+      "days": [1, 2, 3, 4, 5],
+      "userId": 3
+    }
+  ],
+  "attendance": [
+    {
+      "id": 1,
+      "userId": 2,
+      "date": "2024-04-07",
+      "clockIn": "2024-04-07T09:00:00Z",
+      "clockOut": "2024-04-07T18:00:00Z",
+      "status": "present",
+      "lateMinutes": 0,
+      "undertimeMinutes": 0
+    },
+    {
+      "id": 2,
+      "userId": 3,
+      "date": "2024-04-07",
+      "clockIn": "2024-04-07T08:15:00Z",
+      "clockOut": "2024-04-07T17:30:00Z",
+      "status": "present",
+      "lateMinutes": 15,
+      "undertimeMinutes": 0
+    }
+  ],
+  "leaveTypes": [
+    { "id": 1, "name": "Vacation Leave", "code": "VL" },
+    { "id": 2, "name": "Sick Leave", "code": "SL" },
+    { "id": 3, "name": "Emergency Leave", "code": "EL" },
+    { "id": 4, "name": "Maternity Leave", "code": "ML" }
+  ],
+  "leaveRequests": [
+    {
+      "id": 1,
+      "userId": 2,
+      "typeId": 1,
+      "startDate": "2024-04-10",
+      "endDate": "2024-04-12",
+      "reason": "Family vacation",
+      "status": "pending",
+      "createdAt": "2024-04-05T10:00:00Z"
+    }
+  ],
+  "infractionTypes": [
+    { "id": 1, "name": "Tardiness", "severity": "minor" },
+    { "id": 2, "name": "Absent Without Leave", "severity": "major" },
+    { "id": 3, "name": "Misconduct", "severity": "major" }
+  ],
+  "infractions": [
+    {
+      "id": 1,
+      "userId": 2,
+      "typeId": 1,
+      "date": "2024-04-06",
+      "description": "Arrived 30 minutes late",
+      "status": "acknowledged",
+      "createdAt": "2024-04-06T10:00:00Z"
+    }
+  ],
+  "calendarEvents": [
+    {
+      "id": 1,
+      "title": "Team Meeting",
+      "description": "Weekly engineering sync",
+      "start": "2024-04-08T10:00:00Z",
+      "end": "2024-04-08T11:00:00Z",
+      "type": "meeting"
+    },
+    {
+      "id": 2,
+      "title": "Company Holiday",
+      "description": "Araw ng Kagitingan",
+      "start": "2024-04-09T00:00:00Z",
+      "end": "2024-04-09T23:59:59Z",
+      "type": "holiday"
+    }
+  ]
+}

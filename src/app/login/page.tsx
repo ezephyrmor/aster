@@ -67,17 +67,50 @@ export default function LoginPage() {
           <p className="text-sm text-zinc-500 dark:text-zinc-500">
             Demo credentials
           </p>
-          <div className="mt-2 bg-zinc-50 dark:bg-zinc-700 rounded-lg p-3">
+          <div className="mt-2 bg-zinc-50 dark:bg-zinc-700 rounded-lg p-3 text-left">
+            <p className="text-xs text-zinc-600 dark:text-zinc-300 font-medium mb-2">
+              Admin:
+            </p>
             <p className="text-xs text-zinc-600 dark:text-zinc-300">
               Username:{" "}
               <span className="font-mono font-medium text-zinc-900 dark:text-zinc-100">
-                admin
+                admin@demo.com
               </span>
             </p>
-            <p className="text-xs text-zinc-600 dark:text-zinc-300 mt-1">
+            <p className="text-xs text-zinc-600 dark:text-zinc-300">
               Password:{" "}
               <span className="font-mono font-medium text-zinc-900 dark:text-zinc-100">
-                password123
+                demo123
+              </span>
+            </p>
+            <p className="text-xs text-zinc-600 dark:text-zinc-300 font-medium mt-3 mb-2">
+              Employee:
+            </p>
+            <p className="text-xs text-zinc-600 dark:text-zinc-300">
+              Username:{" "}
+              <span className="font-mono font-medium text-zinc-900 dark:text-zinc-100">
+                juan@demo.com
+              </span>
+            </p>
+            <p className="text-xs text-zinc-600 dark:text-zinc-300">
+              Password:{" "}
+              <span className="font-mono font-medium text-zinc-900 dark:text-zinc-100">
+                demo123
+              </span>
+            </p>
+            <p className="text-xs text-zinc-600 dark:text-zinc-300 font-medium mt-3 mb-2">
+              Manager:
+            </p>
+            <p className="text-xs text-zinc-600 dark:text-zinc-300">
+              Username:{" "}
+              <span className="font-mono font-medium text-zinc-900 dark:text-zinc-100">
+                maria@demo.com
+              </span>
+            </p>
+            <p className="text-xs text-zinc-600 dark:text-zinc-300">
+              Password:{" "}
+              <span className="font-mono font-medium text-zinc-900 dark:text-zinc-100">
+                demo123
               </span>
             </p>
           </div>

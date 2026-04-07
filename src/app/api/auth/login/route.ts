@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { comparePassword } from "@/lib/password";
+import { demoStore } from "@/lib/demo/store";
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,6 +13,39 @@ export async function POST(request: NextRequest) {
         { error: "Username and password are required" },
         { status: 400 },
       );
+    }
+
+    // Check if demo mode is enabled
+    if (process.env.DEMO_MODE === "true") {
+      // Use demo authentication
+      const demoUser = demoStore.validateCredentials(username, password);
+
+      if (!demoUser) {
+        return NextResponse.json(
+          { error: "Invalid credentials. Try admin@demo.com / demo123" },
+          { status: 401 },
+        );
+      }
+
+      const response = NextResponse.json({
+        success: true,
+        user: demoUser,
+      });
+
+      // Set session cookie for demo user (use email as username for compatibility)
+      response.cookies.set(
+        "user",
+        JSON.stringify({ id: demoUser.id, username: demoUser.email }),
+        {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "strict",
+          maxAge: 60 * 60 * 24 * 7,
+          path: "/",
+        },
+      );
+
+      return response;
     }
 
     // Find user in database (including salt for password verification)

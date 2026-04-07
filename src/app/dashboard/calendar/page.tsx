@@ -72,7 +72,34 @@ export default function CalendarPage() {
       );
       if (response.ok) {
         const data = await response.json();
-        setEvents(data);
+        // Handle both array response and paginated response
+        const eventsArray = Array.isArray(data) ? data : data.events || [];
+        // Normalize event dates - handle both startDate/end and start/end formats
+        const normalizedEvents = eventsArray.map(
+          (event: {
+            id: number;
+            title: string;
+            description?: string | null;
+            start?: string;
+            end?: string;
+            startDate?: string;
+            endDate?: string;
+            color?: string;
+            createdBy?: number;
+            creatorName?: string;
+            createdAt?: string;
+          }) => ({
+            ...event,
+            startDate: event.startDate || event.start,
+            endDate: event.endDate || event.end,
+            description: event.description || null,
+            color: event.color || "blue",
+            createdBy: event.createdBy || 0,
+            creatorName: event.creatorName || "",
+            createdAt: event.createdAt || "",
+          }),
+        );
+        setEvents(normalizedEvents as CalendarEvent[]);
       }
     } catch (error) {
       console.error("Failed to fetch events:", error);

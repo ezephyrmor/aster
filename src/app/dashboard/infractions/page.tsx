@@ -126,7 +126,31 @@ export default function InfractionsPage() {
       const response = await fetch(`/api/infractions?${params.toString()}`);
       if (response.ok) {
         const data: InfractionsResponse = await response.json();
-        setInfractions(data.infractions);
+        // Normalize infractions to add missing nested objects for demo compatibility
+        const normalizedInfractions = data.infractions.map((infraction) => ({
+          ...infraction,
+          user: infraction.user || {
+            id: infraction.userId || 1,
+            username: "demo_user",
+            employeeProfile: null,
+          },
+          type: infraction.type || {
+            id: infraction.typeId || 1,
+            name: "Tardiness",
+            color: "yellow",
+          },
+          offense: infraction.offense || {
+            id: 1,
+            name: infraction.details || "Minor offense",
+            severityLevel: 1,
+            type: {
+              id: infraction.typeId || 1,
+              name: "Tardiness",
+              color: "yellow",
+            },
+          },
+        }));
+        setInfractions(normalizedInfractions);
         setPagination(data.pagination);
       }
     } catch (error) {

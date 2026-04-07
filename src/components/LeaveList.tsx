@@ -18,6 +18,7 @@ interface Pagination {
 
 interface LeaveListResponse {
   requests: LeaveRequest[];
+  leaveRequests?: LeaveRequest[];
   pagination: Pagination;
 }
 
@@ -113,7 +114,9 @@ export default function LeaveList() {
       }
 
       const data: LeaveListResponse = await response.json();
-      setRequests(data.requests);
+      // Handle both demo API (leaveRequests) and regular API (requests)
+      const requests = data.leaveRequests || data.requests || [];
+      setRequests(requests);
       setPagination(data.pagination);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
