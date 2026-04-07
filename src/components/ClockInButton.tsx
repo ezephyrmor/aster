@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/lib/toast";
+import Modal from "@/components/Modal";
 
 interface AttendanceStatus {
   attendance: {
@@ -323,133 +324,102 @@ export default function ClockInButton() {
         </div>
       )}
 
-      {/* Early Clock-Out Modal */}
-      {showEarlyClockOutModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => {
-              setShowEarlyClockOutModal(false);
-              setEarlyClockOutReason("");
-            }}
-          />
-
-          {/* Modal */}
-          <div className="relative bg-white dark:bg-zinc-800 rounded-2xl shadow-2xl max-w-md w-full mx-4 border border-zinc-200 dark:border-zinc-700">
-            {/* Header */}
-            <div className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-700">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
+      {/* Early Clock-Out Modal using reusable Modal component */}
+      <Modal
+        isOpen={showEarlyClockOutModal}
+        onClose={() => {
+          setShowEarlyClockOutModal(false);
+          setEarlyClockOutReason("");
+        }}
+        title="Early Clock-Out"
+        description="You're clocking out before your scheduled time"
+        variant="warning"
+        size="md"
+        isLoading={actionLoading}
+        footer={
+          <>
+            <button
+              onClick={() => {
+                setShowEarlyClockOutModal(false);
+                setEarlyClockOutReason("");
+              }}
+              disabled={actionLoading}
+              className="flex-1 px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-600 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleConfirmClockOut}
+              disabled={!earlyClockOutReason.trim() || actionLoading}
+              className="flex-1 px-4 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {actionLoading ? (
+                <>
                   <svg
-                    className="w-5 h-5 text-orange-600 dark:text-orange-400"
+                    className="animate-spin h-4 w-4"
                     fill="none"
-                    stroke="currentColor"
                     viewBox="0 0 24 24"
                   >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
                     <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     />
                   </svg>
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-                    Early Clock-Out
-                  </h3>
-                  <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                    You're clocking out before your scheduled time
-                  </p>
-                </div>
+                  Processing...
+                </>
+              ) : (
+                "Confirm Early Clock-Out"
+              )}
+            </button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          {status?.schedule && (
+            <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-orange-800 dark:text-orange-300">
+                  Scheduled End:
+                </span>
+                <span className="font-semibold text-orange-900 dark:text-orange-200">
+                  {status.schedule.endTime}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-sm mt-1">
+                <span className="text-orange-800 dark:text-orange-300">
+                  Current Time:
+                </span>
+                <span className="font-semibold text-orange-900 dark:text-orange-200">
+                  {serverTime.standard}
+                </span>
               </div>
             </div>
+          )}
 
-            {/* Body */}
-            <div className="px-6 py-4">
-              {status?.schedule && (
-                <div className="mb-4 p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-orange-800 dark:text-orange-300">
-                      Scheduled End:
-                    </span>
-                    <span className="font-semibold text-orange-900 dark:text-orange-200">
-                      {status.schedule.endTime}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center text-sm mt-1">
-                    <span className="text-orange-800 dark:text-orange-300">
-                      Current Time:
-                    </span>
-                    <span className="font-semibold text-orange-900 dark:text-orange-200">
-                      {serverTime.standard}
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-                Reason for early clock-out{" "}
-                <span className="text-red-500">*</span>
-              </label>
-              <textarea
-                value={earlyClockOutReason}
-                onChange={(e) => setEarlyClockOutReason(e.target.value)}
-                placeholder="Please provide a reason for leaving early..."
-                className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
-                rows={3}
-                autoFocus
-              />
-            </div>
-
-            {/* Footer */}
-            <div className="px-6 py-4 border-t border-zinc-200 dark:border-zinc-700 flex gap-3">
-              <button
-                onClick={() => {
-                  setShowEarlyClockOutModal(false);
-                  setEarlyClockOutReason("");
-                }}
-                className="flex-1 px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-600 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmClockOut}
-                disabled={!earlyClockOutReason.trim() || actionLoading}
-                className="flex-1 px-4 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {actionLoading ? (
-                  <>
-                    <svg
-                      className="animate-spin h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      />
-                    </svg>
-                    Processing...
-                  </>
-                ) : (
-                  "Confirm Early Clock-Out"
-                )}
-              </button>
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+              Reason for early clock-out <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              value={earlyClockOutReason}
+              onChange={(e) => setEarlyClockOutReason(e.target.value)}
+              placeholder="Please provide a reason for leaving early..."
+              className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+              rows={3}
+              autoFocus
+            />
           </div>
         </div>
-      )}
+      </Modal>
     </div>
   );
 }
