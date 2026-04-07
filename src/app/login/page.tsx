@@ -9,6 +9,7 @@ export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
   const [isRedirecting, setIsRedirecting] = useState(false);
+  const [showDemoCredentials, setShowDemoCredentials] = useState(false);
 
   const handleLogin = async (username: string, password: string) => {
     const result = await login(username, password);
@@ -63,56 +64,139 @@ export default function LoginPage() {
           <LoginForm onSubmit={handleLogin} />
         </div>
 
-        <div className="mt-6 text-center">
-          <p className="text-sm text-zinc-500 dark:text-zinc-500">
-            Demo credentials
-          </p>
-          <div className="mt-2 bg-zinc-50 dark:bg-zinc-700 rounded-lg p-3 text-left">
-            <p className="text-xs text-zinc-600 dark:text-zinc-300 font-medium mb-2">
-              Admin:
-            </p>
-            <p className="text-xs text-zinc-600 dark:text-zinc-300">
-              Username:{" "}
-              <span className="font-mono font-medium text-zinc-900 dark:text-zinc-100">
-                admin@demo.com
-              </span>
-            </p>
-            <p className="text-xs text-zinc-600 dark:text-zinc-300">
-              Password:{" "}
-              <span className="font-mono font-medium text-zinc-900 dark:text-zinc-100">
-                demo123
-              </span>
-            </p>
-            <p className="text-xs text-zinc-600 dark:text-zinc-300 font-medium mt-3 mb-2">
-              Employee:
-            </p>
-            <p className="text-xs text-zinc-600 dark:text-zinc-300">
-              Username:{" "}
-              <span className="font-mono font-medium text-zinc-900 dark:text-zinc-100">
-                juan@demo.com
-              </span>
-            </p>
-            <p className="text-xs text-zinc-600 dark:text-zinc-300">
-              Password:{" "}
-              <span className="font-mono font-medium text-zinc-900 dark:text-zinc-100">
-                demo123
-              </span>
-            </p>
-            <p className="text-xs text-zinc-600 dark:text-zinc-300 font-medium mt-3 mb-2">
-              Manager:
-            </p>
-            <p className="text-xs text-zinc-600 dark:text-zinc-300">
-              Username:{" "}
-              <span className="font-mono font-medium text-zinc-900 dark:text-zinc-100">
-                maria@demo.com
-              </span>
-            </p>
-            <p className="text-xs text-zinc-600 dark:text-zinc-300">
-              Password:{" "}
-              <span className="font-mono font-medium text-zinc-900 dark:text-zinc-100">
-                demo123
-              </span>
-            </p>
+        <div
+          className="mt-6"
+          onMouseEnter={() => setShowDemoCredentials(true)}
+          onMouseLeave={() => setShowDemoCredentials(false)}
+        >
+          <div
+            className={`
+              flex items-center justify-center gap-2 py-3 px-4 rounded-xl cursor-pointer
+              transition-all duration-200 border-2
+              ${
+                showDemoCredentials
+                  ? "bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700"
+                  : "bg-transparent border-transparent hover:border-zinc-300 dark:hover:border-zinc-600"
+              }
+            `}
+          >
+            <svg
+              className={`w-5 h-5 text-blue-500 dark:text-blue-400 transition-transform duration-200 ${
+                showDemoCredentials ? "rotate-12" : ""
+              }`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+              />
+            </svg>
+            <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              Demo Credentials
+            </span>
+            <span
+              className={`text-xs transition-all duration-200 ${
+                showDemoCredentials
+                  ? "text-blue-600 dark:text-blue-400"
+                  : "text-zinc-400 dark:text-zinc-500"
+              }`}
+            >
+              {showDemoCredentials ? "▼" : "▲ Hover to reveal ▲"}
+            </span>
+          </div>
+          <div
+            className={`
+              bg-zinc-50 dark:bg-zinc-700 rounded-xl p-4 text-left
+              border-2 border-blue-200 dark:border-blue-800
+              shadow-lg transition-all duration-300
+              ${
+                showDemoCredentials
+                  ? "opacity-100 max-h-96 mt-2"
+                  : "opacity-0 max-h-0 overflow-hidden p-0 mt-0 border-0"
+              }
+            `}
+          >
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-zinc-300 dark:border-zinc-600">
+                  <th className="text-left py-2 px-3 font-semibold text-zinc-700 dark:text-zinc-300">
+                    Role
+                  </th>
+                  <th className="text-left py-2 px-3 font-semibold text-zinc-700 dark:text-zinc-300">
+                    Username
+                  </th>
+                  <th className="text-left py-2 px-3 font-semibold text-zinc-700 dark:text-zinc-300">
+                    Password
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-b border-zinc-200 dark:border-zinc-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+                  <td className="py-2 px-3">
+                    <span className="inline-flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-green-500" />
+                      <span className="font-medium text-zinc-700 dark:text-zinc-300">
+                        Admin
+                      </span>
+                    </span>
+                  </td>
+                  <td className="py-2 px-3">
+                    <code className="bg-white dark:bg-zinc-800 px-2 py-1 rounded font-mono text-zinc-900 dark:text-zinc-100 text-xs">
+                      admin@demo.com
+                    </code>
+                  </td>
+                  <td className="py-2 px-3">
+                    <code className="bg-white dark:bg-zinc-800 px-2 py-1 rounded font-mono text-zinc-900 dark:text-zinc-100 text-xs">
+                      demo123
+                    </code>
+                  </td>
+                </tr>
+                <tr className="border-b border-zinc-200 dark:border-zinc-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+                  <td className="py-2 px-3">
+                    <span className="inline-flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-blue-500" />
+                      <span className="font-medium text-zinc-700 dark:text-zinc-300">
+                        Employee
+                      </span>
+                    </span>
+                  </td>
+                  <td className="py-2 px-3">
+                    <code className="bg-white dark:bg-zinc-800 px-2 py-1 rounded font-mono text-zinc-900 dark:text-zinc-100 text-xs">
+                      juan@demo.com
+                    </code>
+                  </td>
+                  <td className="py-2 px-3">
+                    <code className="bg-white dark:bg-zinc-800 px-2 py-1 rounded font-mono text-zinc-900 dark:text-zinc-100 text-xs">
+                      demo123
+                    </code>
+                  </td>
+                </tr>
+                <tr className="hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+                  <td className="py-2 px-3">
+                    <span className="inline-flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-purple-500" />
+                      <span className="font-medium text-zinc-700 dark:text-zinc-300">
+                        Manager
+                      </span>
+                    </span>
+                  </td>
+                  <td className="py-2 px-3">
+                    <code className="bg-white dark:bg-zinc-800 px-2 py-1 rounded font-mono text-zinc-900 dark:text-zinc-100 text-xs">
+                      maria@demo.com
+                    </code>
+                  </td>
+                  <td className="py-2 px-3">
+                    <code className="bg-white dark:bg-zinc-800 px-2 py-1 rounded font-mono text-zinc-900 dark:text-zinc-100 text-xs">
+                      demo123
+                    </code>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
