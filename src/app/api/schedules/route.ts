@@ -40,15 +40,15 @@ export async function GET(request: NextRequest) {
     if (search) {
       whereClause.user = {
         OR: [
-          { username: { contains: search, mode: "insensitive" } },
+          { username: { contains: search } },
           {
             employeeProfile: {
-              firstName: { contains: search, mode: "insensitive" },
+              firstName: { contains: search },
             },
           },
           {
             employeeProfile: {
-              lastName: { contains: search, mode: "insensitive" },
+              lastName: { contains: search },
             },
           },
         ],

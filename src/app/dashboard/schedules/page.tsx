@@ -405,7 +405,7 @@ export default function SchedulesPage() {
 
   return (
     <DashboardLayout
-      title="Work Schedules"
+      title="Schedules"
       subtitle="Manage employee work schedules"
     >
       <ServerSideDataTable

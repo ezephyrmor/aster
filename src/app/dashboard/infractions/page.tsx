@@ -286,7 +286,7 @@ export default function InfractionsPage() {
 
   return (
     <DashboardLayout
-      title="Employee Infractions"
+      title="Infractions"
       subtitle="Track and manage employee disciplinary actions"
     >
       <ServerSideDataTable
