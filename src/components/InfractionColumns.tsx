@@ -51,6 +51,9 @@ export interface Infraction {
 }
 
 function getFullName(infraction: Infraction) {
+  if (!infraction.user) {
+    return "Unknown";
+  }
   if (infraction.user.employeeProfile) {
     return `${infraction.user.employeeProfile.firstName} ${infraction.user.employeeProfile.lastName}`;
   }
@@ -135,6 +138,16 @@ export function useInfractionColumns({
       },
       cell: ({ row }) => {
         const infraction = row.original;
+        if (!infraction.user) {
+          return (
+            <div>
+              <div className="font-medium">Unknown</div>
+              <div className="text-sm text-muted-foreground">
+                User ID: {infraction.userId}
+              </div>
+            </div>
+          );
+        }
         const profile = infraction.user.employeeProfile;
         return (
           <div>
@@ -156,6 +169,13 @@ export function useInfractionColumns({
       header: () => <div>Type</div>,
       cell: ({ row }) => {
         const type = row.original.type;
+        if (!type) {
+          return (
+            <span className="px-2 py-1 text-sm rounded-full bg-gray-100 text-gray-800">
+              Unknown
+            </span>
+          );
+        }
         return (
           <span
             className="px-2 py-1 text-sm rounded-full"
@@ -295,6 +315,16 @@ export const columns: ColumnDef<Infraction>[] = [
     header: () => <div>Employee</div>,
     cell: ({ row }) => {
       const infraction = row.original;
+      if (!infraction.user) {
+        return (
+          <div>
+            <div className="font-medium">Unknown</div>
+            <div className="text-sm text-muted-foreground">
+              User ID: {infraction.userId}
+            </div>
+          </div>
+        );
+      }
       const profile = infraction.user.employeeProfile;
       return (
         <div>
@@ -316,6 +346,13 @@ export const columns: ColumnDef<Infraction>[] = [
     header: () => <div>Type</div>,
     cell: ({ row }) => {
       const type = row.original.type;
+      if (!type) {
+        return (
+          <span className="px-2 py-1 text-sm rounded-full bg-gray-100 text-gray-800">
+            Unknown
+          </span>
+        );
+      }
       return (
         <span
           className="px-2 py-1 text-sm rounded-full"

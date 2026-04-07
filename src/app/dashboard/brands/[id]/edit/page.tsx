@@ -94,7 +94,25 @@ export default function EditBrandPage({
 
   if (isFetching) {
     return (
-      <DashboardLayout title="Edit Brand" subtitle="Loading...">
+      <DashboardLayout
+        title="Edit Brand"
+        subtitle="Loading..."
+        icon={
+          <svg
+            className="w-6 h-6 text-white"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+            />
+          </svg>
+        }
+      >
         <div className="flex justify-center items-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
         </div>
@@ -104,7 +122,25 @@ export default function EditBrandPage({
 
   if (error && !brand) {
     return (
-      <DashboardLayout title="Edit Brand" subtitle="Error">
+      <DashboardLayout
+        title="Edit Brand"
+        subtitle="Error"
+        icon={
+          <svg
+            className="w-6 h-6 text-white"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+            />
+          </svg>
+        }
+      >
         <div className="text-center py-12">
           <p className="text-red-600">{error}</p>
           <button
@@ -119,7 +155,25 @@ export default function EditBrandPage({
   }
 
   return (
-    <DashboardLayout title="Edit Brand" subtitle={`Editing: ${brand?.name}`}>
+    <DashboardLayout
+      title="Edit Brand"
+      subtitle={`Editing: ${brand?.name}`}
+      icon={
+        <svg
+          className="w-6 h-6 text-white"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+          />
+        </svg>
+      }
+    >
       <div className="max-w-2xl">
         {error && (
           <div className="mb-6 rounded-md bg-red-50 p-4">

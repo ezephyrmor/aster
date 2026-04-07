@@ -33,6 +33,13 @@ export default function CalendarWidget({ userId }: CalendarWidgetProps) {
     fetchEvents();
   }, [currentDate, userId]);
 
+  // Helper to update year in ISO date string
+  const updateYear = (dateStr: string, newYear: number): string => {
+    const date = new Date(dateStr);
+    date.setFullYear(newYear);
+    return date.toISOString();
+  };
+
   const fetchEvents = async () => {
     setLoading(true);
     try {
@@ -55,7 +62,40 @@ export default function CalendarWidget({ userId }: CalendarWidgetProps) {
       const response = await fetch(url);
       if (response.ok) {
         const data = await response.json();
-        setEvents(data);
+        // Handle both array response and paginated response
+        const eventsArray = Array.isArray(data) ? data : data.events || [];
+        // Normalize event dates - handle both startDate/end and start/end formats
+        // Also update year to current year so events appear in the current calendar view
+        const currentYear = new Date().getFullYear();
+        const normalizedEvents = eventsArray.map(
+          (event: {
+            id: number;
+            title: string;
+            start?: string;
+            end?: string;
+            startDate?: string;
+            endDate?: string;
+            color?: string;
+            description?: string;
+            type?: string;
+          }) => {
+            const startDate = event.startDate || event.start;
+            const endDate = event.endDate || event.end;
+            // Update year to current year so events appear in current month view
+            const updatedStart = startDate
+              ? updateYear(startDate, currentYear)
+              : undefined;
+            const updatedEnd = endDate
+              ? updateYear(endDate, currentYear)
+              : undefined;
+            return {
+              ...event,
+              startDate: updatedStart,
+              endDate: updatedEnd,
+            };
+          },
+        );
+        setEvents(normalizedEvents);
       }
     } catch (error) {
       console.error("Failed to fetch events:", error);

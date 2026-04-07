@@ -1,0 +1,1549 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "admin@demo.com",
+      "email": "admin@demo.com",
+      "password": "demo123",
+      "firstName": "Admin",
+      "lastName": "User",
+      "role": "admin",
+      "position": "HR Manager",
+      "department": "Human Resources",
+      "hireDate": "2023-01-15",
+      "status": "active"
+    },
+    {
+      "id": 2,
+      "username": "juan@demo.com",
+      "email": "juan@demo.com",
+      "password": "demo123",
+      "firstName": "Juan",
+      "lastName": "Dela Cruz",
+      "role": "employee",
+      "position": "Software Engineer",
+      "department": "Engineering",
+      "hireDate": "2023-03-20",
+      "status": "active",
+      "teamId": 1
+    },
+    {
+      "id": 3,
+      "username": "maria@demo.com",
+      "email": "maria@demo.com",
+      "password": "demo123",
+      "firstName": "Maria",
+      "lastName": "Santos",
+      "role": "manager",
+      "position": "Marketing Manager",
+      "department": "Marketing",
+      "hireDate": "2022-11-10",
+      "status": "active",
+      "teamId": 2
+    },
+    {
+      "id": 4,
+      "username": "carlos@demo.com",
+      "email": "carlos@demo.com",
+      "password": "demo123",
+      "firstName": "Carlos",
+      "lastName": "Reyes",
+      "role": "admin",
+      "position": "System Administrator",
+      "department": "IT",
+      "hireDate": "2022-06-15",
+      "status": "active"
+    },
+    {
+      "id": 5,
+      "username": "ana@demo.com",
+      "email": "ana@demo.com",
+      "password": "demo123",
+      "firstName": "Ana",
+      "lastName": "Garcia",
+      "role": "manager",
+      "position": "Finance Manager",
+      "department": "Finance",
+      "hireDate": "2022-08-01",
+      "status": "active",
+      "teamId": 3
+    },
+    {
+      "id": 6,
+      "username": "luis@demo.com",
+      "email": "luis@demo.com",
+      "password": "demo123",
+      "firstName": "Luis",
+      "lastName": "Torres",
+      "role": "employee",
+      "position": "Frontend Developer",
+      "department": "Engineering",
+      "hireDate": "2023-05-10",
+      "status": "active",
+      "teamId": 1
+    },
+    {
+      "id": 7,
+      "username": "sofia@demo.com",
+      "email": "sofia@demo.com",
+      "password": "demo123",
+      "firstName": "Sofia",
+      "lastName": "Mendoza",
+      "role": "employee",
+      "position": "Marketing Specialist",
+      "department": "Marketing",
+      "hireDate": "2023-07-20",
+      "status": "active",
+      "teamId": 2
+    },
+    {
+      "id": 8,
+      "username": "diego@demo.com",
+      "email": "diego@demo.com",
+      "password": "demo123",
+      "firstName": "Diego",
+      "lastName": "Flores",
+      "role": "employee",
+      "position": "Accountant",
+      "department": "Finance",
+      "hireDate": "2023-02-14",
+      "status": "active",
+      "teamId": 3
+    },
+    {
+      "id": 9,
+      "username": "elena@demo.com",
+      "email": "elena@demo.com",
+      "password": "demo123",
+      "firstName": "Elena",
+      "lastName": "Ramos",
+      "role": "manager",
+      "position": "Operations Manager",
+      "department": "Operations",
+      "hireDate": "2022-04-10",
+      "status": "active",
+      "teamId": 4
+    },
+    {
+      "id": 10,
+      "username": "miguel@demo.com",
+      "email": "miguel@demo.com",
+      "password": "demo123",
+      "firstName": "Miguel",
+      "lastName": "Castillo",
+      "role": "employee",
+      "position": "Backend Developer",
+      "department": "Engineering",
+      "hireDate": "2023-06-01",
+      "status": "active",
+      "teamId": 1
+    },
+    {
+      "id": 11,
+      "username": "lucia@demo.com",
+      "email": "lucia@demo.com",
+      "password": "demo123",
+      "firstName": "Lucia",
+      "lastName": "Vargas",
+      "role": "employee",
+      "position": "HR Specialist",
+      "department": "Human Resources",
+      "hireDate": "2023-08-15",
+      "status": "active",
+      "teamId": 5
+    },
+    {
+      "id": 12,
+      "username": "rafael@demo.com",
+      "email": "rafael@demo.com",
+      "password": "demo123",
+      "firstName": "Rafael",
+      "lastName": "Ortiz",
+      "role": "employee",
+      "position": "Sales Representative",
+      "department": "Sales",
+      "hireDate": "2023-04-05",
+      "status": "active",
+      "teamId": 6
+    },
+    {
+      "id": 13,
+      "username": "carmen@demo.com",
+      "email": "carmen@demo.com",
+      "password": "demo123",
+      "firstName": "Carmen",
+      "lastName": "Delgado",
+      "role": "manager",
+      "position": "Sales Manager",
+      "department": "Sales",
+      "hireDate": "2022-02-20",
+      "status": "active",
+      "teamId": 6
+    },
+    {
+      "id": 14,
+      "username": "javier@demo.com",
+      "email": "javier@demo.com",
+      "password": "demo123",
+      "firstName": "Javier",
+      "lastName": "Ruiz",
+      "role": "employee",
+      "position": "QA Engineer",
+      "department": "Engineering",
+      "hireDate": "2023-09-01",
+      "status": "active",
+      "teamId": 1
+    },
+    {
+      "id": 15,
+      "username": "isabel@demo.com",
+      "email": "isabel@demo.com",
+      "password": "demo123",
+      "firstName": "Isabel",
+      "lastName": "Moreno",
+      "role": "employee",
+      "position": "Operations Analyst",
+      "department": "Operations",
+      "hireDate": "2023-10-10",
+      "status": "active",
+      "teamId": 4
+    },
+    {
+      "id": 16,
+      "username": "alejandro@demo.com",
+      "email": "alejandro@demo.com",
+      "password": "demo123",
+      "firstName": "Alejandro",
+      "lastName": "Jimenez",
+      "role": "admin",
+      "position": "IT Director",
+      "department": "IT",
+      "hireDate": "2021-11-01",
+      "status": "active"
+    },
+    {
+      "id": 17,
+      "username": "patricia@demo.com",
+      "email": "patricia@demo.com",
+      "password": "demo123",
+      "firstName": "Patricia",
+      "lastName": "Aguilar",
+      "role": "employee",
+      "position": "Content Writer",
+      "department": "Marketing",
+      "hireDate": "2023-11-15",
+      "status": "active",
+      "teamId": 2
+    },
+    {
+      "id": 18,
+      "username": "roberto@demo.com",
+      "email": "roberto@demo.com",
+      "password": "demo123",
+      "firstName": "Roberto",
+      "lastName": "Serrano",
+      "role": "employee",
+      "position": "Financial Analyst",
+      "department": "Finance",
+      "hireDate": "2023-03-01",
+      "status": "active",
+      "teamId": 3
+    },
+    {
+      "id": 19,
+      "username": "teresa@demo.com",
+      "email": "teresa@demo.com",
+      "password": "demo123",
+      "firstName": "Teresa",
+      "lastName": "Navarro",
+      "role": "employee",
+      "position": "Customer Support",
+      "department": "Operations",
+      "hireDate": "2024-01-08",
+      "status": "active",
+      "teamId": 4
+    },
+    {
+      "id": 20,
+      "username": "fernando@demo.com",
+      "email": "fernando@demo.com",
+      "password": "demo123",
+      "firstName": "Fernando",
+      "lastName": "Domínguez",
+      "role": "employee",
+      "position": "DevOps Engineer",
+      "department": "Engineering",
+      "hireDate": "2023-07-01",
+      "status": "active",
+      "teamId": 1
+    },
+    {
+      "id": 21,
+      "username": "gloria@demo.com",
+      "email": "gloria@demo.com",
+      "password": "demo123",
+      "firstName": "Gloria",
+      "lastName": "Vázquez",
+      "role": "employee",
+      "position": "Recruiter",
+      "department": "Human Resources",
+      "hireDate": "2024-02-01",
+      "status": "active",
+      "teamId": 5
+    },
+    {
+      "id": 22,
+      "username": "hector@demo.com",
+      "email": "hector@demo.com",
+      "password": "demo123",
+      "firstName": "Hector",
+      "lastName": "Rojas",
+      "role": "employee",
+      "position": "Sales Associate",
+      "department": "Sales",
+      "hireDate": "2024-01-15",
+      "status": "active",
+      "teamId": 6
+    },
+    {
+      "id": 23,
+      "username": "diana@demo.com",
+      "email": "diana@demo.com",
+      "password": "demo123",
+      "firstName": "Diana",
+      "lastName": "Pacheco",
+      "role": "employee",
+      "position": "UX Designer",
+      "department": "Engineering",
+      "hireDate": "2023-08-20",
+      "status": "active",
+      "teamId": 1
+    },
+    {
+      "id": 24,
+      "username": "armando@demo.com",
+      "email": "armando@demo.com",
+      "password": "demo123",
+      "firstName": "Armando",
+      "lastName": "Cortés",
+      "role": "employee",
+      "position": "Marketing Analyst",
+      "department": "Marketing",
+      "hireDate": "2023-12-01",
+      "status": "active",
+      "teamId": 2
+    },
+    {
+      "id": 25,
+      "username": "beatriz@demo.com",
+      "email": "beatriz@demo.com",
+      "password": "demo123",
+      "firstName": "Beatriz",
+      "lastName": "León",
+      "role": "employee",
+      "position": "Payroll Specialist",
+      "department": "Finance",
+      "hireDate": "2023-09-15",
+      "status": "active",
+      "teamId": 3
+    },
+    {
+      "id": 26,
+      "username": "guillermo@demo.com",
+      "email": "guillermo@demo.com",
+      "password": "demo123",
+      "firstName": "Guillermo",
+      "lastName": "Herrera",
+      "role": "employee",
+      "position": "Logistics Coordinator",
+      "department": "Operations",
+      "hireDate": "2023-10-01",
+      "status": "active",
+      "teamId": 4
+    },
+    {
+      "id": 27,
+      "username": "silvia@demo.com",
+      "email": "silvia@demo.com",
+      "password": "demo123",
+      "firstName": "Silvia",
+      "lastName": "Medina",
+      "role": "employee",
+      "position": "Training Coordinator",
+      "department": "Human Resources",
+      "hireDate": "2024-02-15",
+      "status": "active",
+      "teamId": 5
+    },
+    {
+      "id": 28,
+      "username": "ricardo@demo.com",
+      "email": "ricardo@demo.com",
+      "password": "demo123",
+      "firstName": "Ricardo",
+      "lastName": "Aguirre",
+      "role": "employee",
+      "position": "Account Executive",
+      "department": "Sales",
+      "hireDate": "2023-11-01",
+      "status": "active",
+      "teamId": 6
+    },
+    {
+      "id": 29,
+      "username": "monica@demo.com",
+      "email": "monica@demo.com",
+      "password": "demo123",
+      "firstName": "Monica",
+      "lastName": "Estrada",
+      "role": "employee",
+      "position": "Data Analyst",
+      "department": "Engineering",
+      "hireDate": "2024-01-02",
+      "status": "active",
+      "teamId": 1
+    },
+    {
+      "id": 30,
+      "username": "alberto@demo.com",
+      "email": "alberto@demo.com",
+      "password": "demo123",
+      "firstName": "Alberto",
+      "lastName": "Paredes",
+      "role": "employee",
+      "position": "Social Media Manager",
+      "department": "Marketing",
+      "hireDate": "2023-06-15",
+      "status": "active",
+      "teamId": 2
+    }
+  ],
+  "teams": [
+    {
+      "id": 1,
+      "name": "Engineering",
+      "description": "Software Development Team",
+      "leaderId": 2
+    },
+    {
+      "id": 2,
+      "name": "Marketing",
+      "description": "Marketing and Communications",
+      "leaderId": 3
+    },
+    {
+      "id": 3,
+      "name": "Finance",
+      "description": "Finance and Accounting",
+      "leaderId": 5
+    },
+    {
+      "id": 4,
+      "name": "Operations",
+      "description": "Operations and Logistics",
+      "leaderId": 9
+    },
+    {
+      "id": 5,
+      "name": "Human Resources",
+      "description": "HR and Talent Management",
+      "leaderId": 11
+    },
+    {
+      "id": 6,
+      "name": "Sales",
+      "description": "Sales and Business Development",
+      "leaderId": 13
+    },
+    {
+      "id": 7,
+      "name": "IT Support",
+      "description": "Technical Support and Infrastructure",
+      "leaderId": 4
+    },
+    {
+      "id": 8,
+      "name": "Product",
+      "description": "Product Management",
+      "leaderId": 16
+    },
+    {
+      "id": 9,
+      "name": "Quality Assurance",
+      "description": "QA and Testing",
+      "leaderId": 14
+    },
+    {
+      "id": 10,
+      "name": "Customer Success",
+      "description": "Customer Support and Success",
+      "leaderId": 19
+    },
+    {
+      "id": 11,
+      "name": "Frontend Team",
+      "description": "Frontend Development",
+      "leaderId": 6
+    },
+    {
+      "id": 12,
+      "name": "Backend Team",
+      "description": "Backend Development",
+      "leaderId": 10
+    },
+    {
+      "id": 13,
+      "name": "Design Team",
+      "description": "UX/UI Design",
+      "leaderId": 23
+    },
+    {
+      "id": 14,
+      "name": "DevOps",
+      "description": "Infrastructure and Deployment",
+      "leaderId": 20
+    },
+    {
+      "id": 15,
+      "name": "Content Team",
+      "description": "Content Creation and Strategy",
+      "leaderId": 17
+    },
+    {
+      "id": 16,
+      "name": "Analytics",
+      "description": "Data Analytics and Reporting",
+      "leaderId": 29
+    },
+    {
+      "id": 17,
+      "name": "Recruitment",
+      "description": "Talent Acquisition",
+      "leaderId": 21
+    },
+    {
+      "id": 18,
+      "name": "Training",
+      "description": "Employee Training and Development",
+      "leaderId": 27
+    },
+    {
+      "id": 19,
+      "name": "Logistics",
+      "description": "Supply Chain and Logistics",
+      "leaderId": 26
+    },
+    {
+      "id": 20,
+      "name": "Compliance",
+      "description": "Legal and Compliance",
+      "leaderId": 1
+    }
+  ],
+  "brands": [
+    {
+      "id": 1,
+      "name": "Aster HR",
+      "description": "Main HR Management System",
+      "logo": "/logo.png",
+      "status": "active"
+    },
+    {
+      "id": 2,
+      "name": "Aster Portal",
+      "description": "Employee Self-Service Portal",
+      "logo": "/logo.png",
+      "status": "active"
+    },
+    {
+      "id": 3,
+      "name": "Aster Analytics",
+      "description": "HR Analytics Platform",
+      "logo": "/logo.png",
+      "status": "active"
+    },
+    {
+      "id": 4,
+      "name": "Aster Payroll",
+      "description": "Payroll Management System",
+      "logo": "/logo.png",
+      "status": "active"
+    },
+    {
+      "id": 5,
+      "name": "Aster Learn",
+      "description": "Learning Management System",
+      "logo": "/logo.png",
+      "status": "active"
+    },
+    {
+      "id": 6,
+      "name": "Aster Recruit",
+      "description": "Recruitment and ATS",
+      "logo": "/logo.png",
+      "status": "active"
+    },
+    {
+      "id": 7,
+      "name": "Aster Perform",
+      "description": "Performance Management",
+      "logo": "/logo.png",
+      "status": "active"
+    },
+    {
+      "id": 8,
+      "name": "Aster Engage",
+      "description": "Employee Engagement Platform",
+      "logo": "/logo.png",
+      "status": "active"
+    },
+    {
+      "id": 9,
+      "name": "Aster Benefits",
+      "description": "Benefits Administration",
+      "logo": "/logo.png",
+      "status": "active"
+    },
+    {
+      "id": 10,
+      "name": "Aster Time",
+      "description": "Time and Attendance Tracking",
+      "logo": "/logo.png",
+      "status": "active"
+    },
+    {
+      "id": 11,
+      "name": "Aster Safety",
+      "description": "Workplace Safety Management",
+      "logo": "/logo.png",
+      "status": "active"
+    },
+    {
+      "id": 12,
+      "name": "Aster Connect",
+      "description": "Internal Communication Platform",
+      "logo": "/logo.png",
+      "status": "active"
+    },
+    {
+      "id": 13,
+      "name": "Aster Mobile",
+      "description": "Mobile HR App",
+      "logo": "/logo.png",
+      "status": "active"
+    },
+    {
+      "id": 14,
+      "name": "Aster Reports",
+      "description": "Reporting and BI",
+      "logo": "/logo.png",
+      "status": "active"
+    },
+    {
+      "id": 15,
+      "name": "Aster Compliance",
+      "description": "Compliance Management",
+      "logo": "/logo.png",
+      "status": "active"
+    },
+    {
+      "id": 16,
+      "name": "Aster Onboard",
+      "description": "Onboarding System",
+      "logo": "/logo.png",
+      "status": "active"
+    },
+    {
+      "id": 17,
+      "name": "Aster Survey",
+      "description": "Employee Survey Platform",
+      "logo": "/logo.png",
+      "status": "active"
+    },
+    {
+      "id": 18,
+      "name": "Aster Schedule",
+      "description": "Workforce Scheduling",
+      "logo": "/logo.png",
+      "status": "active"
+    },
+    {
+      "id": 19,
+      "name": "Aster Goals",
+      "description": "Goal Setting and Tracking",
+      "logo": "/logo.png",
+      "status": "active"
+    },
+    {
+      "id": 20,
+      "name": "Aster Feedback",
+      "description": "360-degree Feedback System",
+      "logo": "/logo.png",
+      "status": "active"
+    }
+  ],
+  "schedules": [
+    {
+      "id": 1,
+      "name": "Standard Schedule",
+      "startTime": "09:00",
+      "endTime": "18:00",
+      "breakMinutes": 60,
+      "days": [1, 2, 3, 4, 5],
+      "userId": 2
+    },
+    {
+      "id": 2,
+      "name": "Flexible Schedule",
+      "startTime": "08:00",
+      "endTime": "17:00",
+      "breakMinutes": 60,
+      "days": [1, 2, 3, 4, 5],
+      "userId": 3
+    },
+    {
+      "id": 3,
+      "name": "Early Bird",
+      "startTime": "07:00",
+      "endTime": "16:00",
+      "breakMinutes": 60,
+      "days": [1, 2, 3, 4, 5],
+      "userId": 5
+    },
+    {
+      "id": 4,
+      "name": "Night Shift",
+      "startTime": "22:00",
+      "endTime": "07:00",
+      "breakMinutes": 60,
+      "days": [1, 2, 3, 4, 5],
+      "userId": 6
+    },
+    {
+      "id": 5,
+      "name": "Part-time Morning",
+      "startTime": "08:00",
+      "endTime": "12:00",
+      "breakMinutes": 30,
+      "days": [1, 2, 3, 4, 5],
+      "userId": 7
+    },
+    {
+      "id": 6,
+      "name": "Part-time Afternoon",
+      "startTime": "13:00",
+      "endTime": "17:00",
+      "breakMinutes": 30,
+      "days": [1, 2, 3, 4, 5],
+      "userId": 8
+    },
+    {
+      "id": 7,
+      "name": "Weekend Shift",
+      "startTime": "09:00",
+      "endTime": "18:00",
+      "breakMinutes": 60,
+      "days": [0, 6],
+      "userId": 9
+    },
+    {
+      "id": 8,
+      "name": "Rotating Shift A",
+      "startTime": "06:00",
+      "endTime": "14:00",
+      "breakMinutes": 30,
+      "days": [1, 2, 3, 4, 5],
+      "userId": 10
+    },
+    {
+      "id": 9,
+      "name": "Rotating Shift B",
+      "startTime": "14:00",
+      "endTime": "22:00",
+      "breakMinutes": 30,
+      "days": [1, 2, 3, 4, 5],
+      "userId": 11
+    },
+    {
+      "id": 10,
+      "name": "Compressed Week",
+      "startTime": "08:00",
+      "endTime": "18:00",
+      "breakMinutes": 60,
+      "days": [1, 2, 3, 4],
+      "userId": 12
+    },
+    {
+      "id": 11,
+      "name": "Standard IT",
+      "startTime": "09:00",
+      "endTime": "18:00",
+      "breakMinutes": 60,
+      "days": [1, 2, 3, 4, 5],
+      "userId": 4
+    },
+    {
+      "id": 12,
+      "name": "Finance Hours",
+      "startTime": "08:30",
+      "endTime": "17:30",
+      "breakMinutes": 60,
+      "days": [1, 2, 3, 4, 5],
+      "userId": 18
+    },
+    {
+      "id": 13,
+      "name": "Sales Flex",
+      "startTime": "10:00",
+      "endTime": "19:00",
+      "breakMinutes": 60,
+      "days": [1, 2, 3, 4, 5],
+      "userId": 13
+    },
+    {
+      "id": 14,
+      "name": "Support Shift",
+      "startTime": "08:00",
+      "endTime": "17:00",
+      "breakMinutes": 60,
+      "days": [1, 2, 3, 4, 5],
+      "userId": 19
+    },
+    {
+      "id": 15,
+      "name": "Design Creative",
+      "startTime": "10:00",
+      "endTime": "19:00",
+      "breakMinutes": 60,
+      "days": [1, 2, 3, 4, 5],
+      "userId": 23
+    },
+    {
+      "id": 16,
+      "name": "DevOps On-call",
+      "startTime": "09:00",
+      "endTime": "18:00",
+      "breakMinutes": 60,
+      "days": [1, 2, 3, 4, 5],
+      "userId": 20
+    },
+    {
+      "id": 17,
+      "name": "HR Standard",
+      "startTime": "08:00",
+      "endTime": "17:00",
+      "breakMinutes": 60,
+      "days": [1, 2, 3, 4, 5],
+      "userId": 11
+    },
+    {
+      "id": 18,
+      "name": "Marketing Hours",
+      "startTime": "09:00",
+      "endTime": "18:00",
+      "breakMinutes": 60,
+      "days": [1, 2, 3, 4, 5],
+      "userId": 7
+    },
+    {
+      "id": 19,
+      "name": "Analytics Flex",
+      "startTime": "09:00",
+      "endTime": "18:00",
+      "breakMinutes": 60,
+      "days": [1, 2, 3, 4, 5],
+      "userId": 29
+    },
+    {
+      "id": 20,
+      "name": "Executive Schedule",
+      "startTime": "08:00",
+      "endTime": "18:00",
+      "breakMinutes": 60,
+      "days": [1, 2, 3, 4, 5],
+      "userId": 16
+    }
+  ],
+  "attendance": [
+    {
+      "id": 1,
+      "userId": 2,
+      "date": "2026-04-01",
+      "clockIn": "2026-04-01T09:00:00Z",
+      "clockOut": "2026-04-01T18:00:00Z",
+      "status": "present",
+      "lateMinutes": 0,
+      "undertimeMinutes": 0
+    },
+    {
+      "id": 2,
+      "userId": 2,
+      "date": "2026-04-02",
+      "clockIn": "2026-04-02T08:45:00Z",
+      "clockOut": "2026-04-02T18:30:00Z",
+      "status": "present",
+      "lateMinutes": 0,
+      "undertimeMinutes": 0
+    },
+    {
+      "id": 3,
+      "userId": 2,
+      "date": "2026-04-03",
+      "clockIn": "2026-04-03T09:30:00Z",
+      "clockOut": "2026-04-03T18:00:00Z",
+      "status": "present",
+      "lateMinutes": 30,
+      "undertimeMinutes": 0
+    },
+    {
+      "id": 4,
+      "userId": 2,
+      "date": "2026-04-04",
+      "clockIn": "2026-04-04T09:00:00Z",
+      "clockOut": "2026-04-04T17:00:00Z",
+      "status": "present",
+      "lateMinutes": 0,
+      "undertimeMinutes": 60
+    },
+    {
+      "id": 5,
+      "userId": 2,
+      "date": "2026-04-07",
+      "clockIn": "2026-04-07T09:00:00Z",
+      "clockOut": "2026-04-07T18:00:00Z",
+      "status": "present",
+      "lateMinutes": 0,
+      "undertimeMinutes": 0
+    },
+    {
+      "id": 6,
+      "userId": 3,
+      "date": "2026-04-01",
+      "clockIn": "2026-04-01T08:00:00Z",
+      "clockOut": "2026-04-01T17:00:00Z",
+      "status": "present",
+      "lateMinutes": 0,
+      "undertimeMinutes": 0
+    },
+    {
+      "id": 7,
+      "userId": 3,
+      "date": "2026-04-02",
+      "clockIn": "2026-04-02T08:15:00Z",
+      "clockOut": "2026-04-02T17:30:00Z",
+      "status": "present",
+      "lateMinutes": 15,
+      "undertimeMinutes": 0
+    },
+    {
+      "id": 8,
+      "userId": 3,
+      "date": "2026-04-03",
+      "clockIn": "2026-04-03T08:00:00Z",
+      "clockOut": "2026-04-03T17:00:00Z",
+      "status": "present",
+      "lateMinutes": 0,
+      "undertimeMinutes": 0
+    },
+    {
+      "id": 9,
+      "userId": 3,
+      "date": "2026-04-04",
+      "clockIn": "2026-04-04T08:00:00Z",
+      "clockOut": "2026-04-04T16:00:00Z",
+      "status": "present",
+      "lateMinutes": 0,
+      "undertimeMinutes": 60
+    },
+    {
+      "id": 10,
+      "userId": 3,
+      "date": "2026-04-07",
+      "clockIn": "2026-04-07T08:00:00Z",
+      "clockOut": "2026-04-07T17:00:00Z",
+      "status": "present",
+      "lateMinutes": 0,
+      "undertimeMinutes": 0
+    },
+    {
+      "id": 11,
+      "userId": 5,
+      "date": "2026-04-01",
+      "clockIn": "2026-04-01T07:00:00Z",
+      "clockOut": "2026-04-01T16:00:00Z",
+      "status": "present",
+      "lateMinutes": 0,
+      "undertimeMinutes": 0
+    },
+    {
+      "id": 12,
+      "userId": 5,
+      "date": "2026-04-02",
+      "clockIn": "2026-04-02T07:10:00Z",
+      "clockOut": "2026-04-02T16:00:00Z",
+      "status": "present",
+      "lateMinutes": 10,
+      "undertimeMinutes": 0
+    },
+    {
+      "id": 13,
+      "userId": 5,
+      "date": "2026-04-03",
+      "clockIn": "2026-04-03T07:00:00Z",
+      "clockOut": "2026-04-03T16:00:00Z",
+      "status": "present",
+      "lateMinutes": 0,
+      "undertimeMinutes": 0
+    },
+    {
+      "id": 14,
+      "userId": 5,
+      "date": "2026-04-04",
+      "clockIn": "2026-04-04T07:00:00Z",
+      "clockOut": "2026-04-04T15:30:00Z",
+      "status": "present",
+      "lateMinutes": 0,
+      "undertimeMinutes": 30
+    },
+    {
+      "id": 15,
+      "userId": 5,
+      "date": "2026-04-07",
+      "clockIn": "2026-04-07T07:00:00Z",
+      "clockOut": "2026-04-07T16:00:00Z",
+      "status": "present",
+      "lateMinutes": 0,
+      "undertimeMinutes": 0
+    },
+    {
+      "id": 16,
+      "userId": 6,
+      "date": "2026-04-01",
+      "clockIn": "2026-04-01T22:00:00Z",
+      "clockOut": "2026-04-02T07:00:00Z",
+      "status": "present",
+      "lateMinutes": 0,
+      "undertimeMinutes": 0
+    },
+    {
+      "id": 17,
+      "userId": 6,
+      "date": "2026-04-02",
+      "clockIn": "2026-04-02T22:00:00Z",
+      "clockOut": "2026-04-03T07:00:00Z",
+      "status": "present",
+      "lateMinutes": 0,
+      "undertimeMinutes": 0
+    },
+    {
+      "id": 18,
+      "userId": 6,
+      "date": "2026-04-03",
+      "clockIn": "2026-04-03T22:30:00Z",
+      "clockOut": "2026-04-04T07:00:00Z",
+      "status": "present",
+      "lateMinutes": 30,
+      "undertimeMinutes": 0
+    },
+    {
+      "id": 19,
+      "userId": 6,
+      "date": "2026-04-04",
+      "clockIn": "2026-04-04T22:00:00Z",
+      "clockOut": "2026-04-05T06:00:00Z",
+      "status": "present",
+      "lateMinutes": 0,
+      "undertimeMinutes": 60
+    },
+    {
+      "id": 20,
+      "userId": 6,
+      "date": "2026-04-07",
+      "clockIn": "2026-04-07T22:00:00Z",
+      "clockOut": "2026-04-08T07:00:00Z",
+      "status": "present",
+      "lateMinutes": 0,
+      "undertimeMinutes": 0
+    },
+    {
+      "id": 21,
+      "userId": 7,
+      "date": "2026-04-01",
+      "clockIn": "2026-04-01T08:00:00Z",
+      "clockOut": "2026-04-01T12:00:00Z",
+      "status": "present",
+      "lateMinutes": 0,
+      "undertimeMinutes": 0
+    },
+    {
+      "id": 22,
+      "userId": 7,
+      "date": "2026-04-02",
+      "clockIn": "2026-04-02T08:00:00Z",
+      "clockOut": "2026-04-02T12:00:00Z",
+      "status": "present",
+      "lateMinutes": 0,
+      "undertimeMinutes": 0
+    },
+    {
+      "id": 23,
+      "userId": 7,
+      "date": "2026-04-03",
+      "clockIn": "2026-04-03T08:15:00Z",
+      "clockOut": "2026-04-03T12:00:00Z",
+      "status": "present",
+      "lateMinutes": 15,
+      "undertimeMinutes": 0
+    },
+    {
+      "id": 24,
+      "userId": 7,
+      "date": "2026-04-04",
+      "clockIn": "2026-04-04T08:00:00Z",
+      "clockOut": "2026-04-04T11:00:00Z",
+      "status": "present",
+      "lateMinutes": 0,
+      "undertimeMinutes": 60
+    },
+    {
+      "id": 25,
+      "userId": 7,
+      "date": "2026-04-07",
+      "clockIn": "2026-04-07T08:00:00Z",
+      "clockOut": "2026-04-07T12:00:00Z",
+      "status": "present",
+      "lateMinutes": 0,
+      "undertimeMinutes": 0
+    },
+    {
+      "id": 26,
+      "userId": 8,
+      "date": "2026-04-01",
+      "clockIn": "2026-04-01T13:00:00Z",
+      "clockOut": "2026-04-01T17:00:00Z",
+      "status": "present",
+      "lateMinutes": 0,
+      "undertimeMinutes": 0
+    },
+    {
+      "id": 27,
+      "userId": 8,
+      "date": "2026-04-02",
+      "clockIn": "2026-04-02T13:00:00Z",
+      "clockOut": "2026-04-02T17:00:00Z",
+      "status": "present",
+      "lateMinutes": 0,
+      "undertimeMinutes": 0
+    },
+    {
+      "id": 28,
+      "userId": 8,
+      "date": "2026-04-03",
+      "clockIn": "2026-04-03T13:30:00Z",
+      "clockOut": "2026-04-03T17:00:00Z",
+      "status": "present",
+      "lateMinutes": 30,
+      "undertimeMinutes": 0
+    },
+    {
+      "id": 29,
+      "userId": 8,
+      "date": "2026-04-04",
+      "clockIn": "2026-04-04T13:00:00Z",
+      "clockOut": "2026-04-04T16:00:00Z",
+      "status": "present",
+      "lateMinutes": 0,
+      "undertimeMinutes": 60
+    },
+    {
+      "id": 30,
+      "userId": 8,
+      "date": "2026-04-07",
+      "clockIn": "2026-04-07T13:00:00Z",
+      "clockOut": "2026-04-07T17:00:00Z",
+      "status": "present",
+      "lateMinutes": 0,
+      "undertimeMinutes": 0
+    }
+  ],
+  "leaveTypes": [
+    { "id": 1, "name": "Vacation Leave", "code": "VL" },
+    { "id": 2, "name": "Sick Leave", "code": "SL" },
+    { "id": 3, "name": "Emergency Leave", "code": "EL" },
+    { "id": 4, "name": "Maternity Leave", "code": "ML" },
+    { "id": 5, "name": "Paternity Leave", "code": "PL" },
+    { "id": 6, "name": "Bereavement Leave", "code": "BL" },
+    { "id": 7, "name": "Personal Leave", "code": "PrL" },
+    { "id": 8, "name": "Study Leave", "code": "StL" },
+    { "id": 9, "name": "Unpaid Leave", "code": "UL" },
+    { "id": 10, "name": "Work From Home", "code": "WFH" }
+  ],
+  "leaveRequests": [
+    {
+      "id": 1,
+      "userId": 2,
+      "typeId": 1,
+      "startDate": "2026-04-10",
+      "endDate": "2026-04-12",
+      "reason": "Family vacation",
+      "status": "pending",
+      "createdAt": "2026-04-05T10:00:00Z"
+    },
+    {
+      "id": 2,
+      "userId": 3,
+      "typeId": 2,
+      "startDate": "2026-04-08",
+      "endDate": "2026-04-08",
+      "reason": "Flu and fever",
+      "status": "approved",
+      "createdAt": "2026-04-07T08:00:00Z"
+    },
+    {
+      "id": 3,
+      "userId": 5,
+      "typeId": 3,
+      "startDate": "2026-04-15",
+      "endDate": "2026-04-15",
+      "reason": "Family emergency",
+      "status": "pending",
+      "createdAt": "2026-04-06T14:00:00Z"
+    },
+    {
+      "id": 4,
+      "userId": 6,
+      "typeId": 1,
+      "startDate": "2026-04-20",
+      "endDate": "2026-04-24",
+      "reason": "Annual vacation",
+      "status": "approved",
+      "createdAt": "2026-04-01T09:00:00Z"
+    },
+    {
+      "id": 5,
+      "userId": 7,
+      "typeId": 7,
+      "startDate": "2026-04-18",
+      "endDate": "2026-04-18",
+      "reason": "Personal matters",
+      "status": "pending",
+      "createdAt": "2026-04-04T11:00:00Z"
+    },
+    {
+      "id": 6,
+      "userId": 8,
+      "typeId": 2,
+      "startDate": "2026-04-09",
+      "endDate": "2026-04-10",
+      "reason": "Medical appointment",
+      "status": "pending",
+      "createdAt": "2026-04-06T16:00:00Z"
+    },
+    {
+      "id": 7,
+      "userId": 9,
+      "typeId": 6,
+      "startDate": "2026-04-22",
+      "endDate": "2026-04-24",
+      "reason": "Family bereavement",
+      "status": "approved",
+      "createdAt": "2026-04-03T10:00:00Z"
+    },
+    {
+      "id": 8,
+      "userId": 10,
+      "typeId": 8,
+      "startDate": "2026-05-01",
+      "endDate": "2026-05-05",
+      "reason": "Professional certification course",
+      "status": "pending",
+      "createdAt": "2026-04-02T15:00:00Z"
+    },
+    {
+      "id": 9,
+      "userId": 11,
+      "typeId": 1,
+      "startDate": "2026-04-28",
+      "endDate": "2026-04-30",
+      "reason": "Holiday trip",
+      "status": "rejected",
+      "createdAt": "2026-03-28T09:00:00Z"
+    },
+    {
+      "id": 10,
+      "userId": 12,
+      "typeId": 5,
+      "startDate": "2026-04-25",
+      "endDate": "2026-04-27",
+      "reason": "Wife giving birth",
+      "status": "approved",
+      "createdAt": "2026-04-01T12:00:00Z"
+    }
+  ],
+  "infractionTypes": [
+    { "id": 1, "name": "Tardiness", "severity": "minor" },
+    { "id": 2, "name": "Absent Without Leave", "severity": "major" },
+    { "id": 3, "name": "Misconduct", "severity": "major" },
+    { "id": 4, "name": "Dress Code Violation", "severity": "minor" },
+    { "id": 5, "name": "Insubordination", "severity": "major" },
+    { "id": 6, "name": "Policy Violation", "severity": "major" },
+    { "id": 7, "name": "Unsafe Behavior", "severity": "major" },
+    { "id": 8, "name": "Unauthorized Absence", "severity": "minor" },
+    { "id": 9, "name": "Harassment", "severity": "major" },
+    { "id": 10, "name": "Data Security Violation", "severity": "major" }
+  ],
+  "infractions": [
+    {
+      "id": 1,
+      "userId": 2,
+      "typeId": 1,
+      "date": "2026-04-03",
+      "description": "Arrived 30 minutes late to work",
+      "status": "acknowledged",
+      "createdAt": "2026-04-03T10:00:00Z"
+    },
+    {
+      "id": 2,
+      "userId": 6,
+      "typeId": 1,
+      "date": "2026-04-05",
+      "description": "Arrived 45 minutes late to night shift",
+      "status": "pending",
+      "createdAt": "2026-04-05T23:00:00Z"
+    },
+    {
+      "id": 3,
+      "userId": 7,
+      "typeId": 4,
+      "date": "2026-04-02",
+      "description": "Not wearing proper ID badge",
+      "status": "acknowledged",
+      "createdAt": "2026-04-02T09:00:00Z"
+    },
+    {
+      "id": 4,
+      "userId": 8,
+      "typeId": 1,
+      "date": "2026-04-04",
+      "description": "Late return from lunch break",
+      "status": "pending",
+      "createdAt": "2026-04-04T14:00:00Z"
+    },
+    {
+      "id": 5,
+      "userId": 10,
+      "typeId": 8,
+      "date": "2026-04-01",
+      "description": "Left workstation without notification for 2 hours",
+      "status": "acknowledged",
+      "createdAt": "2026-04-01T16:00:00Z"
+    },
+    {
+      "id": 6,
+      "userId": 12,
+      "typeId": 6,
+      "date": "2026-04-06",
+      "description": "Shared confidential client information improperly",
+      "status": "pending",
+      "createdAt": "2026-04-06T11:00:00Z"
+    },
+    {
+      "id": 7,
+      "userId": 14,
+      "typeId": 1,
+      "date": "2026-04-07",
+      "description": "Late to morning standup meeting",
+      "status": "pending",
+      "createdAt": "2026-04-07T10:00:00Z"
+    },
+    {
+      "id": 8,
+      "userId": 19,
+      "typeId": 4,
+      "date": "2026-04-03",
+      "description": "Improper attire during client video call",
+      "status": "acknowledged",
+      "createdAt": "2026-04-03T15:00:00Z"
+    },
+    {
+      "id": 9,
+      "userId": 22,
+      "typeId": 5,
+      "date": "2026-04-02",
+      "description": "Refused to follow supervisor's instructions",
+      "status": "pending",
+      "createdAt": "2026-04-02T14:00:00Z"
+    },
+    {
+      "id": 10,
+      "userId": 25,
+      "typeId": 10,
+      "date": "2026-04-05",
+      "description": "Left computer unlocked with sensitive data visible",
+      "status": "acknowledged",
+      "createdAt": "2026-04-05T17:00:00Z"
+    }
+  ],
+  "calendarEvents": [
+    {
+      "id": 1,
+      "title": "Team Meeting",
+      "description": "Weekly engineering sync",
+      "start": "2026-04-08T10:00:00Z",
+      "end": "2026-04-08T11:00:00Z",
+      "type": "meeting"
+    },
+    {
+      "id": 2,
+      "title": "Company Holiday",
+      "description": "Araw ng Kagitingan",
+      "start": "2026-04-09T00:00:00Z",
+      "end": "2026-04-09T23:59:59Z",
+      "type": "holiday"
+    },
+    {
+      "id": 3,
+      "title": "Quarterly Review",
+      "description": "Q1 2026 Performance Reviews",
+      "start": "2026-04-15T09:00:00Z",
+      "end": "2026-04-15T17:00:00Z",
+      "type": "meeting"
+    },
+    {
+      "id": 4,
+      "title": "Team Building",
+      "description": "Annual team building activity",
+      "start": "2026-04-18T08:00:00Z",
+      "end": "2026-04-18T17:00:00Z",
+      "type": "event"
+    },
+    {
+      "id": 5,
+      "title": "Training Session",
+      "description": "New HR System Training",
+      "start": "2026-04-20T14:00:00Z",
+      "end": "2026-04-20T16:00:00Z",
+      "type": "training"
+    },
+    {
+      "id": 6,
+      "title": "All Hands Meeting",
+      "description": "Monthly company-wide update",
+      "start": "2026-04-22T10:00:00Z",
+      "end": "2026-04-22T11:30:00Z",
+      "type": "meeting"
+    },
+    {
+      "id": 7,
+      "title": "Project Kickoff",
+      "description": "New client project kickoff meeting",
+      "start": "2026-04-25T09:00:00Z",
+      "end": "2026-04-25T10:30:00Z",
+      "type": "meeting"
+    },
+    {
+      "id": 8,
+      "title": "Birthday Celebration",
+      "description": "April birthday celebrations",
+      "start": "2026-04-28T15:00:00Z",
+      "end": "2026-04-28T16:00:00Z",
+      "type": "event"
+    },
+    {
+      "id": 9,
+      "title": "Safety Drill",
+      "description": "Quarterly emergency evacuation drill",
+      "start": "2026-04-30T10:00:00Z",
+      "end": "2026-04-30T10:30:00Z",
+      "type": "training"
+    },
+    {
+      "id": 10,
+      "title": "Budget Planning",
+      "description": "Q2 budget planning session",
+      "start": "2026-05-02T09:00:00Z",
+      "end": "2026-05-02T12:00:00Z",
+      "type": "meeting"
+    },
+    {
+      "id": 11,
+      "title": "Client Presentation",
+      "description": "Product demo for ABC Corp",
+      "start": "2026-05-05T14:00:00Z",
+      "end": "2026-05-05T15:30:00Z",
+      "type": "meeting"
+    },
+    {
+      "id": 12,
+      "title": "HR Policy Update",
+      "description": "Review and update HR policies",
+      "start": "2026-05-08T10:00:00Z",
+      "end": "2026-05-08T12:00:00Z",
+      "type": "meeting"
+    },
+    {
+      "id": 13,
+      "title": "Tech Talk",
+      "description": "Internal tech sharing session",
+      "start": "2026-05-10T16:00:00Z",
+      "end": "2026-05-10T17:00:00Z",
+      "type": "training"
+    },
+    {
+      "id": 14,
+      "title": "Interview Day",
+      "description": "Scheduled candidate interviews",
+      "start": "2026-05-12T09:00:00Z",
+      "end": "2026-05-12T17:00:00Z",
+      "type": "event"
+    },
+    {
+      "id": 15,
+      "title": "System Maintenance",
+      "description": "Scheduled server maintenance window",
+      "start": "2026-05-15T02:00:00Z",
+      "end": "2026-05-15T06:00:00Z",
+      "type": "event"
+    },
+    {
+      "id": 16,
+      "title": "Performance Reviews",
+      "description": "Mid-year performance review cycle",
+      "start": "2026-05-18T09:00:00Z",
+      "end": "2026-05-22T17:00:00Z",
+      "type": "event"
+    },
+    {
+      "id": 17,
+      "title": "Company Picnic",
+      "description": "Annual company picnic at Central Park",
+      "start": "2026-05-25T11:00:00Z",
+      "end": "2026-05-25T16:00:00Z",
+      "type": "event"
+    },
+    {
+      "id": 18,
+      "title": "Strategy Workshop",
+      "description": "Q3 strategy planning workshop",
+      "start": "2026-05-28T09:00:00Z",
+      "end": "2026-05-28T17:00:00Z",
+      "type": "meeting"
+    },
+    {
+      "id": 19,
+      "title": "Wellness Day",
+      "description": "Employee wellness and health day",
+      "start": "2026-06-01T08:00:00Z",
+      "end": "2026-06-01T17:00:00Z",
+      "type": "event"
+    },
+    {
+      "id": 20,
+      "title": "Graduation Celebration",
+      "description": "Celebrating employees who completed courses",
+      "start": "2026-06-05T15:00:00Z",
+      "end": "2026-06-05T17:00:00Z",
+      "type": "event"
+    }
+  ]
+}
