@@ -8,6 +8,13 @@ export async function GET(request: NextRequest) {
     const userId = searchParams.get("userId");
     const date = searchParams.get("date"); // Get schedules for a specific date
 
+    // Pagination parameters
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "10");
+    const sortBy = searchParams.get("sortBy") || "effectiveFrom";
+    const sortOrder = searchParams.get("sortOrder") || "desc";
+    const search = searchParams.get("search"); // Search by employee name
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const whereClause: any = {};
 
@@ -29,6 +36,30 @@ export async function GET(request: NextRequest) {
       ];
     }
 
+    // Search by employee name
+    if (search) {
+      whereClause.user = {
+        OR: [
+          { username: { contains: search, mode: "insensitive" } },
+          {
+            employeeProfile: {
+              firstName: { contains: search, mode: "insensitive" },
+            },
+          },
+          {
+            employeeProfile: {
+              lastName: { contains: search, mode: "insensitive" },
+            },
+          },
+        ],
+      };
+    }
+
+    // Get total count for pagination
+    const total = await prisma.workSchedule.count({
+      where: whereClause,
+    });
+
     const schedules = await prisma.workSchedule.findMany({
       where: whereClause,
       include: {
@@ -38,10 +69,20 @@ export async function GET(request: NextRequest) {
           },
         },
       },
-      orderBy: [{ dayOfWeek: "asc" }, { effectiveFrom: "desc" }],
+      skip: (page - 1) * limit,
+      take: limit,
+      orderBy: [{ [sortBy]: sortOrder }],
     });
 
-    return NextResponse.json(schedules);
+    return NextResponse.json({
+      schedules,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
   } catch (error) {
     console.error("Error fetching schedules:", error);
     return NextResponse.json(

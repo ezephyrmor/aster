@@ -70,6 +70,8 @@ interface ServerSideDataTableProps<TData, TValue> {
   searchValue?: string;
   /** Callback when search value changes */
   onSearchChange?: (value: string) => void;
+  /** Optional action button to display next to search (e.g., Add User) */
+  searchAction?: React.ReactNode;
   /** Array of filter configurations */
   filters?: FilterConfig[];
   /** Custom filter renderer (overrides default filter UI) */
@@ -104,6 +106,7 @@ export function ServerSideDataTable<TData, TValue>({
   searchPlaceholder = "Search...",
   searchValue = "",
   onSearchChange,
+  searchAction,
   filters,
   renderFilters,
   pagination,
@@ -221,13 +224,14 @@ export function ServerSideDataTable<TData, TValue>({
           {showFilterSection && (
             <div className="mb-4">
               {showSearch && (
-                <div className="flex items-center mb-4">
+                <div className="flex items-center justify-between gap-3 mb-4">
                   <Input
                     placeholder={searchPlaceholder}
                     value={searchValue}
                     onChange={(e) => onSearchChange?.(e.target.value)}
                     className="max-w-sm"
                   />
+                  {searchAction}
                 </div>
               )}
               {renderFilterUI()}
