@@ -10,12 +10,14 @@ interface DashboardLayoutProps {
   children: React.ReactNode;
   title: string;
   subtitle?: string;
+  icon?: React.ReactNode;
 }
 
 export default function DashboardLayout({
   children,
   title,
   subtitle,
+  icon,
 }: DashboardLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -68,19 +70,21 @@ export default function DashboardLayout({
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-4">
                   <div className="h-10 w-10 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
-                    <svg
-                      className="w-6 h-6 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                      />
-                    </svg>
+                    {icon || (
+                      <svg
+                        className="w-6 h-6 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                        />
+                      </svg>
+                    )}
                   </div>
                   <div>
                     <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">

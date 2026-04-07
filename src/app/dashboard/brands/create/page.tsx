@@ -47,7 +47,25 @@ export default function CreateBrandPage() {
   };
 
   return (
-    <DashboardLayout title="Create Brand" subtitle="Create a new client brand">
+    <DashboardLayout
+      title="Create Brand"
+      subtitle="Create a new client brand"
+      icon={
+        <svg
+          className="w-6 h-6 text-white"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+      }
+    >
       <div className="max-w-2xl">
         {error && (
           <div className="mb-6 rounded-md bg-red-50 p-4">

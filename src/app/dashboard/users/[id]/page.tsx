@@ -108,7 +108,25 @@ export default function EditUserPage({
 
   if (isLoading) {
     return (
-      <DashboardLayout title="Edit User" subtitle="Loading...">
+      <DashboardLayout
+        title="Edit User"
+        subtitle="Loading..."
+        icon={
+          <svg
+            className="w-6 h-6 text-white"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+            />
+          </svg>
+        }
+      >
         <div className="flex justify-center items-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
         </div>
@@ -117,7 +135,25 @@ export default function EditUserPage({
   }
 
   return (
-    <DashboardLayout title="Edit User" subtitle="Update employee information">
+    <DashboardLayout
+      title="Edit User"
+      subtitle="Update employee information"
+      icon={
+        <svg
+          className="w-6 h-6 text-white"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+          />
+        </svg>
+      }
+    >
       {error && (
         <div className="mb-6 rounded-md bg-red-50 p-4">
           <div className="flex">

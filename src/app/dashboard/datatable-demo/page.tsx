@@ -371,6 +371,21 @@ export default function DataTableDemoPage() {
     <DashboardLayout
       title="DataTable Demo"
       subtitle="A demonstration of the shadcn/ui DataTable component with sorting, filtering, and pagination."
+      icon={
+        <svg
+          className="w-6 h-6 text-white"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M3 10h18M3 14h18M3 10h18M3 14h18"
+          />
+        </svg>
+      }
     >
       <ThemedDataTable
         columns={columns}

@@ -315,7 +315,25 @@ export default function CalendarPage() {
 
   if (isLoading) {
     return (
-      <DashboardLayout title="Calendar" subtitle="Loading...">
+      <DashboardLayout
+        title="Calendar"
+        subtitle="Loading..."
+        icon={
+          <svg
+            className="w-6 h-6 text-white"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+            />
+          </svg>
+        }
+      >
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full" />
         </div>
@@ -330,7 +348,25 @@ export default function CalendarPage() {
   const days = getDaysInMonth();
 
   return (
-    <DashboardLayout title="Calendar" subtitle="View and manage company events">
+    <DashboardLayout
+      title="Calendar"
+      subtitle="View and manage company events"
+      icon={
+        <svg
+          className="w-6 h-6 text-white"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+          />
+        </svg>
+      }
+    >
       <div className="bg-white dark:bg-zinc-800 rounded-xl shadow-lg border border-zinc-200 dark:border-zinc-700 overflow-hidden">
         {/* Calendar Header */}
         <div className="flex items-center justify-between p-6 border-b border-zinc-200 dark:border-zinc-700">
