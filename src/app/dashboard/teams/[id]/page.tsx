@@ -70,9 +70,6 @@ interface Team {
   description?: string | null;
   members: TeamMember[];
   history: TeamHistory[];
-  _count: {
-    members: number;
-  };
 }
 
 export default function TeamDetailPage({
@@ -414,7 +411,7 @@ export default function TeamDetailPage({
           <div className="bg-white dark:bg-zinc-800 rounded-lg shadow">
             <div className="px-6 py-4 border-b border-gray-200 dark:border-zinc-700 flex justify-between items-center">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                Team Members ({team._count.members})
+                Team Members ({team.members?.length ?? 0})
               </h2>
               <button
                 onClick={() => setShowAddMemberModal(true)}
@@ -437,13 +434,13 @@ export default function TeamDetailPage({
               </button>
             </div>
 
-            {team.members.length === 0 ? (
+            {(team.members?.length ?? 0) === 0 ? (
               <div className="p-6 text-center text-gray-500 dark:text-gray-400">
                 No members in this team yet.
               </div>
             ) : (
               <ul className="divide-y divide-gray-200 dark:divide-zinc-700">
-                {team.members.map((member) => (
+                {(team.members ?? []).map((member) => (
                   <li
                     key={member.id}
                     className="px-6 py-4 hover:bg-gray-50 dark:hover:bg-zinc-700/50"
@@ -521,17 +518,17 @@ export default function TeamDetailPage({
               </h2>
             </div>
 
-            {team.history.length === 0 ? (
+            {(team.history?.length ?? 0) === 0 ? (
               <div className="p-6 text-center text-gray-500 dark:text-gray-400">
                 No history yet.
               </div>
             ) : (
               <div className="flow-root px-6 py-4">
                 <ul className="-mb-8">
-                  {team.history.map((event, eventIdx) => (
+                  {(team.history ?? []).map((event, eventIdx) => (
                     <li key={event.id}>
                       <div className="relative pb-8">
-                        {eventIdx !== team.history.length - 1 ? (
+                        {eventIdx !== (team.history?.length ?? 0) - 1 ? (
                           <span
                             className="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200 dark:bg-zinc-700"
                             aria-hidden="true"

@@ -61,10 +61,11 @@ export const columns: ColumnDef<Team>[] = [
     },
   },
   {
-    accessorKey: "_count.members",
+    accessorKey: "membersCount",
+    accessorFn: (row) => row._count?.members ?? 0,
     header: () => <div className="hidden md:block">Members</div>,
     cell: ({ row }) => {
-      const membersCount = row.original._count.members;
+      const membersCount = row.original._count?.members ?? 0;
       return (
         <div className="hidden md:block text-muted-foreground">
           {membersCount} member{membersCount !== 1 ? "s" : ""}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import LoginForm from "@/components/LoginForm";
 
@@ -10,6 +10,11 @@ export default function LoginPage() {
   const { login } = useAuth();
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [showDemoCredentials, setShowDemoCredentials] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const handleLogin = async (username: string, password: string) => {
     const result = await login(username, password);
@@ -70,20 +75,14 @@ export default function LoginPage() {
           onMouseLeave={() => setShowDemoCredentials(false)}
         >
           <div
-            className={`
+            className="
               flex items-center justify-center gap-2 py-3 px-4 rounded-xl cursor-pointer
               transition-all duration-200 border-2
-              ${
-                showDemoCredentials
-                  ? "bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700"
-                  : "bg-transparent border-transparent hover:border-zinc-300 dark:hover:border-zinc-600"
-              }
-            `}
+              bg-transparent border-transparent hover:border-zinc-300 dark:hover:border-zinc-600
+            "
           >
             <svg
-              className={`w-5 h-5 text-blue-500 dark:text-blue-400 transition-transform duration-200 ${
-                showDemoCredentials ? "rotate-12" : ""
-              }`}
+              className="w-5 h-5 text-blue-500 dark:text-blue-400 transition-transform duration-200"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -98,14 +97,8 @@ export default function LoginPage() {
             <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
               Demo Credentials
             </span>
-            <span
-              className={`text-xs transition-all duration-200 ${
-                showDemoCredentials
-                  ? "text-blue-600 dark:text-blue-400"
-                  : "text-zinc-400 dark:text-zinc-500"
-              }`}
-            >
-              {showDemoCredentials ? "▼" : "▲ Hover to reveal ▲"}
+            <span className="text-xs text-zinc-400 dark:text-zinc-500 transition-all duration-200">
+              ▲ Hover to reveal ▲
             </span>
           </div>
           <div
@@ -114,7 +107,7 @@ export default function LoginPage() {
               border-2 border-blue-200 dark:border-blue-800
               shadow-lg transition-all duration-300
               ${
-                showDemoCredentials
+                isMounted && showDemoCredentials
                   ? "opacity-100 max-h-96 mt-2"
                   : "opacity-0 max-h-0 overflow-hidden p-0 mt-0 border-0"
               }
