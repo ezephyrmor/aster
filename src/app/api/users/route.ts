@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
     // Get total count for pagination
     const total = await prisma.user.count({ where });
 
-    // Build orderBy - handle nested fields
+    // Build orderBy - handle nested fields and relations
     const orderBy: any =
       sortBy === "employeeProfile.firstName"
         ? { employeeProfile: { firstName: sortOrder as "asc" | "desc" } }
@@ -85,7 +85,9 @@ export async function GET(request: NextRequest) {
                   status: { name: sortOrder as "asc" | "desc" },
                 },
               }
-            : { [sortBy]: sortOrder };
+            : sortBy === "role"
+              ? { role: { name: sortOrder as "asc" | "desc" } }
+              : { [sortBy]: sortOrder };
 
     // Get users with pagination, including related data
     const users = await prisma.user.findMany({
