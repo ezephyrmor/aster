@@ -108,9 +108,7 @@ export default function DashboardLayout({
                       {user && (
                         <>
                           <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-semibold shadow-md">
-                            {(user.username || user.email || user.name || "U")
-                              .charAt(0)
-                              .toUpperCase()}
+                            {(user?.username || "U").charAt(0).toUpperCase()}
                           </div>
                           <svg
                             className={`w-4 h-4 text-zinc-600 dark:text-zinc-400 transition-transform ${isOpen ? "rotate-180" : ""}`}

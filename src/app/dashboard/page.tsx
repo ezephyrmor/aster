@@ -128,15 +128,12 @@ export default function DashboardPage() {
             <div className="flex items-center gap-4 mb-4">
               <div className="h-16 w-16 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center shadow-2xl flex-shrink-0">
                 <span className="text-2xl font-bold text-white">
-                  {(user.username || user.email || user.name || "U")
-                    .charAt(0)
-                    .toUpperCase()}
+                  {(user?.username || "U").charAt(0).toUpperCase()}
                 </span>
               </div>
               <div>
                 <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
-                  Welcome back,{" "}
-                  {user.username || user.email || user.name || "User"}!
+                  Welcome back, {user?.username || "User"}!
                 </h2>
                 <p className="text-zinc-600 dark:text-zinc-400 text-sm">
                   You are logged in.
