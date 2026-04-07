@@ -139,28 +139,68 @@ export default function ClockInButton() {
     : null;
 
   return (
-    <div className="relative">
-      <div className="flex items-center gap-2">
-        {/* Server Time Display */}
-        {serverTime.standard && (
-          <div className="text-xs text-zinc-500 dark:text-zinc-400">
-            <span className="font-mono">
-              {serverTime.standard} / {serverTime.military}
-            </span>
-            <span className="ml-2">{serverTime.date}</span>
-          </div>
-        )}
+    <div className="relative flex items-center gap-4">
+      {/* Time Card - Secondary */}
+      <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700">
+        <svg
+          className="w-4 h-4 text-zinc-400 dark:text-zinc-500"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+        <div className="flex flex-col">
+          <span className="text-xs font-mono font-semibold text-zinc-900 dark:text-zinc-100 leading-tight">
+            {serverTime.standard}
+          </span>
+          <span className="text-[10px] text-zinc-500 dark:text-zinc-400 leading-tight">
+            {serverTime.date}
+          </span>
+        </div>
+      </div>
 
-        {status?.canClockIn ? (
-          <button
-            onClick={() => handleClockAction("in")}
-            disabled={actionLoading}
-            className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
-            onMouseEnter={() => setShowTooltip(true)}
-            onMouseLeave={() => setShowTooltip(false)}
-          >
+      {/* Primary Clock Action Button */}
+      {status?.canClockIn ? (
+        <button
+          onClick={() => handleClockAction("in")}
+          disabled={actionLoading}
+          title="Clock In"
+          className="relative flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold text-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:focus:ring-offset-zinc-900 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+          onMouseEnter={() => setShowTooltip(true)}
+          onMouseLeave={() => setShowTooltip(false)}
+        >
+          {/* Pulse animation ring */}
+          <div className="absolute inset-0 rounded-xl bg-green-400 opacity-20 animate-pulse" />
+
+          {actionLoading ? (
             <svg
-              className="w-4 h-4"
+              className="animate-spin h-5 w-5 relative z-10"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              />
+            </svg>
+          ) : (
+            <svg
+              className="w-5 h-5 relative z-10"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -172,36 +212,61 @@ export default function ClockInButton() {
                 d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 6v1a2 2 0 01-2 2H5a2 2 0 012-2V7a2 2 0 012-2h7a2 2 0 012 2v1"
               />
             </svg>
-            Clock In
-          </button>
-        ) : clockOutTime ? (
-          <span className="px-3 py-1.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-sm font-medium rounded-lg flex items-center gap-1.5">
+          )}
+          <span className="relative z-10">Clock In</span>
+        </button>
+      ) : clockOutTime ? (
+        <div
+          title={`Clocked out at ${clockOutTime}`}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 text-green-700 dark:text-green-400 font-semibold text-sm shadow-md"
+        >
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M5 13l4 4L19 7"
+            />
+          </svg>
+          <span>Clocked Out</span>
+        </div>
+      ) : (
+        <button
+          onClick={() => handleClockAction("out")}
+          disabled={actionLoading}
+          title="Clock Out"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold text-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 dark:focus:ring-offset-zinc-900 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+          onMouseEnter={() => setShowTooltip(true)}
+          onMouseLeave={() => setShowTooltip(false)}
+        >
+          {actionLoading ? (
             <svg
-              className="w-4 h-4"
+              className="animate-spin h-5 w-5"
               fill="none"
-              stroke="currentColor"
               viewBox="0 0 24 24"
             >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
               <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               />
             </svg>
-            Done
-          </span>
-        ) : (
-          // Show Clock Out button after clocking in (disabled until eligible)
-          <button
-            onClick={() => handleClockAction("out")}
-            disabled={true}
-            className="px-3 py-1.5 bg-orange-400 text-white text-sm font-medium rounded-lg flex items-center gap-1.5 opacity-75 cursor-not-allowed"
-            onMouseEnter={() => setShowTooltip(true)}
-            onMouseLeave={() => setShowTooltip(false)}
-          >
+          ) : (
             <svg
-              className="w-4 h-4"
+              className="w-5 h-5"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -213,35 +278,24 @@ export default function ClockInButton() {
                 d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
               />
             </svg>
-            Clock Out (Not Yet)
-          </button>
-        )}
+          )}
+          <span>Clock Out</span>
+        </button>
+      )}
 
-        {/* Status Info */}
-        {(clockInTime ||
-          (status?.attendance && status.attendance.lateMinutes > 0)) && (
-          <div className="text-xs text-zinc-500 dark:text-zinc-400">
-            {clockInTime && <span>In: {clockInTime}</span>}
-            {clockOutTime && <span> | Out: {clockOutTime}</span>}
-            {status?.attendance && status.attendance.lateMinutes > 0 && (
-              <span className="text-orange-600 dark:text-orange-400">
-                {" "}
-                (+{status.attendance.lateMinutes}m late)
-              </span>
-            )}
-            {status?.attendance && status.attendance.undertimeMinutes > 0 && (
-              <span className="text-orange-600 dark:text-orange-400">
-                {" "}
-                (-{status.attendance.undertimeMinutes}m early)
-              </span>
-            )}
-          </div>
-        )}
-      </div>
+      {/* Status Indicator - Minimal */}
+      {status?.attendance && status.attendance.lateMinutes > 0 && (
+        <span
+          title={`${status.attendance.lateMinutes} minutes late`}
+          className="text-xs text-orange-600 dark:text-orange-400 font-medium"
+        >
+          +{status.attendance.lateMinutes}m
+        </span>
+      )}
 
       {/* Tooltip */}
       {showTooltip && status?.schedule && (
-        <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-2 bg-zinc-900 dark:bg-zinc-700 text-white text-xs rounded-lg shadow-lg whitespace-nowrap">
+        <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-2 bg-zinc-900 dark:bg-zinc-700 text-white text-xs rounded-lg shadow-lg whitespace-nowrap z-50">
           Schedule: {status.schedule.startTime} - {status.schedule.endTime}
           <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-b-zinc-900 dark:border-b-zinc-700" />
         </div>

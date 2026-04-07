@@ -2,6 +2,16 @@
 
 import { useState, useEffect, useCallback } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
+import {
+  ServerSideDataTable,
+  FilterConfig,
+} from "@/components/ServerSideDataTable";
+import {
+  useScheduleColumns,
+  WorkSchedule,
+  ScheduleAction,
+} from "@/components/ScheduleColumns";
+import { PaginationState, SortingState } from "@tanstack/react-table";
 
 interface Employee {
   id: number;
@@ -15,16 +25,16 @@ interface Employee {
   teams?: { name: string }[];
 }
 
-interface WorkSchedule {
-  id: number;
-  userId: number;
-  dayOfWeek: number;
-  startTime: string;
-  endTime: string;
-  breakMinutes: number;
-  effectiveFrom: string;
-  effectiveTo: string | null;
-  user: Employee;
+interface Pagination {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+interface SchedulesResponse {
+  schedules: WorkSchedule[];
+  pagination: Pagination;
 }
 
 const DAYS_OF_WEEK = [
@@ -50,11 +60,17 @@ const getFullName = (
 
 export default function SchedulesPage() {
   const [schedules, setSchedules] = useState<WorkSchedule[]>([]);
-  const [filteredSchedules, setFilteredSchedules] = useState<WorkSchedule[]>(
-    [],
-  );
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [pagination, setPagination] = useState<Pagination>({
+    total: 0,
+    page: 1,
+    limit: 10,
+    totalPages: 0,
+  });
+
+  // Modal state
   const [showModal, setShowModal] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState<WorkSchedule | null>(
     null,
@@ -77,6 +93,17 @@ export default function SchedulesPage() {
 
     return () => clearTimeout(timer);
   }, [searchName]);
+
+  // TanStack Table pagination state
+  const [tablePagination, setTablePagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 10,
+  });
+
+  // TanStack Table sorting state
+  const [sorting, setSorting] = useState<SortingState>([]);
+
+  // Form data state
   const [formData, setFormData] = useState({
     userId: "",
     dayOfWeek: [1], // Array of selected days
@@ -86,6 +113,28 @@ export default function SchedulesPage() {
     effectiveFrom: new Date().toISOString().split("T")[0],
     effectiveTo: "",
   });
+
+  // Sync TanStack Table pagination with our pagination state
+  useEffect(() => {
+    setPagination((prev) => ({
+      ...prev,
+      page: tablePagination.pageIndex + 1,
+      limit: tablePagination.pageSize,
+    }));
+  }, [tablePagination]);
+
+  // Map sorting column IDs to API field names
+  // Note: Prisma orderBy doesn't support deeply nested relations like user.employeeProfile.firstName
+  // We use simpler fields that Prisma can handle
+  const getSortByField = (columnId: string): string => {
+    const fieldMap: Record<string, string> = {
+      user: "userId", // Sort by user ID since nested name sorting isn't supported
+      dayOfWeek: "dayOfWeek",
+      breakMinutes: "breakMinutes",
+      effectiveFrom: "effectiveFrom",
+    };
+    return fieldMap[columnId] || columnId;
+  };
 
   // Filter employees based on search
   const filteredEmployees = employees.filter((emp) => {
@@ -105,29 +154,45 @@ export default function SchedulesPage() {
   );
 
   const fetchSchedules = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
     try {
-      const response = await fetch("/api/schedules");
+      const params = new URLSearchParams();
+      params.set("page", pagination.page.toString());
+      params.set("limit", pagination.limit.toString());
+      if (debouncedSearch) params.set("search", debouncedSearch);
+
+      // Add sorting parameters
+      if (sorting.length > 0) {
+        const sort = sorting[0];
+        const sortBy = getSortByField(sort.id);
+        const sortOrder = sort.desc ? "desc" : "asc";
+        params.set("sortBy", sortBy);
+        params.set("sortOrder", sortOrder);
+      }
+
+      const response = await fetch(`/api/schedules?${params.toString()}`);
       if (response.ok) {
-        const data = await response.json();
-        setSchedules(data);
-        setFilteredSchedules(data);
+        const data: SchedulesResponse = await response.json();
+        setSchedules(data.schedules);
+        setPagination(data.pagination);
       }
     } catch (error) {
       console.error("Error fetching schedules:", error);
+      setError("Failed to fetch schedules");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [pagination.page, pagination.limit, debouncedSearch, sorting]);
 
   const fetchEmployees = useCallback(async () => {
     try {
-      // Fetch all users sorted by ID ascending (so admin appears first)
       const response = await fetch(
         "/api/users?limit=1000&sortBy=id&sortOrder=asc",
       );
       if (response.ok) {
         const data = await response.json();
-        // Handle paginated response format
         setEmployees(Array.isArray(data) ? data : data.users || []);
       }
     } catch (error) {
@@ -135,48 +200,18 @@ export default function SchedulesPage() {
     }
   }, []);
 
-  // Apply filters when they change
-  useEffect(() => {
-    let filtered = [...schedules];
-
-    // Filter by name search
-    if (debouncedSearch) {
-      const searchLower = debouncedSearch.toLowerCase();
-      filtered = filtered.filter((schedule) => {
-        const fullName = getFullName(
-          schedule.user.employeeProfile,
-          schedule.user.username,
-        ).toLowerCase();
-        return (
-          fullName.includes(searchLower) ||
-          schedule.user.username.toLowerCase().includes(searchLower)
-        );
-      });
-    }
-
-    // Filter by department
-    if (departmentFilter) {
-      filtered = filtered.filter((schedule) => {
-        const emp = employees.find((e) => e.id === schedule.userId);
-        return emp?.employeeProfile?.department === departmentFilter;
-      });
-    }
-
-    // Filter by team
-    if (teamFilter) {
-      filtered = filtered.filter((schedule) => {
-        const emp = employees.find((e) => e.id === schedule.userId);
-        return emp?.teams?.some((t) => t.name === teamFilter);
-      });
-    }
-
-    setFilteredSchedules(filtered);
-  }, [debouncedSearch, departmentFilter, teamFilter, schedules, employees]);
-
   useEffect(() => {
     fetchSchedules();
+  }, [fetchSchedules]);
+
+  useEffect(() => {
     fetchEmployees();
-  }, [fetchSchedules, fetchEmployees]);
+  }, [fetchEmployees]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setTablePagination((prev) => ({ ...prev, pageIndex: 0 }));
+  }, [debouncedSearch, departmentFilter, teamFilter]);
 
   // Get unique departments from employees
   const departments = Array.from(
@@ -195,6 +230,18 @@ export default function SchedulesPage() {
         .filter((t): t is string => !!t),
     ),
   ).sort();
+
+  // Update sorting state when TanStack Table sorting changes
+  const handleSortingChange = useCallback(
+    (updater: SortingState | ((old: SortingState) => SortingState)) => {
+      setSorting((old) => {
+        const newSorting =
+          typeof updater === "function" ? updater(old) : updater;
+        return newSorting;
+      });
+    },
+    [],
+  );
 
   const openModal = (schedule?: WorkSchedule) => {
     if (schedule) {
@@ -256,7 +303,6 @@ export default function SchedulesPage() {
     }
 
     try {
-      // Create schedules for each selected day
       const promises = formData.dayOfWeek.map((day) => {
         const url = editingSchedule
           ? `/api/schedules/${editingSchedule.id}`
@@ -312,197 +358,73 @@ export default function SchedulesPage() {
     }
   };
 
-  const getDayName = (day: number) => {
-    return DAYS_OF_WEEK.find((d) => d.value === day)?.label || "Unknown";
-  };
+  // Handle schedule actions from the table
+  const handleScheduleAction = useCallback((action: ScheduleAction) => {
+    switch (action.type) {
+      case "edit":
+        openModal(action.schedule);
+        break;
+      case "delete":
+        handleDelete(action.schedule.id);
+        break;
+    }
+  }, []);
 
-  const formatTime = (time: string) => {
-    const [hours, minutes] = time.split(":");
-    const hour = parseInt(hours);
-    const ampm = hour >= 12 ? "PM" : "AM";
-    const hour12 = hour % 12 || 12;
-    return `${hour12}:${minutes} ${ampm}`;
-  };
+  // Get columns with action handlers
+  const columns = useScheduleColumns({ onAction: handleScheduleAction });
+
+  // Build filters configuration
+  const filters: FilterConfig[] = [
+    {
+      id: "department",
+      label: "Department",
+      type: "select",
+      options: departments.map((dept) => ({ value: dept, label: dept })),
+      value: departmentFilter,
+      onChange: setDepartmentFilter,
+    },
+    {
+      id: "team",
+      label: "Team",
+      type: "select",
+      options: teams.map((team) => ({ value: team, label: team })),
+      value: teamFilter,
+      onChange: setTeamFilter,
+    },
+  ];
+
+  // Create the Add Schedule button
+  const searchAction = (
+    <button
+      onClick={() => openModal()}
+      className="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 whitespace-nowrap"
+    >
+      + Add Schedule
+    </button>
+  );
 
   return (
     <DashboardLayout
-      title="Work Schedules"
+      title="Schedules"
       subtitle="Manage employee work schedules"
     >
-      {/* Header with Add button */}
-      <div className="sm:flex sm:items-center mb-6">
-        <div className="sm:flex-auto">
-          <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
-            Manage employee work schedules including working days, hours, and
-            break times.
-          </p>
-        </div>
-        <div className="mt-4 sm:mt-0 sm:flex-none">
-          <button
-            onClick={() => openModal()}
-            className="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:w-auto"
-          >
-            + Add Schedule
-          </button>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <div className="bg-white dark:bg-zinc-800 rounded-lg shadow p-4 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {/* Search */}
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Search
-            </label>
-            <input
-              type="text"
-              value={searchName}
-              onChange={(e) => setSearchName(e.target.value)}
-              placeholder="Search by employee name..."
-              className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-zinc-700 dark:border-zinc-600"
-            />
-          </div>
-
-          {/* Department Filter */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Department
-            </label>
-            <select
-              value={departmentFilter}
-              onChange={(e) => setDepartmentFilter(e.target.value)}
-              className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-zinc-700 dark:border-zinc-600"
-            >
-              <option value="">All Departments</option>
-              {departments.map((dept) => (
-                <option key={dept} value={dept}>
-                  {dept}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Team Filter */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Team
-            </label>
-            <select
-              value={teamFilter}
-              onChange={(e) => setTeamFilter(e.target.value)}
-              className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-zinc-700 dark:border-zinc-600"
-            >
-              <option value="">All Teams</option>
-              {teams.map((team) => (
-                <option key={team} value={team}>
-                  {team}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {loading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full" />
-        </div>
-      ) : schedules.length === 0 ? (
-        <div className="bg-white dark:bg-zinc-800 rounded-lg shadow p-8 text-center">
-          <p className="text-gray-500 dark:text-gray-400">
-            No schedules found. Click "Add Schedule" to create one.
-          </p>
-        </div>
-      ) : (
-        <div className="bg-white dark:bg-zinc-800 rounded-lg shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-zinc-700">
-            <thead className="bg-gray-50 dark:bg-zinc-700">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  Employee
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  Day
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  Time
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  Break
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  Effective Date
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white dark:bg-zinc-800 divide-y divide-gray-200 dark:divide-zinc-700">
-              {filteredSchedules.map((schedule) => (
-                <tr
-                  key={schedule.id}
-                  className="hover:bg-gray-50 dark:hover:bg-zinc-700/50"
-                >
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                      {getFullName(
-                        schedule.user.employeeProfile,
-                        schedule.user.username,
-                      )}
-                    </div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">
-                      {schedule.user.username}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 text-sm rounded-full">
-                      {getDayName(schedule.dayOfWeek)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900 dark:text-gray-100">
-                      {formatTime(schedule.startTime)} -{" "}
-                      {formatTime(schedule.endTime)}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900 dark:text-gray-100">
-                      {schedule.breakMinutes} min
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900 dark:text-gray-100">
-                      {new Date(schedule.effectiveFrom).toLocaleDateString()}
-                    </div>
-                    {schedule.effectiveTo && (
-                      <div className="text-xs text-gray-500 dark:text-gray-400">
-                        To:{" "}
-                        {new Date(schedule.effectiveTo).toLocaleDateString()}
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button
-                      onClick={() => openModal(schedule)}
-                      className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-4"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(schedule.id)}
-                      className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <ServerSideDataTable
+        columns={columns}
+        data={schedules}
+        totalCount={pagination.total}
+        isLoading={loading}
+        error={error}
+        searchKey="name"
+        searchPlaceholder="Search by employee name..."
+        searchValue={searchName}
+        onSearchChange={setSearchName}
+        searchAction={searchAction}
+        filters={filters}
+        pagination={tablePagination}
+        onPaginationChange={setTablePagination}
+        sorting={sorting}
+        onSortingChange={handleSortingChange}
+      />
 
       {/* Modal */}
       {showModal && (

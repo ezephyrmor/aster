@@ -10,6 +10,13 @@ export async function GET(request: NextRequest) {
     const offenseId = searchParams.get("offenseId");
     const acknowledged = searchParams.get("acknowledged");
 
+    // Pagination parameters
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "10");
+    const sortBy = searchParams.get("sortBy") || "createdAt";
+    const sortOrder = searchParams.get("sortOrder") || "desc";
+    const search = searchParams.get("search"); // Search by employee name
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const where: any = {};
 
@@ -32,6 +39,30 @@ export async function GET(request: NextRequest) {
         where.acknowledgedBy = null;
       }
     }
+
+    // Search by employee name
+    if (search) {
+      where.user = {
+        OR: [
+          { username: { contains: search, mode: "insensitive" } },
+          {
+            employeeProfile: {
+              firstName: { contains: search, mode: "insensitive" },
+            },
+          },
+          {
+            employeeProfile: {
+              lastName: { contains: search, mode: "insensitive" },
+            },
+          },
+        ],
+      };
+    }
+
+    // Get total count for pagination
+    const total = await prisma.infraction.count({
+      where,
+    });
 
     const infractions = await prisma.infraction.findMany({
       where,
@@ -63,12 +94,22 @@ export async function GET(request: NextRequest) {
           },
         },
       },
+      skip: (page - 1) * limit,
+      take: limit,
       orderBy: {
-        createdAt: "desc",
+        [sortBy]: sortOrder,
       },
     });
 
-    return NextResponse.json(infractions);
+    return NextResponse.json({
+      infractions,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
   } catch (error) {
     console.error("Error fetching infractions:", error);
     return NextResponse.json(
