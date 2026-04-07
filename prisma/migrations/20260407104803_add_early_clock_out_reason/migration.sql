@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `attendance` ADD COLUMN `early_clock_out_reason` TEXT NULL;
