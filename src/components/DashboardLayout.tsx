@@ -21,6 +21,7 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const { user, isLoading, logout } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -94,54 +95,94 @@ export default function DashboardLayout({
                 </div>
                 <div className="flex items-center gap-4">
                   <ClockInButton />
-                  <button
-                    onClick={handleLogout}
-                    disabled={isLoggingOut}
-                    className="px-6 py-3 rounded-xl bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-medium transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-zinc-900 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg hover:shadow-xl"
-                  >
-                    {isLoggingOut ? (
-                      <div className="flex items-center gap-2">
-                        <svg
-                          className="animate-spin h-5 w-5"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
+                  <div className="h-8 w-px bg-zinc-200 dark:bg-zinc-700" />
+                  <div className="relative">
+                    <button
+                      onClick={() => setIsOpen(!isOpen)}
+                      className="flex items-center gap-2 p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-400 focus:ring-offset-2 dark:focus:ring-offset-zinc-900"
+                    >
+                      {user && (
+                        <>
+                          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-semibold shadow-md">
+                            {user.username.charAt(0).toUpperCase()}
+                          </div>
+                          <svg
+                            className={`w-4 h-4 text-zinc-600 dark:text-zinc-400 transition-transform ${isOpen ? "rotate-180" : ""}`}
+                            fill="none"
                             stroke="currentColor"
-                            strokeWidth="4"
-                          />
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          />
-                        </svg>
-                        Logging out...
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <svg
-                          className="w-5 h-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                          />
-                        </svg>
-                        Logout
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 9l-7 7-7-7"
+                            />
+                          </svg>
+                        </>
+                      )}
+                    </button>
+
+                    {/* Dropdown Menu */}
+                    {isOpen && (
+                      <div className="absolute right-0 mt-2 w-48 rounded-xl bg-white dark:bg-zinc-800 shadow-xl border border-zinc-200 dark:border-zinc-700 z-50 overflow-hidden">
+                        <div className="px-4 py-3 border-b border-zinc-200 dark:border-zinc-700">
+                          <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                            {user?.username}
+                          </p>
+                          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                            {user?.role?.name}
+                          </p>
+                        </div>
+                        <div className="p-1">
+                          <button
+                            onClick={handleLogout}
+                            disabled={isLoggingOut}
+                            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg transition-colors disabled:opacity-50"
+                          >
+                            {isLoggingOut ? (
+                              <svg
+                                className="animate-spin h-4 w-4"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                              >
+                                <circle
+                                  className="opacity-25"
+                                  cx="12"
+                                  cy="12"
+                                  r="10"
+                                  stroke="currentColor"
+                                  strokeWidth="4"
+                                />
+                                <path
+                                  className="opacity-75"
+                                  fill="currentColor"
+                                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                />
+                              </svg>
+                            ) : (
+                              <svg
+                                className="h-4 w-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                                />
+                              </svg>
+                            )}
+                            <span>
+                              {isLoggingOut ? "Logging out..." : "Logout"}
+                            </span>
+                          </button>
+                        </div>
                       </div>
                     )}
-                  </button>
+                  </div>
                 </div>
               </div>
             </div>
