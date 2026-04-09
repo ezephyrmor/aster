@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/lib/toast";
+import Modal from "@/components/Modal";
 
 interface AttendanceStatus {
   attendance: {
@@ -29,6 +30,8 @@ export default function ClockInButton() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
+  const [showEarlyClockOutModal, setShowEarlyClockOutModal] = useState(false);
+  const [earlyClockOutReason, setEarlyClockOutReason] = useState("");
   const [serverTime, setServerTime] = useState({
     standard: "",
     military: "",
@@ -84,15 +87,23 @@ export default function ClockInButton() {
     return () => clearInterval(interval);
   }, [user]);
 
-  const handleClockAction = async (type: "in" | "out") => {
+  const handleClockAction = async (type: "in" | "out", reason?: string) => {
     if (!user) return;
     setActionLoading(true);
 
     try {
+      const body: { userId: number; type: string; reason?: string } = {
+        userId: user.id,
+        type,
+      };
+      if (reason !== undefined) {
+        body.reason = reason;
+      }
+
       const response = await fetch("/api/attendance/clock", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.id, type }),
+        body: JSON.stringify(body),
       });
 
       const data = await response.json();
@@ -113,6 +124,18 @@ export default function ClockInButton() {
     } finally {
       setActionLoading(false);
     }
+  };
+
+  const handleClockOutClick = () => {
+    // Always show confirmation modal for clock-out
+    setShowEarlyClockOutModal(true);
+  };
+
+  const handleConfirmClockOut = async () => {
+    const reason = earlyClockOutReason.trim() || undefined;
+    await handleClockAction("out", reason);
+    setShowEarlyClockOutModal(false);
+    setEarlyClockOutReason("");
   };
 
   const formatTime = (dateString: string) => {
@@ -237,7 +260,7 @@ export default function ClockInButton() {
         </div>
       ) : (
         <button
-          onClick={() => handleClockAction("out")}
+          onClick={handleClockOutClick}
           disabled={actionLoading}
           title="Clock Out"
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold text-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 dark:focus:ring-offset-zinc-900 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
@@ -300,6 +323,103 @@ export default function ClockInButton() {
           <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-b-zinc-900 dark:border-b-zinc-700" />
         </div>
       )}
+
+      {/* Early Clock-Out Modal using reusable Modal component */}
+      <Modal
+        isOpen={showEarlyClockOutModal}
+        onClose={() => {
+          setShowEarlyClockOutModal(false);
+          setEarlyClockOutReason("");
+        }}
+        title="Early Clock-Out"
+        description="You're clocking out before your scheduled time"
+        variant="warning"
+        size="md"
+        isLoading={actionLoading}
+        footer={
+          <>
+            <button
+              onClick={() => {
+                setShowEarlyClockOutModal(false);
+                setEarlyClockOutReason("");
+              }}
+              disabled={actionLoading}
+              className="flex-1 px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-600 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleConfirmClockOut}
+              disabled={!earlyClockOutReason.trim() || actionLoading}
+              className="flex-1 px-4 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {actionLoading ? (
+                <>
+                  <svg
+                    className="animate-spin h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
+                  </svg>
+                  Processing...
+                </>
+              ) : (
+                "Confirm Early Clock-Out"
+              )}
+            </button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          {status?.schedule && (
+            <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-orange-800 dark:text-orange-300">
+                  Scheduled End:
+                </span>
+                <span className="font-semibold text-orange-900 dark:text-orange-200">
+                  {status.schedule.endTime}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-sm mt-1">
+                <span className="text-orange-800 dark:text-orange-300">
+                  Current Time:
+                </span>
+                <span className="font-semibold text-orange-900 dark:text-orange-200">
+                  {serverTime.standard}
+                </span>
+              </div>
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+              Reason for early clock-out <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              value={earlyClockOutReason}
+              onChange={(e) => setEarlyClockOutReason(e.target.value)}
+              placeholder="Please provide a reason for leaving early..."
+              className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+              rows={3}
+              autoFocus
+            />
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

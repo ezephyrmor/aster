@@ -358,6 +358,7 @@ model Attendance {
   status        AttendanceStatus @default(present)
   lateMinutes   Int          @default(0) @map("late_minutes")
   undertimeMinutes Int       @default(0) @map("undertime_minutes")
+  earlyClockOutReason String? @map("early_clock_out_reason") @db.Text
   notes         String?      @db.Text
   createdAt     DateTime     @default(now()) @map("created_at")
   updatedAt     DateTime     @updatedAt @map("updated_at")

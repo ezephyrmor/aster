@@ -267,7 +267,8 @@ export async function POST(request: NextRequest) {
           );
         }
       } catch (error: unknown) {
-        if ((error as any).code === "P2002") {
+        const prismaError = error as { code?: string };
+        if (prismaError.code === "P2002") {
           return NextResponse.json(
             { error: "Already clocked in for today" },
             { status: 400 },
@@ -284,6 +285,8 @@ export async function POST(request: NextRequest) {
       });
     } else {
       // Clock Out Logic
+      const { reason } = body; // Optional reason for early clock-out
+
       const attendance = await prisma.attendance.findUnique({
         where: {
           userId_date: {
@@ -307,41 +310,41 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Check if can clock out (2 hours before scheduled end time)
+      // Calculate undertime and check if clocking out early
       let undertimeMinutes = 0;
+      let isEarlyClockOut = false;
+      let earlyMinutes = 0;
+
       if (schedule) {
         const [endHour, endMinute] = schedule.endTime.split(":").map(Number);
 
         // Create scheduled end time in Manila timezone
-        // Same logic as scheduledStart - use manilaMidnightUTC
         const scheduledEnd = new Date(
           manilaMidnightUTC.getTime() + (endHour * 60 + endMinute) * 60000,
         );
 
-        // Allow clock-out 2 hours before scheduled end
-        const earliestClockOut = new Date(
-          scheduledEnd.getTime() - 2 * 60 * 60000,
-        );
-
-        // Debug: Show time comparison
-        console.log("Clock-out time check:", {
-          now: now.toISOString(),
-          scheduledEnd: scheduledEnd.toISOString(),
-          earliestClockOut: earliestClockOut.toISOString(),
-          isTooEarly: now < earliestClockOut,
-        });
-
-        if (now < earliestClockOut) {
-          return NextResponse.json(
-            {
-              error: `Cannot clock out yet. Earliest clock-out time is 2 hours before your scheduled end time (${schedule.endTime})`,
-              earliestClockOut: earliestClockOut.toISOString(),
-            },
-            { status: 400 },
+        // Check if clocking out before scheduled end time
+        if (now < scheduledEnd) {
+          isEarlyClockOut = true;
+          earlyMinutes = Math.floor(
+            (scheduledEnd.getTime() - now.getTime()) / (1000 * 60),
           );
+
+          // If trying to clock out early without a reason, reject
+          if (!reason || reason.trim() === "") {
+            return NextResponse.json(
+              {
+                error: "Early clock-out requires a reason",
+                isEarlyClockOut: true,
+                earlyMinutes,
+                scheduledEndTime: schedule.endTime,
+              },
+              { status: 400 },
+            );
+          }
         }
 
-        // Calculate undertime minutes if clocking out before scheduled end
+        // Calculate undertime minutes
         if (now < scheduledEnd) {
           undertimeMinutes = Math.floor(
             (scheduledEnd.getTime() - now.getTime()) / (1000 * 60),
@@ -349,13 +352,14 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Update attendance record with clock-out
+      // Update attendance record with clock-out and reason
       const updatedAttendance = await prisma.attendance.update({
         where: { id: attendance.id },
         data: {
           clockOut: now,
           undertimeMinutes,
           status: undertimeMinutes > 0 ? "undertime" : attendance.status,
+          earlyClockOutReason: reason || null,
         },
         include: {
           schedule: true,
@@ -367,6 +371,7 @@ export async function POST(request: NextRequest) {
         message: "Clocked out successfully",
         attendance: updatedAttendance,
         undertimeMinutes,
+        isEarlyClockOut,
       });
     }
   } catch (error) {
