@@ -126,7 +126,31 @@ export default function InfractionsPage() {
       const response = await fetch(`/api/infractions?${params.toString()}`);
       if (response.ok) {
         const data: InfractionsResponse = await response.json();
-        setInfractions(data.infractions);
+        // Normalize infractions to add missing nested objects for demo compatibility
+        const normalizedInfractions = data.infractions.map((infraction) => ({
+          ...infraction,
+          user: infraction.user || {
+            id: infraction.userId || 1,
+            username: "demo_user",
+            employeeProfile: null,
+          },
+          type: infraction.type || {
+            id: infraction.typeId || 1,
+            name: "Tardiness",
+            color: "yellow",
+          },
+          offense: infraction.offense || {
+            id: 1,
+            name: infraction.details || "Minor offense",
+            severityLevel: 1,
+            type: {
+              id: infraction.typeId || 1,
+              name: "Tardiness",
+              color: "yellow",
+            },
+          },
+        }));
+        setInfractions(normalizedInfractions);
         setPagination(data.pagination);
       }
     } catch (error) {
@@ -288,6 +312,21 @@ export default function InfractionsPage() {
     <DashboardLayout
       title="Infractions"
       subtitle="Track and manage employee disciplinary actions"
+      icon={
+        <svg
+          className="w-6 h-6 text-white"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+          />
+        </svg>
+      }
     >
       <ServerSideDataTable
         columns={columns}

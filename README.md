@@ -1,40 +1,88 @@
-# Aster Admin Dashboard
+# Aster HR Management System
 
-A modern, secure admin dashboard built with Next.js 16.2.2, TypeScript, and Prisma ORM. This project demonstrates enterprise-level authentication, responsive design, and modern development practices.
+A comprehensive HR management system built with Next.js, TypeScript, and Prisma ORM. Features include user management, team management, leave tracking, attendance monitoring, infraction tracking, and calendar events.
 
 ## 🚀 Features
 
 ### 🔐 **Secure Authentication**
 
-- **JWT-based session management** with HTTP-only cookies
-- **Password security** with salt + pepper + bcryptjs (12 rounds)
-- **Explicit salt storage** for educational demonstration
-- **Pepper protection** via environment variable
+- **Session management** with HTTP-only cookies
+- **Password security** with salt + pepper + bcrypt (12 rounds)
 - **Protected routes** with automatic redirect to login
 - **Session validation** and secure logout functionality
 
+### 👥 **User Management**
+
+- Full CRUD operations for users
+- Employee profiles with department and position
+- Role-based access control (Admin, HR, Employee)
+- User search functionality
+
+### 👨‍👩‍👧‍👦 **Team Management**
+
+- Create and manage teams
+- Assign team members with team leaders
+- Brand-based team organization
+- Team member tracking
+
+### 🏢 **Brand Management**
+
+- Manage multiple brands
+- Assign brand managers
+- Track manager assignment history
+- Brand-specific team organization
+
+### 📅 **Leave Management**
+
+- Leave request submission and approval workflow
+- Multiple leave types (Vacation, Sick, Personal, etc.)
+- Leave credits tracking
+- Leave status management (Pending, Approved, Rejected)
+- Manager approval dashboard
+
+### ⏰ **Attendance & Schedules**
+
+- Clock in/out functionality
+- Schedule management
+- Attendance tracking with late/undertime detection
+- Early clock-out with reason tracking
+- Real-time attendance status
+
+### ⚠️ **Infraction System**
+
+- Track employee infractions
+- Infraction types with severity levels
+- Offense level tracking (1st, 2nd, 3rd, 4th offense)
+- Employee acknowledgment workflow
+- Infraction history tracking
+
+### 📆 **Calendar Events**
+
+- Create and manage calendar events
+- Event color coding
+- Integration with leave requests
+- Calendar widget on dashboard
+
+### 📊 **Analytics Dashboard**
+
+- Real-time metrics and statistics
+- User analytics
+- Attendance overview
+- Pending items tracking (leaves, infractions)
+
 ### 🎨 **Modern UI/UX**
 
-- **Admin LTE 2 inspired design** with modern gradients
 - **Dark/light mode support** with smooth transitions
-- **Responsive sidebar navigation** with full-height layout
+- **Responsive design** for all devices
 - **Professional dashboard** with user information and stats
+- **Toast notifications** for user feedback
 - **Loading states** and error handling throughout
 
-### 🛠 **Technical Excellence**
+### 🧪 **Demo Mode**
 
-- **TypeScript** throughout for type safety
-- **Next.js 16.2.2** with App Router and Server Components
-- **Prisma ORM** with MySQL database integration
-- **Docker MySQL** for consistent development environment
-- **ESLint + Prettier** for code quality
-
-### 📊 **Admin Features**
-
-- **User management** interface ready for expansion
-- **Analytics dashboard** with real-time data visualization
-- **Settings panel** for system configuration
-- **Admin user seeding** for development
+- Full demo data mode for testing without database
+- Pre-populated users, teams, brands, and events
+- Easy switching between demo and production mode
 
 ## 🏗️ Architecture
 
@@ -42,26 +90,49 @@ A modern, secure admin dashboard built with Next.js 16.2.2, TypeScript, and Pris
 ├── src/
 │   ├── app/                    # Next.js App Router
 │   │   ├── api/               # API routes
-│   │   │   └── auth/          # Authentication endpoints
+│   │   │   ├── auth/          # Authentication endpoints
+│   │   │   ├── users/         # User management
+│   │   │   ├── teams/         # Team management
+│   │   │   ├── brands/        # Brand management
+│   │   │   ├── leaves/        # Leave management
+│   │   │   ├── attendance/    # Attendance tracking
+│   │   │   ├── schedules/     # Schedule management
+│   │   │   ├── infractions/   # Infraction tracking
+│   │   │   ├── calendar/      # Calendar events
+│   │   │   └── analytics/     # Analytics data
 │   │   ├── dashboard/         # Protected admin pages
+│   │   │   ├── users/         # User management pages
+│   │   │   ├── teams/         # Team management pages
+│   │   │   ├── brands/        # Brand management pages
+│   │   │   ├── leaves/        # Leave management pages
+│   │   │   ├── schedules/     # Schedule pages
+│   │   │   ├── infractions/   # Infraction pages
+│   │   │   ├── calendar/      # Calendar page
+│   │   │   └── analytics/     # Analytics page
 │   │   └── login/             # Authentication pages
 │   ├── components/            # Reusable UI components
 │   │   ├── LoginForm.tsx      # Secure login form
-│   │   └── Sidebar.tsx        # Admin navigation
+│   │   ├── Sidebar.tsx        # Navigation sidebar
+│   │   ├── ClockInButton.tsx  # Attendance clock button
+│   │   ├── CalendarWidget.tsx # Calendar widget
+│   │   └── ...                # More components
 │   ├── lib/                   # Core utilities
 │   │   ├── auth.tsx           # Authentication context
 │   │   ├── db.ts              # Database connection
-│   │   └── password.ts        # Password utilities
+│   │   ├── password.ts        # Password utilities
+│   │   ├── toast.tsx          # Toast notifications
+│   │   └── demo/              # Demo mode store
 │   └── app/                   # Root application
 ├── prisma/                    # Database schema
-└── scripts/                   # Development utilities
+├── scripts/                   # Development utilities
+└── public/                    # Static assets
 ```
 
 ## 🛠️ Tech Stack
 
 ### Frontend
 
-- **Next.js 16.2.2** - React framework with App Router
+- **Next.js 15** - React framework with App Router
 - **TypeScript** - Type-safe development
 - **Tailwind CSS** - Utility-first styling
 - **React Hook Form** - Form management
@@ -70,13 +141,13 @@ A modern, secure admin dashboard built with Next.js 16.2.2, TypeScript, and Pris
 ### Backend
 
 - **Prisma ORM** - Database modeling and queries
-- **MySQL** - Relational database
-- **bcryptjs** - Password hashing
+- **SQLite** - Default database (easily switchable to MySQL/PostgreSQL)
+- **bcrypt** - Password hashing
 - **Next.js API Routes** - Serverless functions
 
 ### Development
 
-- **Docker** - Containerized MySQL database
+- **TypeScript** - Type safety
 - **ESLint** - Code linting
 - **Prettier** - Code formatting
 - **Git** - Version control
@@ -86,8 +157,7 @@ A modern, secure admin dashboard built with Next.js 16.2.2, TypeScript, and Pris
 ### Prerequisites
 
 - Node.js 18+
-- Docker & Docker Compose
-- MySQL (optional, Docker provided)
+- npm or pnpm
 
 ### Installation
 
@@ -110,63 +180,100 @@ npm install
 cp .env.example .env.local
 ```
 
-4. **Start MySQL with Docker**
-
-```bash
-docker-compose up -d
-```
-
-5. **Run database migrations**
+4. **Run database migrations**
 
 ```bash
 npx prisma migrate dev
 ```
 
-6. **Generate Prisma client**
+5. **Generate Prisma client**
 
 ```bash
 npx prisma generate
 ```
 
-7. **Seed admin user**
+6. **Seed the database**
 
 ```bash
+# Seed lookup tables first
+npx tsx scripts/seed-lookup-tables.ts
+
+# Seed admin users
 npx tsx scripts/seed-admin.ts
+
+# Seed dummy data (optional)
+npx tsx scripts/seed-dummy-data.ts
+
+# Or seed everything at once
+npx tsx scripts/seed-all-data.ts
 ```
 
-8. **Start development server**
+7. **Start development server**
 
 ```bash
 npm run dev
 ```
+
+8. **Open your browser**
+
+Navigate to `http://localhost:3000`
 
 ### Environment Variables
 
 Create a `.env.local` file with the following:
 
 ```env
-# Database
-DATABASE_URL="mysql://root:aster_root_password@localhost:3306/aster_db"
+# Database (SQLite default)
+DATABASE_URL="file:./dev.db"
+
+# For MySQL/PostgreSQL:
+# DATABASE_URL="mysql://root:password@localhost:3306/aster_db"
+# DATABASE_URL="postgresql://user:password@localhost:5432/aster_db"
 
 # Application
 NEXTAUTH_SECRET="your-secret-key-here"
 NEXTAUTH_URL="http://localhost:3000"
+
+# Password pepper (for additional security)
+PASSWORD_PEPPER="your-pepper-secret"
+
+# Demo mode (set to "true" to enable demo mode)
+DEMO_MODE="false"
 ```
 
 ## 📖 Usage
 
 ### Default Credentials
 
+**Database Mode:**
+
 - **Username**: `admin`
 - **Password**: `password123`
 
+**Demo Mode:**
+| Role | Email | Password |
+|------|-------|----------|
+| Admin | admin@demo.com | demo123 |
+| Employee | juan@demo.com | demo123 |
+| Manager | maria@demo.com | demo123 |
+
 ### Available Routes
 
-- **Login**: `/login` - Authentication page
-- **Dashboard**: `/dashboard` - Protected admin interface
-- **Users**: `/dashboard/users` - User management (ready for implementation)
-- **Settings**: `/dashboard/settings` - System configuration (ready for implementation)
-- **Analytics**: `/dashboard/analytics` - Data visualization (ready for implementation)
+| Route                       | Description                       |
+| --------------------------- | --------------------------------- |
+| `/login`                    | Authentication page               |
+| `/dashboard`                | Main dashboard                    |
+| `/dashboard/users`          | User management                   |
+| `/dashboard/teams`          | Team management                   |
+| `/dashboard/brands`         | Brand management                  |
+| `/dashboard/leaves/request` | Submit leave requests             |
+| `/dashboard/leaves/approve` | Approve leave requests (managers) |
+| `/dashboard/schedules`      | Schedule management               |
+| `/dashboard/infractions`    | Infraction tracking               |
+| `/dashboard/my-infractions` | View own infractions              |
+| `/dashboard/calendar`       | Calendar events                   |
+| `/dashboard/analytics`      | Analytics dashboard               |
+| `/dashboard/settings`       | User settings                     |
 
 ### Development Scripts
 
@@ -180,122 +287,70 @@ npm run format       # Format code with Prettier
 
 ### Database Seeding Scripts
 
-The project includes comprehensive seeding scripts to populate the database with initial data:
+The project includes comprehensive seeding scripts:
 
 ```bash
-npm run db:seed:lookup   # Seed lookup tables (roles, positions, departments, statuses, industries)
-npm run db:seed:admin    # Create admin and HR users with secure passwords
-npm run db:seed:dummy    # Create dummy users, brands, and teams
-npm run db:seed:members  # Assign team members to existing teams
-npm run db:seed:all      # Run all seed scripts in order
-npm run db:reset         # Reset database and seed all data (use with caution!)
+# Individual scripts
+npx tsx scripts/seed-lookup-tables.ts   # Roles, positions, departments, statuses
+npx tsx scripts/seed-admin.ts           # Admin and HR users
+npx tsx scripts/seed-dummy-data.ts      # Sample users, brands, teams
+npx tsx scripts/seed-team-members.ts    # Assign members to teams
+npx tsx scripts/seed-leave-lookups.ts   # Leave types and statuses
+npx tsx scripts/seed-infraction-lookups.ts # Infraction types and offenses
+npx tsx scripts/seed-calendar-events.ts # Calendar events
+npx tsx scripts/seed-schedules.ts       # Work schedules
+npx tsx scripts/seed-attendance.ts      # Attendance records
+npx tsx scripts/seed-leaves.ts          # Leave requests
+npx tsx scripts/seed-infractions.ts     # Infraction records
+
+# All-in-one script
+npx tsx scripts/seed-all-data.ts        # Run all seeds in order
 ```
 
-**Seeding Order:**
+## 🎛️ Demo Mode
 
-1. **Lookup Tables** - Creates roles (admin, hr, employee), positions, departments, employee statuses, and industries
-2. **Admin Users** - Creates admin and HR users with employee profiles
-3. **Dummy Data** - Creates 10 employees, 10 brands, and teams for each brand
-4. **Team Members** - Assigns employees to teams with designated team leaders
+Enable demo mode to test the application without a database:
 
-**Example: Full Database Reset**
+1. Set `DEMO_MODE=true` in `.env.local`
+2. Restart the development server
+3. Use demo credentials to login
 
-```bash
-npm run db:reset
-```
+Demo mode provides:
 
-This will drop and recreate the database, run all migrations, and populate it with fresh seed data.
+- Pre-populated users, teams, brands
+- Sample leave requests and infractions
+- Calendar events
+- Analytics data
 
-**Running Individual Scripts**
+## 📊 Project Status
 
-If you only need to populate team members (e.g., after adding new teams):
+### Completed Features
 
-```bash
-npm run db:seed:members
-```
+- ✅ Authentication System
+- ✅ User Management
+- ✅ Team Management
+- ✅ Brand Management
+- ✅ Leave Management
+- ✅ Attendance & Schedules
+- ✅ Infraction System
+- ✅ Calendar Events
+- ✅ Analytics Dashboard
+- ✅ Demo Mode
+- ✅ Dark/Light Theme
 
-## � Customization
+### In Progress
 
-### Adding New Pages
-
-1. Create new directory in `src/app/dashboard/`
-2. Add `page.tsx` with your component
-3. Update navigation in `src/components/Sidebar.tsx`
-
-### Database Schema
-
-Edit `prisma/schema.prisma` and run:
-
-```bash
-npx prisma migrate dev
-npx prisma generate
-```
-
-### Styling
-
-- Main styles: `src/app/globals.css`
-- Component styles: Use Tailwind classes
-- Dark mode: Built-in support with `dark:` prefix
-
-## �🚀 Deployment
-
-### Vercel (Recommended)
-
-1. Connect your GitHub repository to Vercel
-2. Set environment variables in Vercel dashboard
-3. Deploy with one click
-
-### Docker
-
-```bash
-docker build -t aster-dashboard .
-docker run -p 3000:3000 aster-dashboard
-```
-
-### Manual Deployment
-
-1. Build the application: `npm run build`
-2. Set production environment variables
-3. Start server: `npm run start`
-
-## 🧪 Testing
-
-This project includes comprehensive testing setup:
-
-```bash
-npm run test           # Run all tests
-npm run test:dev       # Development mode tests
-npm run test:coverage  # Generate coverage report
-```
-
-## 📊 Performance
-
-### Optimizations Implemented
-
-- **Image optimization** with Next.js Image component
-- **Code splitting** with dynamic imports
-- **Bundle analysis** with `next-bundle-analyzer`
-- **Caching strategies** for API routes
-- **Lazy loading** for non-critical components
-
-### Performance Metrics
-
-- **First Contentful Paint**: < 1.5s
-- **Largest Contentful Paint**: < 2.5s
-- **Cumulative Layout Shift**: < 0.1
-- **First Input Delay**: < 100ms
+- 🔄 Advanced reporting
+- 🔄 Email notifications
+- 🔄 Export functionality
 
 ## 🔒 Security
 
-### Password Security (Salt + Pepper + Bcrypt)
+### Password Security
 
-This project demonstrates enterprise-level password security:
-
-- **Salt**: Unique cryptographic salt generated per user and stored in database
-- **Pepper**: Secret value stored in environment variable (never in database)
+- **Salt**: Unique cryptographic salt generated per user
+- **Pepper**: Secret value stored in environment variable
 - **Bcrypt**: Industry-standard hashing with 12 rounds
-
-**Formula**: `bcrypt.hash(password + pepper, salt)`
 
 ### Additional Security Features
 
@@ -305,43 +360,24 @@ This project demonstrates enterprise-level password security:
 - **Input validation** with type safety
 - **SQL injection protection** with Prisma ORM
 
-### Security Headers
-
-- Content Security Policy (CSP)
-- X-Frame-Options
-- X-Content-Type-Options
-- Strict-Transport-Security
-
 ## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature-name`
 3. Make your changes
-4. Add tests for your changes
-5. Run tests: `npm run test`
-6. Commit your changes: `git commit -m 'Add feature'`
-7. Push to the branch: `git push origin feature-name`
-8. Submit a pull request
-
-## 📋 Project Status
-
-- ✅ **Authentication System** - Complete
-- ✅ **Admin Dashboard** - Complete
-- ✅ **Database Integration** - Complete
-- ✅ **Responsive Design** - Complete
-- 🔄 **User Management** - Ready for implementation
-- 🔄 **Analytics Dashboard** - Ready for implementation
-- 🔄 **Settings Panel** - Ready for implementation
+4. Commit your changes: `git commit -m 'Add feature'`
+5. Push to the branch: `git push origin feature-name`
+6. Submit a pull request
 
 ## 📞 Support
 
-For support, email developer@ezephyrmor.com or create an issue on GitHub.
+For support, create an issue on GitHub or contact the development team.
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License.
 
-## 🏆 Highlights for Employers
+## 🏆 Highlights
 
 ### Technical Skills Demonstrated
 
@@ -349,8 +385,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Authentication & Authorization** implementation
 - **Database design** and ORM usage
 - **Responsive UI/UX** design principles
-- **Security best practices** implementation (salt, pepper, bcrypt)
-- **Docker containerization** for development
+- **Security best practices** implementation
 - **Git workflow** and version control
 
 ### Modern Development Practices
@@ -360,21 +395,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **API design** with RESTful principles
 - **Database migrations** and schema management
 - **Code quality** with ESLint and Prettier
-- **Environment management** with Docker
-
-### Enterprise-Ready Features
-
-- **Scalable architecture** ready for growth
-- **Security-first approach** with industry standards
-- **Performance optimization** techniques
-- **Error handling** and user experience
-- **Documentation** and maintainability
 
 ---
 
 **Built with ❤️ using modern web technologies**
 
-[![Next.js](https://img.shields.io/badge/Next.js-222222?style=for-the-badge&logo=nextdotjs&logoColor=white)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://typescriptlang.org/)
 [![Prisma](https://img.shields.io/badge/Prisma-3982CE?style=for-the-badge&logo=Prisma&logoColor=white)](https://prisma.io/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)

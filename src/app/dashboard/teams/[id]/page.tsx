@@ -70,9 +70,6 @@ interface Team {
   description?: string | null;
   members: TeamMember[];
   history: TeamHistory[];
-  _count: {
-    members: number;
-  };
 }
 
 export default function TeamDetailPage({
@@ -320,7 +317,25 @@ export default function TeamDetailPage({
 
   if (loading) {
     return (
-      <DashboardLayout title="Team Details" subtitle="Loading...">
+      <DashboardLayout
+        title="Team Details"
+        subtitle="Loading..."
+        icon={
+          <svg
+            className="w-6 h-6 text-white"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+            />
+          </svg>
+        }
+      >
         <div className="flex justify-center items-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
         </div>
@@ -330,7 +345,25 @@ export default function TeamDetailPage({
 
   if (error || !team) {
     return (
-      <DashboardLayout title="Team Details" subtitle="Error">
+      <DashboardLayout
+        title="Team Details"
+        subtitle="Error"
+        icon={
+          <svg
+            className="w-6 h-6 text-white"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+            />
+          </svg>
+        }
+      >
         <div className="text-center py-12">
           <p className="text-red-600">{error || "Team not found"}</p>
           <button
@@ -401,6 +434,21 @@ export default function TeamDetailPage({
     <DashboardLayout
       title={team.name}
       subtitle={team.description || "No description"}
+      icon={
+        <svg
+          className="w-6 h-6 text-white"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+          />
+        </svg>
+      }
     >
       {error && (
         <div className="mb-6 rounded-md bg-red-50 p-4">
@@ -414,7 +462,7 @@ export default function TeamDetailPage({
           <div className="bg-white dark:bg-zinc-800 rounded-lg shadow">
             <div className="px-6 py-4 border-b border-gray-200 dark:border-zinc-700 flex justify-between items-center">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                Team Members ({team._count.members})
+                Team Members ({team.members?.length ?? 0})
               </h2>
               <button
                 onClick={() => setShowAddMemberModal(true)}
@@ -437,13 +485,13 @@ export default function TeamDetailPage({
               </button>
             </div>
 
-            {team.members.length === 0 ? (
+            {(team.members?.length ?? 0) === 0 ? (
               <div className="p-6 text-center text-gray-500 dark:text-gray-400">
                 No members in this team yet.
               </div>
             ) : (
               <ul className="divide-y divide-gray-200 dark:divide-zinc-700">
-                {team.members.map((member) => (
+                {(team.members ?? []).map((member) => (
                   <li
                     key={member.id}
                     className="px-6 py-4 hover:bg-gray-50 dark:hover:bg-zinc-700/50"
@@ -521,17 +569,17 @@ export default function TeamDetailPage({
               </h2>
             </div>
 
-            {team.history.length === 0 ? (
+            {(team.history?.length ?? 0) === 0 ? (
               <div className="p-6 text-center text-gray-500 dark:text-gray-400">
                 No history yet.
               </div>
             ) : (
               <div className="flow-root px-6 py-4">
                 <ul className="-mb-8">
-                  {team.history.map((event, eventIdx) => (
+                  {(team.history ?? []).map((event, eventIdx) => (
                     <li key={event.id}>
                       <div className="relative pb-8">
-                        {eventIdx !== team.history.length - 1 ? (
+                        {eventIdx !== (team.history?.length ?? 0) - 1 ? (
                           <span
                             className="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200 dark:bg-zinc-700"
                             aria-hidden="true"

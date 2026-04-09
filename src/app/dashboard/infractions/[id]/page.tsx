@@ -139,7 +139,25 @@ export default function ViewInfractionPage() {
 
   if (loading) {
     return (
-      <DashboardLayout title="View Infraction" subtitle="Loading...">
+      <DashboardLayout
+        title="View Infraction"
+        subtitle="Loading..."
+        icon={
+          <svg
+            className="w-6 h-6 text-white"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            />
+          </svg>
+        }
+      >
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full" />
         </div>
@@ -149,7 +167,25 @@ export default function ViewInfractionPage() {
 
   if (error || !infraction) {
     return (
-      <DashboardLayout title="View Infraction" subtitle="Error">
+      <DashboardLayout
+        title="View Infraction"
+        subtitle="Error"
+        icon={
+          <svg
+            className="w-6 h-6 text-white"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            />
+          </svg>
+        }
+      >
         <div className="bg-white dark:bg-zinc-800 rounded-lg shadow p-8 text-center">
           <p className="text-red-600 dark:text-red-400 mb-4">
             {error || "Infraction not found"}
@@ -169,6 +205,21 @@ export default function ViewInfractionPage() {
     <DashboardLayout
       title="View Infraction"
       subtitle={`Infraction #${infraction.id}`}
+      icon={
+        <svg
+          className="w-6 h-6 text-white"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+          />
+        </svg>
+      }
     >
       <div className="space-y-6">
         {/* Action Buttons */}

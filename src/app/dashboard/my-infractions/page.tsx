@@ -56,7 +56,44 @@ export default function MyInfractionsPage() {
       const response = await fetch(`/api/my-infractions?${params.toString()}`);
       if (response.ok) {
         const data = await response.json();
-        setInfractions(data);
+        // Handle both array response and paginated response
+        const infractionsArray = Array.isArray(data)
+          ? data
+          : data.infractions || [];
+        // Normalize infractions to add missing nested objects for demo compatibility
+        const normalizedInfractions = infractionsArray.map(
+          (infraction: {
+            id: number;
+            typeId?: number;
+            typeName?: string;
+            description?: string;
+            type?: { id: number; name: string; color: string };
+            offense?: {
+              id: number;
+              name: string;
+              severityLevel: number;
+              type: { id: number; name: string; color: string };
+            };
+          }) => ({
+            ...infraction,
+            type: infraction.type || {
+              id: infraction.typeId || 1,
+              name: infraction.typeName || "Tardiness",
+              color: "yellow",
+            },
+            offense: infraction.offense || {
+              id: 1,
+              name: infraction.description || "Minor offense",
+              severityLevel: 1,
+              type: {
+                id: infraction.typeId || 1,
+                name: infraction.typeName || "Tardiness",
+                color: "yellow",
+              },
+            },
+          }),
+        );
+        setInfractions(normalizedInfractions);
       } else if (response.status === 401) {
         // Not authenticated, redirect to login
         window.location.href = "/login";
@@ -125,6 +162,21 @@ export default function MyInfractionsPage() {
     <DashboardLayout
       title="My Infractions"
       subtitle="View your disciplinary records"
+      icon={
+        <svg
+          className="w-6 h-6 text-white"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
+        </svg>
+      }
     >
       <div className="bg-white dark:bg-zinc-800 rounded-lg shadow p-4 mb-6">
         <p className="text-sm text-gray-600 dark:text-gray-400">
