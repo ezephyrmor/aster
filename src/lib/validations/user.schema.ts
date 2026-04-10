@@ -11,13 +11,20 @@ const BaseUserSchema = z.object({
   contactNumber: validationRules.phone.optional().or(z.literal("")),
   personalEmail: validationRules.email.optional().or(z.literal("")),
   address: z.string().optional(),
-  dateOfBirth: z.coerce.date().optional(),
+  dateOfBirth: z.coerce
+    .date()
+    .optional()
+    .or(z.string().transform((v) => (v ? new Date(v) : undefined))),
   position: z.string().optional(),
   department: z.string().optional(),
-  hireDate: z.coerce.date().optional(),
+  hireDate: z.coerce
+    .date()
+    .optional()
+    .or(z.string().transform((v) => (v ? new Date(v) : undefined))),
   emergencyContactName: z.string().optional(),
   emergencyContactNumber: validationRules.phone.optional().or(z.literal("")),
   emergencyContactRelation: z.string().optional(),
+  status: z.enum(["active", "inactive", "suspended"]).default("active"),
 });
 
 /**

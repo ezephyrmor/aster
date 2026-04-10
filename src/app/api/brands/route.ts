@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
+import { withValidation, CreateBrandSchema } from "@/lib/validations";
 
 // GET /api/brands - List all brands with pagination, search, and filtering
 export async function GET(request: NextRequest) {
@@ -111,17 +112,9 @@ export async function GET(request: NextRequest) {
 }
 
 // POST /api/brands - Create a new brand
-export async function POST(request: NextRequest) {
+export const POST = withValidation(CreateBrandSchema, async (data) => {
   try {
-    const body = await request.json();
-    const { name, description, logo, website, industry, createdBy } = body;
-
-    if (!name) {
-      return NextResponse.json(
-        { error: "Brand name is required" },
-        { status: 400 },
-      );
-    }
+    const { name, description, logo, website, industryId, managerId } = data;
 
     // Check if brand name already exists
     const existingBrand = await prisma.brand.findUnique({
@@ -135,24 +128,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get industry ID if industry is provided
-    let industryId: number | null = null;
-    if (industry) {
-      // Try to find by name first
-      let industryRecord = await prisma.industry.findUnique({
-        where: { name: industry },
-      });
-
-      // If not found and industry is a number, try by ID
-      if (!industryRecord && !isNaN(parseInt(industry))) {
-        industryRecord = await prisma.industry.findUnique({
-          where: { id: parseInt(industry) },
-        });
-      }
-
-      industryId = industryRecord?.id || null;
-    }
-
     const brand = await prisma.brand.create({
       data: {
         name,
@@ -160,10 +135,16 @@ export async function POST(request: NextRequest) {
         logo,
         website,
         industryId,
-        createdBy: createdBy || 1, // Default to admin if not provided
+        managerId,
+        createdBy: 1, // TODO: Get from authenticated user
       },
       include: {
         industry: true,
+        manager: {
+          include: {
+            employeeProfile: true,
+          },
+        },
       },
     });
 
@@ -181,4 +162,4 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     );
   }
-}
+});
