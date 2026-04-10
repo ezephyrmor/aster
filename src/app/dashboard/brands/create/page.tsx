@@ -3,20 +3,51 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/DashboardLayout";
+import { CreateBrandSchema } from "@/lib/validations";
+import type { z } from "zod";
+
+type CreateBrandForm = z.infer<typeof CreateBrandSchema>;
 
 export default function CreateBrandPage() {
   const router = useRouter();
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [website, setWebsite] = useState("");
-  const [industry, setIndustry] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [formData, setFormData] = useState<CreateBrandForm>({
+    name: "",
+    description: "",
+    website: "",
+    industryId: undefined,
+    managerId: undefined,
+    status: "active",
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [globalError, setGlobalError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  const validateForm = (): boolean => {
+    const result = CreateBrandSchema.safeParse(formData);
+
+    if (!result.success) {
+      const newErrors: Record<string, string> = {};
+      for (const issue of result.error.issues) {
+        const fieldName = issue.path[0] as string;
+        newErrors[fieldName] = issue.message;
+      }
+      setErrors(newErrors);
+      return false;
+    }
+
+    setErrors({});
+    return true;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError(null);
+    setGlobalError(null);
+
+    if (!validateForm()) {
+      setIsLoading(false);
+      return;
+    }
 
     try {
       const response = await fetch("/api/brands", {
@@ -24,25 +55,43 @@ export default function CreateBrandPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          name,
-          description: description || null,
-          website: website || null,
-          industry: industry || null,
-        }),
+        body: JSON.stringify(formData),
       });
 
       if (!response.ok) {
         const result = await response.json();
+
+        // Handle Zod validation errors from API
+        if (result.errors) {
+          setErrors(result.errors);
+          throw new Error("Please fix the validation errors below");
+        }
+
         throw new Error(result.error || "Failed to create brand");
       }
 
       router.push("/dashboard/brands");
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setGlobalError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleChange = (field: keyof CreateBrandForm, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+
+    // Clear error for this field when user types
+    if (errors[field]) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
     }
   };
 
@@ -67,11 +116,13 @@ export default function CreateBrandPage() {
       }
     >
       <div className="max-w-2xl">
-        {error && (
+        {globalError && (
           <div className="mb-6 rounded-md bg-red-50 p-4">
             <div className="flex">
               <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">{error}</h3>
+                <h3 className="text-sm font-medium text-red-800">
+                  {globalError}
+                </h3>
               </div>
             </div>
           </div>
@@ -91,33 +142,21 @@ export default function CreateBrandPage() {
                   type="text"
                   name="name"
                   id="name"
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-zinc-700 dark:border-zinc-600"
+                  value={formData.name}
+                  onChange={(e) => handleChange("name", e.target.value)}
+                  className={`mt-1 block w-full rounded-md shadow-sm focus:ring-indigo-500 sm:text-sm dark:bg-zinc-700 dark:border-zinc-600 ${
+                    errors.name
+                      ? "border-red-500 focus:border-red-500"
+                      : "border-gray-300 focus:border-indigo-500"
+                  }`}
                   placeholder="e.g., Acme Corporation, TechStart Inc"
                 />
+                {errors.name && (
+                  <p className="mt-1 text-xs text-red-500">{errors.name}</p>
+                )}
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                   This will be the unique identifier for your brand.
                 </p>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="industry"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                  Industry
-                </label>
-                <input
-                  type="text"
-                  name="industry"
-                  id="industry"
-                  value={industry}
-                  onChange={(e) => setIndustry(e.target.value)}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-zinc-700 dark:border-zinc-600"
-                  placeholder="e.g., Technology, Healthcare, Finance"
-                />
               </div>
 
               <div>
@@ -131,11 +170,18 @@ export default function CreateBrandPage() {
                   type="url"
                   name="website"
                   id="website"
-                  value={website}
-                  onChange={(e) => setWebsite(e.target.value)}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-zinc-700 dark:border-zinc-600"
+                  value={formData.website}
+                  onChange={(e) => handleChange("website", e.target.value)}
+                  className={`mt-1 block w-full rounded-md shadow-sm focus:ring-indigo-500 sm:text-sm dark:bg-zinc-700 dark:border-zinc-600 ${
+                    errors.website
+                      ? "border-red-500 focus:border-red-500"
+                      : "border-gray-300 focus:border-indigo-500"
+                  }`}
                   placeholder="https://example.com"
                 />
+                {errors.website && (
+                  <p className="mt-1 text-xs text-red-500">{errors.website}</p>
+                )}
               </div>
 
               <div>
@@ -149,11 +195,20 @@ export default function CreateBrandPage() {
                   name="description"
                   id="description"
                   rows={3}
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-zinc-700 dark:border-zinc-600"
+                  value={formData.description}
+                  onChange={(e) => handleChange("description", e.target.value)}
+                  className={`mt-1 block w-full rounded-md shadow-sm focus:ring-indigo-500 sm:text-sm dark:bg-zinc-700 dark:border-zinc-600 ${
+                    errors.description
+                      ? "border-red-500 focus:border-red-500"
+                      : "border-gray-300 focus:border-indigo-500"
+                  }`}
                   placeholder="Describe the brand and their business..."
                 />
+                {errors.description && (
+                  <p className="mt-1 text-xs text-red-500">
+                    {errors.description}
+                  </p>
+                )}
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                   Optional: Add a brief description of the brand.
                 </p>
@@ -171,7 +226,7 @@ export default function CreateBrandPage() {
             </button>
             <button
               type="submit"
-              disabled={isLoading || !name.trim()}
+              disabled={isLoading}
               className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? "Creating..." : "Create Brand"}

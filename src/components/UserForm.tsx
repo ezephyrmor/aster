@@ -1,25 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { CreateUserSchema, UpdateUserSchema } from "@/lib/validations";
+import type { z } from "zod";
 
-interface UserFormData {
-  username?: string;
-  password?: string;
-  role: "admin" | "hr" | "employee";
-  firstName: string;
-  lastName: string;
-  middleName?: string;
-  contactNumber?: string;
-  personalEmail?: string;
-  address?: string;
-  dateOfBirth?: string;
-  position?: string;
-  department?: string;
-  hireDate?: string;
-  emergencyContactName?: string;
-  emergencyContactNumber?: string;
-  emergencyContactRelation?: string;
-}
+type CreateUserData = z.infer<typeof CreateUserSchema>;
+type UpdateUserData = z.infer<typeof UpdateUserSchema>;
+type UserFormData = CreateUserData | UpdateUserData;
 
 interface UserFormProps {
   initialData?: Partial<UserFormData>;
@@ -32,73 +21,81 @@ export default function UserForm({
   onSubmit,
   onCancel,
 }: UserFormProps) {
+  const isEditMode = !!initialData;
   const [isLoading, setIsLoading] = useState(false);
-  const [generatedCredentials, setGeneratedCredentials] = useState<{
-    username: string;
-    password: string;
-  } | null>(null);
-  const [formData, setFormData] = useState<UserFormData>({
-    username: initialData?.username || "",
-    password: "",
-    role: initialData?.role || "employee",
-    firstName: initialData?.firstName || "",
-    lastName: initialData?.lastName || "",
-    middleName: initialData?.middleName || "",
-    contactNumber: initialData?.contactNumber || "",
-    personalEmail: initialData?.personalEmail || "",
-    address: initialData?.address || "",
-    dateOfBirth: initialData?.dateOfBirth || "",
-    position: initialData?.position || "",
-    department: initialData?.department || "",
-    hireDate: initialData?.hireDate || "",
-    emergencyContactName: initialData?.emergencyContactName || "",
-    emergencyContactNumber: initialData?.emergencyContactNumber || "",
-    emergencyContactRelation: initialData?.emergencyContactRelation || "",
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm<UserFormData>({
+    resolver: zodResolver(isEditMode ? UpdateUserSchema : CreateUserSchema),
+    defaultValues: {
+      username: initialData?.username || "",
+      password: "",
+      role: initialData?.role || "employee",
+      firstName: initialData?.firstName || "",
+      lastName: initialData?.lastName || "",
+      middleName: initialData?.middleName || "",
+      contactNumber: initialData?.contactNumber || "",
+      personalEmail: initialData?.personalEmail || "",
+      address: initialData?.address || "",
+      dateOfBirth: initialData?.dateOfBirth || "",
+      position: initialData?.position || "",
+      department: initialData?.department || "",
+      hireDate: initialData?.hireDate || "",
+      emergencyContactName: initialData?.emergencyContactName || "",
+      emergencyContactNumber: initialData?.emergencyContactNumber || "",
+      emergencyContactRelation: initialData?.emergencyContactRelation || "",
+    },
+    mode: "onBlur",
   });
 
-  // Auto-generate username preview when first/last name changes (for new users)
-  useEffect(() => {
-    if (!initialData && formData.firstName && formData.lastName) {
-      // Username will be auto-generated on submit, but we can show a preview
-      const lastNameInitial = formData.lastName.charAt(0).toLowerCase();
-      const firstName = formData.firstName.toLowerCase();
-      setFormData((prev) => ({
-        ...prev,
-        username: `${lastNameInitial}${firstName}`,
-      }));
-    }
-  }, [formData.firstName, formData.lastName, initialData]);
+  const firstName = watch("firstName");
+  const lastName = watch("lastName");
 
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >,
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  // Auto-generate username preview
+  const generateUsernamePreview = () => {
+    if (!firstName || !lastName) return "";
+    const lastNameInitial = lastName.charAt(0).toLowerCase();
+    const firstNameLower = firstName.toLowerCase();
+    return `${lastNameInitial}${firstNameLower}`;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onFormSubmit = async (data: UserFormData) => {
     setIsLoading(true);
     try {
-      // Don't send username and password if they're auto-generated
-      const submitData = { ...formData };
-      if (!initialData) {
-        // For new users, let the API auto-generate credentials
-        delete submitData.username;
-        delete submitData.password;
+      const submitData = { ...data };
+
+      // For new users, let API auto-generate credentials
+      if (!isEditMode) {
+        delete (submitData as any).username;
+        delete (submitData as any).password;
       }
+
       await onSubmit(submitData);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const isEditMode = !!initialData;
+  // Error message helper
+  const fieldError = (fieldName: keyof UserFormData) => {
+    return errors[fieldName]?.message as string | undefined;
+  };
+
+  // Input class helper
+  const inputClass = (fieldName: keyof UserFormData) => {
+    return `mt-1 block w-full rounded-md border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:text-zinc-100 ${
+      errors[fieldName]
+        ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+        : ""
+    }`;
+  };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
+    <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-8">
       {/* Account Information */}
       <div className="bg-white dark:bg-zinc-800 px-6 py-5 shadow sm:rounded-lg sm:px-6">
         <h3 className="text-lg font-medium leading-6 text-gray-900 dark:text-zinc-100 mb-4">
@@ -114,23 +111,21 @@ export default function UserForm({
             </label>
             <input
               type="text"
-              name="username"
               id="username"
-              value={formData.username || ""}
-              onChange={handleChange}
+              value={
+                isEditMode
+                  ? initialData?.username || ""
+                  : generateUsernamePreview()
+              }
               readOnly
               className="mt-1 block w-full rounded-md border-gray-300 dark:border-zinc-600 shadow-sm sm:text-sm bg-gray-100 dark:bg-zinc-700 cursor-not-allowed"
               placeholder={isEditMode ? "Locked" : "Auto-generated"}
             />
-            {isEditMode ? (
-              <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400">
-                Username cannot be changed
-              </p>
-            ) : (
-              <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400">
-                Auto-generated from name (e.g., djoe-a7k9)
-              </p>
-            )}
+            <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400">
+              {isEditMode
+                ? "Username cannot be changed"
+                : "Auto-generated from name (e.g., djoe-a7k9)"}
+            </p>
           </div>
 
           {!isEditMode && (
@@ -143,7 +138,6 @@ export default function UserForm({
               </label>
               <input
                 type="text"
-                name="password"
                 id="password"
                 value="Auto-generated"
                 readOnly
@@ -165,13 +159,16 @@ export default function UserForm({
               </label>
               <input
                 type="password"
-                name="password"
                 id="password"
-                value={formData.password || ""}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:text-zinc-100"
+                {...register("password")}
+                className={inputClass("password")}
                 placeholder="••••••••"
               />
+              {fieldError("password") && (
+                <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                  {fieldError("password")}
+                </p>
+              )}
             </div>
           )}
 
@@ -183,16 +180,19 @@ export default function UserForm({
               Role *
             </label>
             <select
-              name="role"
               id="role"
-              value={formData.role}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:text-zinc-100"
+              {...register("role")}
+              className={inputClass("role")}
             >
               <option value="employee">Employee</option>
               <option value="hr">HR</option>
               <option value="admin">Admin</option>
             </select>
+            {fieldError("role") && (
+              <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                {fieldError("role")}
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -212,14 +212,16 @@ export default function UserForm({
             </label>
             <input
               type="text"
-              name="firstName"
               id="firstName"
-              required
-              value={formData.firstName}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:text-zinc-100"
+              {...register("firstName")}
+              className={inputClass("firstName")}
               placeholder="John"
             />
+            {fieldError("firstName") && (
+              <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                {fieldError("firstName")}
+              </p>
+            )}
           </div>
 
           <div>
@@ -231,14 +233,16 @@ export default function UserForm({
             </label>
             <input
               type="text"
-              name="lastName"
               id="lastName"
-              required
-              value={formData.lastName}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:text-zinc-100"
+              {...register("lastName")}
+              className={inputClass("lastName")}
               placeholder="Doe"
             />
+            {fieldError("lastName") && (
+              <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                {fieldError("lastName")}
+              </p>
+            )}
           </div>
 
           <div>
@@ -250,13 +254,16 @@ export default function UserForm({
             </label>
             <input
               type="text"
-              name="middleName"
               id="middleName"
-              value={formData.middleName || ""}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:text-zinc-100"
+              {...register("middleName")}
+              className={inputClass("middleName")}
               placeholder="M."
             />
+            {fieldError("middleName") && (
+              <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                {fieldError("middleName")}
+              </p>
+            )}
           </div>
 
           <div>
@@ -268,12 +275,15 @@ export default function UserForm({
             </label>
             <input
               type="date"
-              name="dateOfBirth"
               id="dateOfBirth"
-              value={formData.dateOfBirth || ""}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:text-zinc-100"
+              {...register("dateOfBirth")}
+              className={inputClass("dateOfBirth")}
             />
+            {fieldError("dateOfBirth") && (
+              <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                {fieldError("dateOfBirth")}
+              </p>
+            )}
           </div>
 
           <div className="sm:col-span-2">
@@ -285,13 +295,16 @@ export default function UserForm({
             </label>
             <input
               type="tel"
-              name="contactNumber"
               id="contactNumber"
-              value={formData.contactNumber || ""}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:text-zinc-100"
+              {...register("contactNumber")}
+              className={inputClass("contactNumber")}
               placeholder="+1 (555) 123-4567"
             />
+            {fieldError("contactNumber") && (
+              <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                {fieldError("contactNumber")}
+              </p>
+            )}
           </div>
 
           <div className="sm:col-span-2">
@@ -303,13 +316,16 @@ export default function UserForm({
             </label>
             <input
               type="email"
-              name="personalEmail"
               id="personalEmail"
-              value={formData.personalEmail || ""}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:text-zinc-100"
+              {...register("personalEmail")}
+              className={inputClass("personalEmail")}
               placeholder="john.doe@example.com"
             />
+            {fieldError("personalEmail") && (
+              <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                {fieldError("personalEmail")}
+              </p>
+            )}
           </div>
 
           <div className="sm:col-span-2">
@@ -320,14 +336,17 @@ export default function UserForm({
               Address
             </label>
             <textarea
-              name="address"
               id="address"
               rows={2}
-              value={formData.address || ""}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:text-zinc-100"
+              {...register("address")}
+              className={inputClass("address")}
               placeholder="123 Main St, City, State, ZIP"
             />
+            {fieldError("address") && (
+              <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                {fieldError("address")}
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -347,13 +366,16 @@ export default function UserForm({
             </label>
             <input
               type="text"
-              name="position"
               id="position"
-              value={formData.position || ""}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:text-zinc-100"
+              {...register("position")}
+              className={inputClass("position")}
               placeholder="Software Engineer"
             />
+            {fieldError("position") && (
+              <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                {fieldError("position")}
+              </p>
+            )}
           </div>
 
           <div>
@@ -365,13 +387,16 @@ export default function UserForm({
             </label>
             <input
               type="text"
-              name="department"
               id="department"
-              value={formData.department || ""}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:text-zinc-100"
+              {...register("department")}
+              className={inputClass("department")}
               placeholder="Engineering"
             />
+            {fieldError("department") && (
+              <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                {fieldError("department")}
+              </p>
+            )}
           </div>
 
           <div>
@@ -383,12 +408,15 @@ export default function UserForm({
             </label>
             <input
               type="date"
-              name="hireDate"
               id="hireDate"
-              value={formData.hireDate || ""}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:text-zinc-100"
+              {...register("hireDate")}
+              className={inputClass("hireDate")}
             />
+            {fieldError("hireDate") && (
+              <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                {fieldError("hireDate")}
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -408,13 +436,16 @@ export default function UserForm({
             </label>
             <input
               type="text"
-              name="emergencyContactName"
               id="emergencyContactName"
-              value={formData.emergencyContactName || ""}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:text-zinc-100"
+              {...register("emergencyContactName")}
+              className={inputClass("emergencyContactName")}
               placeholder="Jane Doe"
             />
+            {fieldError("emergencyContactName") && (
+              <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                {fieldError("emergencyContactName")}
+              </p>
+            )}
           </div>
 
           <div>
@@ -426,13 +457,16 @@ export default function UserForm({
             </label>
             <input
               type="text"
-              name="emergencyContactRelation"
               id="emergencyContactRelation"
-              value={formData.emergencyContactRelation || ""}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:text-zinc-100"
+              {...register("emergencyContactRelation")}
+              className={inputClass("emergencyContactRelation")}
               placeholder="Spouse"
             />
+            {fieldError("emergencyContactRelation") && (
+              <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                {fieldError("emergencyContactRelation")}
+              </p>
+            )}
           </div>
 
           <div>
@@ -444,13 +478,16 @@ export default function UserForm({
             </label>
             <input
               type="tel"
-              name="emergencyContactNumber"
               id="emergencyContactNumber"
-              value={formData.emergencyContactNumber || ""}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:text-zinc-100"
+              {...register("emergencyContactNumber")}
+              className={inputClass("emergencyContactNumber")}
               placeholder="+1 (555) 987-6543"
             />
+            {fieldError("emergencyContactNumber") && (
+              <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                {fieldError("emergencyContactNumber")}
+              </p>
+            )}
           </div>
         </div>
       </div>

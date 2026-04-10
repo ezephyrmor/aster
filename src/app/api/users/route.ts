@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { hashPassword, generateSalt } from "@/lib/password";
 import { generateUsername, generatePassword } from "@/lib/userGenerator";
+import { withValidation, CreateUserSchema } from "@/lib/validations";
 
 // GET /api/users - List all users with pagination, search, and filtering
 export async function GET(request: NextRequest) {
@@ -149,10 +150,9 @@ export async function GET(request: NextRequest) {
 }
 
 // POST /api/users - Create new user
-export async function POST(request: NextRequest) {
+export const POST = withValidation(CreateUserSchema, async (data) => {
   try {
-    const body = await request.json();
-    let {
+    const {
       username,
       password,
       role,
@@ -170,15 +170,7 @@ export async function POST(request: NextRequest) {
       emergencyContactNumber,
       emergencyContactRelation,
       status,
-    } = body;
-
-    // Validate required fields
-    if (!firstName || !lastName) {
-      return NextResponse.json(
-        { error: "First name and last name are required" },
-        { status: 400 },
-      );
-    }
+    } = data;
 
     // Auto-generate username if not provided
     let generatedUsername = username;
@@ -334,4 +326,4 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     );
   }
-}
+});

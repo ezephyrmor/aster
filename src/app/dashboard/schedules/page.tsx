@@ -78,6 +78,10 @@ export default function SchedulesPage() {
   const [employeeSearch, setEmployeeSearch] = useState("");
   const [showEmployeeDropdown, setShowEmployeeDropdown] = useState(false);
 
+  // Form errors
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [globalError, setGlobalError] = useState<string | null>(null);
+
   // Filter states
   const [searchName, setSearchName] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState("");
@@ -281,6 +285,8 @@ export default function SchedulesPage() {
     setEditingSchedule(null);
     setEmployeeSearch("");
     setShowEmployeeDropdown(false);
+    setFormErrors({});
+    setGlobalError(null);
   };
 
   const handleEmployeeSelect = (employee: Employee) => {
@@ -291,14 +297,21 @@ export default function SchedulesPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setGlobalError(null);
+    setFormErrors({});
+
+    const errors: Record<string, string> = {};
 
     if (!formData.userId) {
-      alert("Please select an employee");
-      return;
+      errors.userId = "Please select an employee";
     }
 
     if (formData.dayOfWeek.length === 0) {
-      alert("Please select at least one day");
+      errors.dayOfWeek = "Please select at least one day";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
       return;
     }
 
@@ -330,11 +343,11 @@ export default function SchedulesPage() {
       } else {
         const errorResult = results.find((r) => !r.ok);
         const data = await errorResult?.json();
-        alert(data?.error || "Failed to save schedule");
+        setGlobalError(data?.error || "Failed to save schedule");
       }
     } catch (error) {
       console.error("Error saving schedule:", error);
-      alert("Failed to save schedule");
+      setGlobalError("Failed to save schedule");
     }
   };
 
@@ -449,6 +462,12 @@ export default function SchedulesPage() {
               {editingSchedule ? "Edit Schedule" : "Add Schedule"}
             </h3>
 
+            {globalError && (
+              <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400 text-sm">
+                {globalError}
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
@@ -486,6 +505,11 @@ export default function SchedulesPage() {
                     </div>
                   )}
                 </div>
+                {formErrors.userId && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {formErrors.userId}
+                  </p>
+                )}
                 {selectedEmployee && (
                   <div className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                     Selected:{" "}
@@ -551,6 +575,11 @@ export default function SchedulesPage() {
                         .join(", ")
                     : "None"}
                 </p>
+                {formErrors.dayOfWeek && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {formErrors.dayOfWeek}
+                  </p>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">

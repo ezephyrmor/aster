@@ -56,6 +56,10 @@ export default function NewInfractionPage() {
     createdBy: "1", // Default to admin user
   });
 
+  // Form errors
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [globalError, setGlobalError] = useState<string | null>(null);
+
   const fetchEmployees = useCallback(async () => {
     try {
       const response = await fetch(
@@ -128,9 +132,25 @@ export default function NewInfractionPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setGlobalError(null);
+    setFormErrors({});
 
-    if (!formData.userId || !formData.typeId || !formData.offenseId) {
-      alert("Please fill in all required fields");
+    const errors: Record<string, string> = {};
+
+    if (!formData.userId) {
+      errors.userId = "Please select an employee";
+    }
+
+    if (!formData.typeId) {
+      errors.typeId = "Please select an infraction type";
+    }
+
+    if (!formData.offenseId) {
+      errors.offenseId = "Please select an offense";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
       return;
     }
 
@@ -153,11 +173,11 @@ export default function NewInfractionPage() {
         router.push("/dashboard/infractions");
       } else {
         const data = await response.json();
-        alert(data.error || "Failed to create infraction");
+        setGlobalError(data.error || "Failed to create infraction");
       }
     } catch (error) {
       console.error("Error creating infraction:", error);
-      alert("Failed to create infraction");
+      setGlobalError("Failed to create infraction");
     } finally {
       setLoading(false);
     }
@@ -184,6 +204,12 @@ export default function NewInfractionPage() {
       }
     >
       <div className="bg-white dark:bg-zinc-800 rounded-lg shadow p-6 max-w-2xl">
+        {globalError && (
+          <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400 text-sm">
+            {globalError}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Employee Selection */}
           <div>
@@ -235,6 +261,9 @@ export default function NewInfractionPage() {
                 </div>
               )}
             </div>
+            {formErrors.userId && (
+              <p className="mt-1 text-sm text-red-500">{formErrors.userId}</p>
+            )}
             {selectedEmployee && (
               <div className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                 Selected: {getFullName(selectedEmployee)}
@@ -265,6 +294,9 @@ export default function NewInfractionPage() {
                 </option>
               ))}
             </select>
+            {formErrors.typeId && (
+              <p className="mt-1 text-sm text-red-500">{formErrors.typeId}</p>
+            )}
           </div>
 
           {/* Offense */}
@@ -288,6 +320,11 @@ export default function NewInfractionPage() {
                 </option>
               ))}
             </select>
+            {formErrors.offenseId && (
+              <p className="mt-1 text-sm text-red-500">
+                {formErrors.offenseId}
+              </p>
+            )}
           </div>
 
           {/* Date */}

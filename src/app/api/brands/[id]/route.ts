@@ -96,7 +96,7 @@ export async function PUT(
         description,
         logo,
         website,
-        industry,
+        industry: industry ? { connect: { id: industry.id } } : undefined,
         status,
       },
     });
