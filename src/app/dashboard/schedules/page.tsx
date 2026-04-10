@@ -157,6 +157,22 @@ export default function SchedulesPage() {
     (emp) => emp.id.toString() === formData.userId,
   );
 
+  const calculateDuration = (startTime: string, endTime: string) => {
+    const [startHour, startMin] = startTime.split(":").map(Number);
+    const [endHour, endMin] = endTime.split(":").map(Number);
+
+    let totalMinutes = endHour * 60 + endMin - (startHour * 60 + startMin);
+    if (totalMinutes < 0) totalMinutes += 24 * 60; // Handle overnight schedules
+
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+
+    if (minutes === 0) {
+      return `${hours}h`;
+    }
+    return `${hours}h ${minutes}m`;
+  };
+
   const fetchSchedules = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -611,6 +627,11 @@ export default function SchedulesPage() {
                     required
                   />
                 </div>
+              </div>
+
+              <div className="text-xs text-blue-600 dark:text-blue-400 font-medium bg-blue-50 dark:bg-blue-900/20 px-3 py-2 rounded-lg text-center">
+                Total working hours:{" "}
+                {calculateDuration(formData.startTime, formData.endTime)}
               </div>
 
               <div>

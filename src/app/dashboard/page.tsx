@@ -92,6 +92,22 @@ export default function DashboardPage() {
     });
   };
 
+  const calculateDuration = (startTime: string, endTime: string) => {
+    const [startHour, startMin] = startTime.split(":").map(Number);
+    const [endHour, endMin] = endTime.split(":").map(Number);
+
+    let totalMinutes = endHour * 60 + endMin - (startHour * 60 + startMin);
+    if (totalMinutes < 0) totalMinutes += 24 * 60; // Handle overnight schedules
+
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+
+    if (minutes === 0) {
+      return `${hours}h`;
+    }
+    return `${hours}h ${minutes}m`;
+  };
+
   if (isLoading) {
     return null;
   }
@@ -253,9 +269,30 @@ export default function DashboardPage() {
                       <p className="text-sm font-semibold text-blue-800 dark:text-blue-200">
                         {attendanceStatus.schedule.startTime} -{" "}
                         {attendanceStatus.schedule.endTime}
-                        <span className="text-xs ml-2 font-normal opacity-80">
-                          ({attendanceStatus.schedule.breakMinutes}m break)
+                        <span className="text-xs ml-2 font-normal opacity-90">
+                          (
+                          {calculateDuration(
+                            attendanceStatus.schedule.startTime,
+                            attendanceStatus.schedule.endTime,
+                          )}
+                          )
                         </span>
+                        <span className="text-xs ml-2 font-normal opacity-80">
+                          • {attendanceStatus.schedule.breakMinutes}m break
+                        </span>
+                      </p>
+                    </div>
+                  )}
+
+                  {/* No schedule indicator */}
+                  {attendanceStatus && !attendanceStatus.schedule && (
+                    <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+                      <p className="text-xs text-amber-700 dark:text-amber-400 mb-1 font-medium">
+                        ⚠️ No schedule assigned
+                      </p>
+                      <p className="text-xs text-amber-600 dark:text-amber-400">
+                        Please contact your manager to set up your work
+                        schedule.
                       </p>
                     </div>
                   )}
