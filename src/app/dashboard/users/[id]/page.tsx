@@ -45,7 +45,7 @@ export default function EditUserPage({
 
         // Combine user and employeeProfile data for the form
         const formData: UserFormData = {
-          role: data.role,
+          role: data.role?.name || "employee",
           firstName: data.employeeProfile?.firstName || "",
           lastName: data.employeeProfile?.lastName || "",
           middleName: data.employeeProfile?.middleName || "",
