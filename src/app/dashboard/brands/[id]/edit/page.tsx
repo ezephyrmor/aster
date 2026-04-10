@@ -45,7 +45,7 @@ export default function EditBrandPage({
         setDescription(data.description || "");
         setLogo(data.logo || "");
         setWebsite(data.website || "");
-        setIndustry(data.industry || "");
+        setIndustry(data.industry?.name || "");
         setStatus(data.status);
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");
@@ -73,7 +73,7 @@ export default function EditBrandPage({
           description: description || null,
           logo: logo || null,
           website: website || null,
-          industry: industry || null,
+          industry: industry ? { id: 10, name: industry } : null,
           status,
         }),
       });
