@@ -242,72 +242,81 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-center py-6">
                   <div className="animate-spin h-6 w-6 border-4 border-zinc-300 border-t-blue-500 rounded-full" />
                 </div>
-              ) : attendanceStatus?.attendance?.clockIn ? (
+              ) : (
                 <div className="space-y-3">
-                  {/* Status Badges */}
-                  <div className="flex flex-wrap gap-2">
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        attendanceStatus.attendance.clockOut
-                          ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                          : attendanceStatus.attendance.clockIn
-                            ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-                            : "bg-zinc-100 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-300"
-                      }`}
-                    >
-                      {attendanceStatus.attendance.clockOut
-                        ? "Clocked Out"
-                        : attendanceStatus.attendance.clockIn
-                          ? "Clocked In"
-                          : "Not Clocked In"}
-                    </span>
-                    {attendanceStatus.attendance.lateMinutes > 0 && (
-                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400">
-                        +{attendanceStatus.attendance.lateMinutes}m late
-                      </span>
-                    )}
-                    {attendanceStatus.attendance.undertimeMinutes > 0 && (
-                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
-                        -{attendanceStatus.attendance.undertimeMinutes}m early
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Time Details */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="p-2 bg-zinc-50 dark:bg-zinc-700/50 rounded-lg">
-                      <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                        Clock In
+                  {/* Schedule Info - Always show if exists */}
+                  {attendanceStatus?.schedule && (
+                    <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                      <p className="text-xs text-blue-600 dark:text-blue-400 mb-1 font-medium">
+                        Today's Schedule
                       </p>
-                      <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                        {formatTime(attendanceStatus.attendance.clockIn)}
-                      </p>
-                    </div>
-                    <div className="p-2 bg-zinc-50 dark:bg-zinc-700/50 rounded-lg">
-                      <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                        Clock Out
-                      </p>
-                      <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                        {formatTime(attendanceStatus.attendance.clockOut)}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Schedule Info */}
-                  {attendanceStatus.schedule && (
-                    <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                      <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+                      <p className="text-sm font-semibold text-blue-800 dark:text-blue-200">
                         {attendanceStatus.schedule.startTime} -{" "}
                         {attendanceStatus.schedule.endTime}
+                        <span className="text-xs ml-2 font-normal opacity-80">
+                          ({attendanceStatus.schedule.breakMinutes}m break)
+                        </span>
                       </p>
                     </div>
                   )}
-                </div>
-              ) : (
-                <div className="text-center py-4">
-                  <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                    No attendance record for today.
-                  </p>
+
+                  {attendanceStatus?.attendance?.clockIn ? (
+                    <>
+                      {/* Status Badges */}
+                      <div className="flex flex-wrap gap-2">
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            attendanceStatus.attendance.clockOut
+                              ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                              : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                          }`}
+                        >
+                          {attendanceStatus.attendance.clockOut
+                            ? "Clocked Out"
+                            : "Clocked In"}
+                        </span>
+                        {attendanceStatus.attendance.lateMinutes > 0 && (
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400">
+                            +{attendanceStatus.attendance.lateMinutes}m late
+                          </span>
+                        )}
+                        {attendanceStatus.attendance.undertimeMinutes > 0 && (
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
+                            -{attendanceStatus.attendance.undertimeMinutes}m
+                            early
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Time Details */}
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="p-2 bg-zinc-50 dark:bg-zinc-700/50 rounded-lg">
+                          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                            Clock In
+                          </p>
+                          <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                            {formatTime(attendanceStatus.attendance.clockIn)}
+                          </p>
+                        </div>
+                        <div className="p-2 bg-zinc-50 dark:bg-zinc-700/50 rounded-lg">
+                          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                            Clock Out
+                          </p>
+                          <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                            {formatTime(attendanceStatus.attendance.clockOut)}
+                          </p>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center py-4">
+                      <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                        {attendanceStatus?.schedule
+                          ? "You are not clocked in yet."
+                          : "No attendance record for today."}
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
