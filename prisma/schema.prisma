@@ -94,6 +94,7 @@ model Company {
   calendarEvents   CalendarEvent[]
   leaveTypes       LeaveType[]
   leaveStatuses    LeaveStatus[]
+  leaveRequests    LeaveRequest[]
   infractionTypes  InfractionType[]
   infractionOffenses InfractionOffense[]
 
@@ -370,6 +371,7 @@ model LeaveCredit {
 
 model LeaveRequest {
   id            Int       @id @default(autoincrement())
+  companyId     Int       @default(1) @map("company_id")
   userId        Int       @map("user_id")
   leaveTypeId   Int       @map("leave_type_id")
   statusId      Int       @default(1) @map("status_id")
@@ -387,8 +389,10 @@ model LeaveRequest {
   leaveType     LeaveType    @relation(fields: [leaveTypeId], references: [id])
   status        LeaveStatus  @relation(fields: [statusId], references: [id])
   reviewer      User?        @relation("ReviewedLeaves", fields: [reviewedBy], references: [id])
+  company       Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
   leaveUsage    LeaveUsage[]
 
+  @@index([companyId])
   @@index([userId], map: "leave_requests_user_id_idx")
   @@index([statusId], map: "leave_requests_status_id_idx")
   @@index([leaveTypeId], map: "leave_requests_leave_type_id_idx")

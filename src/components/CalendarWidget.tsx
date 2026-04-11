@@ -59,7 +59,9 @@ export default function CalendarWidget({ userId }: CalendarWidgetProps) {
         url += `&userId=${userId}&includeLeaves=true`;
       }
 
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        credentials: "include",
+      });
       if (response.ok) {
         const data = await response.json();
         // Handle both array response and paginated response
@@ -183,16 +185,26 @@ export default function CalendarWidget({ userId }: CalendarWidgetProps) {
   const getUpcomingEvents = () => {
     const now = new Date();
     return events
-      .filter((event) => new Date(event.startDate) >= now)
-      .sort(
-        (a, b) =>
-          new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
-      )
+      .filter((event) => {
+        const eventDate = new Date(event.startDate);
+        // Use current year for filtering upcoming events (matches calendar display)
+        eventDate.setFullYear(now.getFullYear());
+        return eventDate >= now;
+      })
+      .sort((a, b) => {
+        const dateA = new Date(a.startDate);
+        const dateB = new Date(b.startDate);
+        dateA.setFullYear(now.getFullYear());
+        dateB.setFullYear(now.getFullYear());
+        return dateA.getTime() - dateB.getTime();
+      })
       .slice(0, 5);
   };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
+    // Show current year for display to match calendar grid
+    date.setFullYear(new Date().getFullYear());
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
 

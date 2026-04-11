@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
+import { auth } from "@/lib/next-auth";
 
 interface LeaveRequestWithRelations {
   id: number;
@@ -37,6 +38,14 @@ interface LeaveRequestWithRelations {
 // Query params: startDate, endDate, userId (optional), includeLeaves (optional, default: false)
 export async function GET(request: NextRequest) {
   try {
+    const session = await auth();
+
+    if (!session?.user?.companyId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const companyId = session.user.companyId;
+
     const { searchParams } = new URL(request.url);
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
@@ -46,7 +55,10 @@ export async function GET(request: NextRequest) {
     const dateWhere: {
       startDate?: { gte?: Date; lte?: Date };
       createdBy?: number;
-    } = {};
+      companyId: number;
+    } = {
+      companyId,
+    };
 
     if (startDate && endDate) {
       dateWhere.startDate = {
@@ -85,7 +97,10 @@ export async function GET(request: NextRequest) {
     const leaveWhere: {
       startDate?: { gte?: Date; lte?: Date };
       userId?: number;
-    } = {};
+      companyId: number;
+    } = {
+      companyId,
+    };
 
     if (startDate && endDate) {
       leaveWhere.startDate = {
@@ -185,6 +200,14 @@ export async function GET(request: NextRequest) {
 // POST - Create a new calendar event
 export async function POST(request: NextRequest) {
   try {
+    const session = await auth();
+
+    if (!session?.user?.companyId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const companyId = session.user.companyId;
+
     const body = await request.json();
     const { title, description, startDate, endDate, color, createdBy } = body;
 
@@ -232,6 +255,7 @@ export async function POST(request: NextRequest) {
         endDate: end,
         color: color || "blue",
         createdBy,
+        companyId,
       },
       include: {
         user: {
