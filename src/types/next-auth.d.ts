@@ -5,6 +5,8 @@ declare module "next-auth" {
     id: string;
     username: string;
     roleId: number;
+    companyId: number;
+    companyName?: string;
     role: {
       id: number;
       name: string;
@@ -22,6 +24,8 @@ declare module "next-auth/jwt" {
     id: string;
     username: string;
     roleId: number;
+    companyId: number;
+    companyName?: string;
     role: {
       id: number;
       name: string;

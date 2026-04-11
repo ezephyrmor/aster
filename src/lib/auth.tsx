@@ -13,6 +13,8 @@ interface User {
   id: number;
   username: string;
   roleId: number;
+  companyId: number;
+  companyName?: string;
   role: Role;
 }
 

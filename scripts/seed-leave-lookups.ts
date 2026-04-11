@@ -53,9 +53,17 @@ async function main() {
 
   for (const leaveType of leaveTypes) {
     await prisma.leaveType.upsert({
-      where: { name: leaveType.name },
+      where: {
+        companyId_name: {
+          companyId: 1,
+          name: leaveType.name,
+        },
+      },
       update: leaveType,
-      create: leaveType,
+      create: {
+        ...leaveType,
+        companyId: 1,
+      },
     });
   }
 
@@ -91,9 +99,17 @@ async function main() {
 
   for (const status of leaveStatuses) {
     await prisma.leaveStatus.upsert({
-      where: { name: status.name },
+      where: {
+        companyId_name: {
+          companyId: 1,
+          name: status.name,
+        },
+      },
       update: status,
-      create: status,
+      create: {
+        ...status,
+        companyId: 1,
+      },
     });
   }
 

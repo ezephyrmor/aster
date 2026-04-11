@@ -37,9 +37,17 @@ async function main() {
   // Create infraction types
   for (const type of infractionTypes) {
     await prisma.infractionType.upsert({
-      where: { name: type.name },
+      where: {
+        companyId_name: {
+          companyId: 1,
+          name: type.name,
+        },
+      },
       update: {},
-      create: type,
+      create: {
+        ...type,
+        companyId: 1,
+      },
     });
   }
 
@@ -47,19 +55,44 @@ async function main() {
 
   // Get created types
   const attendanceType = await prisma.infractionType.findUnique({
-    where: { name: "Attendance" },
+    where: {
+      companyId_name: {
+        companyId: 1,
+        name: "Attendance",
+      },
+    },
   });
   const conductType = await prisma.infractionType.findUnique({
-    where: { name: "Conduct" },
+    where: {
+      companyId_name: {
+        companyId: 1,
+        name: "Conduct",
+      },
+    },
   });
   const performanceType = await prisma.infractionType.findUnique({
-    where: { name: "Performance" },
+    where: {
+      companyId_name: {
+        companyId: 1,
+        name: "Performance",
+      },
+    },
   });
   const policyType = await prisma.infractionType.findUnique({
-    where: { name: "Policy Violation" },
+    where: {
+      companyId_name: {
+        companyId: 1,
+        name: "Policy Violation",
+      },
+    },
   });
   const safetyType = await prisma.infractionType.findUnique({
-    where: { name: "Safety" },
+    where: {
+      companyId_name: {
+        companyId: 1,
+        name: "Safety",
+      },
+    },
   });
 
   // Define offenses by type
@@ -180,7 +213,10 @@ async function main() {
   // Create offenses
   for (const offense of offenses) {
     await prisma.infractionOffense.create({
-      data: offense,
+      data: {
+        ...offense,
+        companyId: 1,
+      },
     });
   }
 

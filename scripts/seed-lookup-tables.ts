@@ -10,19 +10,42 @@ const prisma = new PrismaClient();
 async function main() {
   console.log("🌱 Seeding lookup tables...\n");
 
-  // Seed roles
+  // Create default company first
+  console.log("🏢 Creating default company...");
+  await prisma.company.upsert({
+    where: { id: 1 },
+    update: {},
+    create: {
+      id: 1,
+      name: "Aster HR System",
+      status: "active",
+      timezone: "Asia/Manila",
+    },
+  });
+  console.log("   ✅ Default company created\n");
+
+  // Seed roles for default company (id: 1)
   console.log("📋 Seeding roles...");
   const roles = [
-    { id: 1, name: "admin", description: "System Administrator" },
-    { id: 2, name: "hr", description: "Human Resources" },
-    { id: 3, name: "employee", description: "Regular Employee" },
+    { name: "admin", description: "System Administrator" },
+    { name: "hr", description: "Human Resources" },
+    { name: "manager", description: "Department Manager" },
+    { name: "employee", description: "Regular Employee" },
   ];
 
   for (const role of roles) {
     await prisma.role.upsert({
-      where: { name: role.name },
+      where: {
+        companyId_name: {
+          companyId: 1,
+          name: role.name,
+        },
+      },
       update: {},
-      create: role,
+      create: {
+        ...role,
+        companyId: 1,
+      },
     });
   }
   console.log(`   ✅ Created ${roles.length} roles`);
@@ -86,9 +109,17 @@ async function main() {
 
   for (const position of positions) {
     await prisma.position.upsert({
-      where: { name: position.name },
+      where: {
+        companyId_name: {
+          companyId: 1,
+          name: position.name,
+        },
+      },
       update: {},
-      create: position,
+      create: {
+        ...position,
+        companyId: 1,
+      },
     });
   }
   console.log(`   ✅ Created ${positions.length} positions`);
@@ -113,9 +144,17 @@ async function main() {
 
   for (const department of departments) {
     await prisma.department.upsert({
-      where: { name: department.name },
+      where: {
+        companyId_name: {
+          companyId: 1,
+          name: department.name,
+        },
+      },
       update: {},
-      create: department,
+      create: {
+        ...department,
+        companyId: 1,
+      },
     });
   }
   console.log(`   ✅ Created ${departments.length} departments`);
