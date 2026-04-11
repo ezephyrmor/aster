@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { useAuth } from "@/lib/auth";
 import Sidebar from "@/components/Sidebar";
 import ClockInButton from "@/components/ClockInButton";
+import Modal from "@/components/Modal";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -24,6 +26,8 @@ export default function DashboardLayout({
   const { user, isLoading, logout } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [showSessionModal, setShowSessionModal] = useState(false);
+  const { data: session } = useSession();
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -139,6 +143,30 @@ export default function DashboardLayout({
                           </p>
                         </div>
                         <div className="p-1">
+                          {user?.role?.name?.toLowerCase() === "admin" && (
+                            <button
+                              onClick={() => {
+                                setIsOpen(false);
+                                setShowSessionModal(true);
+                              }}
+                              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg transition-colors"
+                            >
+                              <svg
+                                className="h-4 w-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                                />
+                              </svg>
+                              <span>Session</span>
+                            </button>
+                          )}
                           <button
                             onClick={handleLogout}
                             disabled={isLoggingOut}
@@ -186,6 +214,36 @@ export default function DashboardLayout({
                         </div>
                       </div>
                     )}
+
+                    {/* Session Debug Modal */}
+                    <Modal
+                      isOpen={showSessionModal}
+                      onClose={() => setShowSessionModal(false)}
+                      title="Current Session Data"
+                    >
+                      <div className="space-y-4">
+                        <div className="bg-zinc-50 dark:bg-zinc-900 p-4 rounded-lg overflow-auto max-h-96">
+                          <pre className="text-xs text-zinc-800 dark:text-zinc-200 whitespace-pre-wrap">
+                            {JSON.stringify(
+                              {
+                                user: session?.user,
+                                expires: session?.expires,
+                                authenticated: !!session,
+                                timestamp: new Date().toISOString(),
+                              },
+                              null,
+                              2,
+                            )}
+                          </pre>
+                        </div>
+                        <button
+                          onClick={() => setShowSessionModal(false)}
+                          className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                        >
+                          Close
+                        </button>
+                      </div>
+                    </Modal>
                   </div>
                 </div>
               </div>

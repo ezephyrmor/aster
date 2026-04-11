@@ -1,19 +1,18 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import { auth } from "@/lib/next-auth";
 import prisma from "@/lib/db";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const userCookie = request.cookies.get("user")?.value;
+    const session = await auth();
 
-    if (!userCookie) {
+    if (!session?.user) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    const user = JSON.parse(userCookie);
-
     // Fetch user's role from database
     const dbUser = await prisma.user.findUnique({
-      where: { id: user.id },
+      where: { id: parseInt(session.user.id, 10) },
       include: {
         role: true,
       },
