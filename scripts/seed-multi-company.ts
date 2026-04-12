@@ -136,6 +136,178 @@ const baseLeaveTypes = [
   { name: "Maternity Leave", defaultDaysLimit: 60, color: "purple" },
 ];
 
+const companyBrands: Record<
+  number,
+  Array<{ name: string; description: string }>
+> = {
+  1: [
+    { name: "Aster HR Cloud", description: "Core HR management platform" },
+    {
+      name: "Aster Payroll",
+      description: "Automated payroll processing system",
+    },
+    {
+      name: "Aster TimeTrack",
+      description: "Attendance and time tracking solution",
+    },
+    {
+      name: "Aster Talent",
+      description: "Recruitment and talent management module",
+    },
+  ],
+  2: [
+    {
+      name: "Acme Industrial Parts",
+      description: "Heavy machinery components division",
+    },
+    {
+      name: "Acme Assembly Systems",
+      description: "Production line integration solutions",
+    },
+    { name: "Acme Logistics", description: "Global supply chain management" },
+    {
+      name: "Acme Maintenance Services",
+      description: "On-site equipment maintenance",
+    },
+  ],
+  3: [
+    {
+      name: "GlobalTech Enterprise",
+      description: "Enterprise software development",
+    },
+    {
+      name: "CloudFusion Platform",
+      description: "Cloud infrastructure solutions",
+    },
+    { name: "DevOps Labs", description: "CI/CD and automation tools" },
+    {
+      name: "DataInsights Analytics",
+      description: "Business intelligence and analytics",
+    },
+  ],
+  4: [
+    {
+      name: "Pacific Retail Stores",
+      description: "Physical retail store operations",
+    },
+    {
+      name: "Pacific Online Market",
+      description: "E-commerce digital platform",
+    },
+    {
+      name: "Pacific Supply Chain",
+      description: "Warehouse and distribution network",
+    },
+    {
+      name: "Pacific Customer Care",
+      description: "Customer support and services",
+    },
+  ],
+  5: [
+    {
+      name: "Metro General Hospital",
+      description: "Primary healthcare facility",
+    },
+    {
+      name: "Metro Specialty Clinics",
+      description: "Specialized medical services",
+    },
+    {
+      name: "Metro Laboratory Services",
+      description: "Diagnostic testing facilities",
+    },
+    {
+      name: "Metro Pharmacy Network",
+      description: "Pharmaceutical distribution",
+    },
+  ],
+};
+
+const companyTeams: Record<
+  number,
+  Array<{ name: string; description: string }>
+> = {
+  1: [
+    {
+      name: "Backend Engineering",
+      description: "Server-side development team",
+    },
+    {
+      name: "Frontend Engineering",
+      description: "User interface development team",
+    },
+    {
+      name: "Product Management",
+      description: "Product roadmap and strategy team",
+    },
+    {
+      name: "Customer Success",
+      description: "Client onboarding and support team",
+    },
+    {
+      name: "DevOps & Infrastructure",
+      description: "Cloud and deployment team",
+    },
+    {
+      name: "Quality Assurance",
+      description: "Testing and quality control team",
+    },
+  ],
+  2: [
+    { name: "Production Line", description: "Manufacturing operations team" },
+    { name: "Quality Control", description: "Product inspection team" },
+    { name: "Maintenance Crew", description: "Equipment maintenance team" },
+    { name: "Logistics Team", description: "Shipping and receiving team" },
+    { name: "Procurement Team", description: "Raw material purchasing team" },
+    {
+      name: "Safety Officers",
+      description: "Workplace safety compliance team",
+    },
+  ],
+  3: [
+    {
+      name: "Software Development",
+      description: "Application development team",
+    },
+    {
+      name: "Cloud Operations",
+      description: "Cloud infrastructure management",
+    },
+    { name: "UX Design Team", description: "User experience design team" },
+    { name: "Security Team", description: "Cybersecurity and compliance team" },
+    {
+      name: "Data Engineering",
+      description: "Data pipeline and analytics team",
+    },
+    {
+      name: "Support Engineering",
+      description: "Technical customer support team",
+    },
+  ],
+  4: [
+    { name: "Store Operations", description: "Retail store management team" },
+    {
+      name: "Merchandising Team",
+      description: "Product placement and display team",
+    },
+    { name: "E-commerce Team", description: "Online platform management team" },
+    {
+      name: "Loss Prevention",
+      description: "Security and inventory control team",
+    },
+    { name: "Supply Chain Team", description: "Inventory and logistics team" },
+    { name: "Marketing Team", description: "Promotions and advertising team" },
+  ],
+  5: [
+    { name: "Clinical Staff", description: "Medical practitioners team" },
+    { name: "Nursing Staff", description: "Patient care nursing team" },
+    { name: "Laboratory Team", description: "Diagnostic testing team" },
+    { name: "Pharmacy Staff", description: "Medication management team" },
+    { name: "Admin & Billing", description: "Administration and billing team" },
+    { name: "Facilities Management", description: "Hospital maintenance team" },
+  ],
+};
+
 async function seedCompany(companyId: number, companyData: any) {
   console.log(`\n🌱 Seeding company: ${companyData.name} (ID: ${companyId})`);
 
@@ -205,11 +377,47 @@ async function seedCompany(companyId: number, companyData: any) {
     companyId,
     "System",
     "Administrator",
-    adminRole.id,
+    adminRole!.id,
     positions[0].id,
     departments[0].id,
   );
   console.log(`   ✅ Created admin user: ${adminUser.username}`);
+
+  // Create brands for this company
+  const brands = [];
+  const brandList = companyBrands[companyId] || companyBrands[1];
+
+  for (const brandData of brandList) {
+    const brand = await prisma.brand.create({
+      data: {
+        name: brandData.name,
+        description: brandData.description,
+        companyId,
+        createdBy: adminUser.id,
+        status: "active",
+      },
+    });
+    brands.push(brand);
+  }
+  console.log(`   ✅ Created ${brands.length} brands`);
+
+  // Create teams for this company (assigned to first brand)
+  const teams = [];
+  const teamList = companyTeams[companyId] || companyTeams[1];
+  const primaryBrand = brands[0];
+
+  for (const teamData of teamList) {
+    const team = await prisma.team.create({
+      data: {
+        name: teamData.name,
+        description: teamData.description,
+        brandId: primaryBrand.id,
+        companyId,
+      },
+    });
+    teams.push(team);
+  }
+  console.log(`   ✅ Created ${teams.length} teams`);
 
   // Create 2 HR Officers
   for (let i = 0; i < 2; i++) {
@@ -217,7 +425,7 @@ async function seedCompany(companyId: number, companyData: any) {
       companyId,
       "HR",
       `Officer ${i + 1}`,
-      hrRole.id,
+      hrRole!.id,
       positions[4].id,
       departments[2].id,
     );
@@ -230,7 +438,7 @@ async function seedCompany(companyId: number, companyData: any) {
       companyId,
       "Manager",
       `${i + 1}`,
-      managerRole.id,
+      managerRole!.id,
       positions[3].id,
       departments[i % departments.length].id,
     );
@@ -243,7 +451,7 @@ async function seedCompany(companyId: number, companyData: any) {
       companyId,
       "Employee",
       `${i + 1}`,
-      employeeRole.id,
+      employeeRole!.id,
       positions[i % positions.length].id,
       departments[i % departments.length].id,
     );
@@ -334,6 +542,8 @@ async function main() {
     console.log(
       `   - Leave Types: ${companies.length * baseLeaveTypes.length}`,
     );
+    console.log(`   - Brands: ${companies.length * 4}`);
+    console.log(`   - Teams: ${companies.length * 6}`);
 
     console.log(
       "\n✅ System is now fully populated with multiple isolated companies!",
