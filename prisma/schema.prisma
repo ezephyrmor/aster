@@ -97,6 +97,8 @@ model Company {
   leaveRequests    LeaveRequest[]
   infractionTypes  InfractionType[]
   infractionOffenses InfractionOffense[]
+  infractions Infraction[]
+  workSchedules WorkSchedule[]
 
   @@map("companies")
 }
@@ -418,6 +420,7 @@ model LeaveUsage {
 model WorkSchedule {
   id           Int          @id @default(autoincrement())
   userId       Int          @map("user_id")
+  companyId    Int          @default(1) @map("company_id")
   dayOfWeek    Int          @map("day_of_week") // 0=Sunday, 1=Monday, ..., 6=Saturday
   startTime    String       @map("start_time") // Format: "HH:MM" (24-hour)
   endTime      String       @map("end_time") // Format: "HH:MM" (24-hour)
@@ -427,8 +430,10 @@ model WorkSchedule {
   createdAt    DateTime     @default(now()) @map("created_at")
   updatedAt    DateTime     @updatedAt @map("updated_at")
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company      Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
   attendance   Attendance[]
 
+  @@index([companyId])
   @@index([userId], map: "work_schedules_user_id_idx")
   @@index([dayOfWeek], map: "work_schedules_day_of_week_idx")
   @@map("work_schedules")
@@ -506,6 +511,7 @@ model InfractionOffense {
 model Infraction {
   id             Int                @id @default(autoincrement())
   userId         Int                @map("user_id")
+  companyId      Int                @default(1) @map("company_id")
   offenseId      Int                @map("offense_id")
   typeId         Int                @map("type_id")
   date           DateTime           @db.Date
@@ -518,11 +524,13 @@ model Infraction {
   updatedAt      DateTime           @updatedAt @map("updated_at")
 
   user           User               @relation("InfractionUsers", fields: [userId], references: [id])
+  company        Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
   offense        InfractionOffense  @relation(fields: [offenseId], references: [id])
   type           InfractionType     @relation(fields: [typeId], references: [id])
   creator        User               @relation("InfractionCreators", fields: [createdBy], references: [id])
   ackUser        User?              @relation("InfractionAckUsers", fields: [acknowledgedBy], references: [id])
 
+  @@index([companyId])
   @@index([userId], map: "infractions_user_id_idx")
   @@index([typeId], map: "infractions_type_id_idx")
   @@index([offenseId], map: "infractions_offense_id_idx")

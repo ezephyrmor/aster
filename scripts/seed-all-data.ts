@@ -11,15 +11,10 @@
 import { PrismaClient } from "@prisma/client";
 import { generateSalt, hashPassword } from "../src/lib/password";
 import { generateUsername, generatePassword } from "../src/lib/userGenerator";
+import SEED_CONFIG from "./seed.config";
 
 const prisma = new PrismaClient();
-
-// Configuration from environment variables
-const CONFIG = {
-  employeeCount: parseInt(process.env.EMPLOYEE_COUNT || "100", 10),
-  brandCount: parseInt(process.env.BRAND_COUNT || "15", 10),
-  teamCount: parseInt(process.env.TEAM_COUNT || "20", 10),
-};
+const CONFIG = SEED_CONFIG;
 
 // Date constants
 const DECEMBER_2024 = new Date("2024-12-01");
@@ -621,10 +616,10 @@ function getRandomStatus(statuses: { id: number; name: string }[]): {
   name: string;
 } {
   const weights = [
-    { status: "active", weight: 0.75 },
-    { status: "on_leave", weight: 0.1 },
-    { status: "inactive", weight: 0.1 },
-    { status: "terminated", weight: 0.05 },
+    { status: "active", weight: CONFIG.employeeStatusActive },
+    { status: "on_leave", weight: CONFIG.employeeStatusOnLeave },
+    { status: "inactive", weight: CONFIG.employeeStatusInactive },
+    { status: "terminated", weight: CONFIG.employeeStatusTerminated },
   ];
   const rand = Math.random();
   let cumulative = 0;
@@ -652,7 +647,10 @@ function logError(message: string, error?: unknown) {
 }
 
 function logProgress(current: number, total: number, prefix: string = "") {
-  const percent = Math.round((current / total) * 100);
+  const percent = Math.max(
+    0,
+    Math.min(100, Math.round((current / total) * 100)),
+  );
   const bar =
     "█".repeat(Math.floor(percent / 5)) +
     "░".repeat(20 - Math.floor(percent / 5));
@@ -664,6 +662,7 @@ function logProgress(current: number, total: number, prefix: string = "") {
 // Types
 interface CreatedUser {
   id: number;
+  companyId: number;
   username: string;
   password: string;
   hireDate: Date;
@@ -801,6 +800,7 @@ async function main() {
 
         createdUsers.push({
           id: user.id,
+          companyId: user.companyId,
           username,
           password,
           hireDate,
@@ -839,31 +839,28 @@ async function main() {
       const template = getRandomItem(scheduleTemplates);
       const effectiveFrom = getRandomDate(employee.hireDate, PRESENT_DATE);
 
-      try {
-        for (const dayOfWeek of workDays) {
-          await prisma.workSchedule.create({
-            data: {
-              userId: employee.id,
-              dayOfWeek,
-              startTime: template.start,
-              endTime: template.end,
-              breakMinutes: template.break,
-              effectiveFrom,
-            },
-          });
-        }
-        employeesWithSchedules.push(employee);
-        schedulesCreated++;
+      for (const dayOfWeek of workDays) {
+        await prisma.workSchedule.create({
+          data: {
+            userId: employee.id,
+            companyId: employee.companyId,
+            dayOfWeek,
+            startTime: template.start,
+            endTime: template.end,
+            breakMinutes: template.break,
+            effectiveFrom,
+          },
+        });
+      }
+      employeesWithSchedules.push(employee);
+      schedulesCreated++;
 
-        if (schedulesCreated % 10 === 0) {
-          logProgress(
-            schedulesCreated,
-            Math.floor(CONFIG.employeeCount * 0.8),
-            "Schedules",
-          );
-        }
-      } catch (error: unknown) {
-        logError(`Failed to create schedule for ${employee.username}`, error);
+      if (schedulesCreated % 10 === 0) {
+        logProgress(
+          schedulesCreated,
+          Math.floor(CONFIG.employeeCount * CONFIG.scheduleCoveragePercent),
+          "Schedules",
+        );
       }
     }
     console.log();
@@ -1326,31 +1323,25 @@ async function main() {
         const infractionDate = getRandomDate(employee.hireDate, empEndDate);
         const isAcknowledged = Math.random() < 0.6;
 
-        try {
-          await prisma.infraction.create({
-            data: {
-              userId: employee.id,
-              offenseId: offense.id,
-              typeId: offense.typeId,
-              date: infractionDate,
-              details: getRandomItem(infractionReasons),
-              comment: isAcknowledged
-                ? "Employee acknowledged the infraction."
-                : null,
-              createdBy: adminUser.id,
-              acknowledgedBy: isAcknowledged ? employee.id : null,
-              acknowledgedAt: isAcknowledged
-                ? getRandomDate(infractionDate, PRESENT_DATE)
-                : null,
-            },
-          });
-          infractionsCreated++;
-        } catch (error: unknown) {
-          logError(
-            `Failed to create infraction for ${employee.username}`,
-            error,
-          );
-        }
+        await prisma.infraction.create({
+          data: {
+            userId: employee.id,
+            companyId: employee.companyId,
+            offenseId: offense.id,
+            typeId: offense.typeId,
+            date: infractionDate,
+            details: getRandomItem(infractionReasons),
+            comment: isAcknowledged
+              ? "Employee acknowledged the infraction."
+              : null,
+            createdBy: adminUser.id,
+            acknowledgedBy: isAcknowledged ? employee.id : null,
+            acknowledgedAt: isAcknowledged
+              ? getRandomDate(infractionDate, PRESENT_DATE)
+              : null,
+          },
+        });
+        infractionsCreated++;
       }
 
       if (infractionsCreated % 20 === 0) {

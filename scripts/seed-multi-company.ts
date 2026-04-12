@@ -12,41 +12,34 @@
 import { PrismaClient } from "@prisma/client";
 import { generateSalt, hashPassword } from "../src/lib/password";
 import { generateUsername, generatePassword } from "../src/lib/userGenerator";
+import SEED_CONFIG from "./seed.config";
 
 const prisma = new PrismaClient();
+const CONFIG = SEED_CONFIG;
 
-const companies = [
-  {
-    id: 1,
-    name: "Aster HR System",
-    timezone: "Asia/Manila",
-    adminEmail: "admin@aster.local",
-  },
-  {
-    id: 2,
-    name: "Acme Corporation",
-    timezone: "America/New_York",
-    adminEmail: "admin@acme-corp.com",
-  },
-  {
-    id: 3,
-    name: "Global Tech Solutions",
-    timezone: "Europe/London",
-    adminEmail: "admin@globaltechsolutions.co.uk",
-  },
-  {
-    id: 4,
-    name: "Pacific Retail Group",
-    timezone: "Australia/Sydney",
-    adminEmail: "admin@pacificretail.com.au",
-  },
-  {
-    id: 5,
-    name: "Metro Healthcare Services",
-    timezone: "Asia/Tokyo",
-    adminEmail: "admin@metrohealthcare.jp",
-  },
+// Company templates for different industries
+const companyTemplates = [
+  { name: "Aster HR System", timezone: "Asia/Manila" },
+  { name: "Acme Corporation", timezone: "America/New_York" },
+  { name: "Global Tech Solutions", timezone: "Europe/London" },
+  { name: "Pacific Retail Group", timezone: "Australia/Sydney" },
+  { name: "Metro Healthcare Services", timezone: "Asia/Tokyo" },
+  { name: "Northwest Manufacturing", timezone: "America/Chicago" },
+  { name: "Sunrise Financial Group", timezone: "America/Los_Angeles" },
+  { name: "Eastern Shipping Lines", timezone: "Asia/Singapore" },
+  { name: "Mountain View University", timezone: "America/Denver" },
+  { name: "Coastal Energy Corporation", timezone: "Europe/Paris" },
 ];
+
+// Generate companies array based on configuration
+const companies = companyTemplates
+  .slice(0, CONFIG.companyCount)
+  .map((template, index) => ({
+    id: index + 1,
+    name: template.name,
+    timezone: template.timezone,
+    adminEmail: `admin@${template.name.toLowerCase().replace(/\s+/g, "")}.local`,
+  }));
 
 const basePositions = [
   "Software Engineer",
@@ -446,8 +439,9 @@ async function seedCompany(companyId: number, companyData: any) {
     console.log(`   ✅ Created manager user: ${managerUser.username}`);
   }
 
-  // Create 50 Employees
-  for (let i = 0; i < 50; i++) {
+  // Create employees
+  const employeeCountPerCompany = CONFIG.employeeCountPerCompany;
+  for (let i = 0; i < employeeCountPerCompany; i++) {
     const empUser = await createUser(
       companyId,
       "Employee",
@@ -457,10 +451,12 @@ async function seedCompany(companyId: number, companyData: any) {
       departments[i % departments.length].id,
     );
     if (i % 10 === 0) {
-      console.log(`   ✅ Created ${i + 1}/50 employees`);
+      console.log(
+        `   ✅ Created ${i + 1}/${employeeCountPerCompany} employees`,
+      );
     }
   }
-  console.log(`   ✅ Created 50 employees`);
+  console.log(`   ✅ Created ${employeeCountPerCompany} employees`);
 
   console.log(`✅ Company ${companyData.name} seeding complete!`);
 }
@@ -536,7 +532,10 @@ async function main() {
     console.log("\n🎉 Multi-company seeding completed successfully!");
     console.log("\n📊 Summary:");
     console.log(`   - Companies: ${companies.length}`);
-    console.log(`   - Total users: ${companies.length * 58}`);
+    const employeeCountPerCompany = CONFIG.employeeCountPerCompany;
+    console.log(
+      `   - Total users: ${companies.length * (employeeCountPerCompany + 8)}`,
+    );
     console.log(`   - Positions: ${companies.length * basePositions.length}`);
     console.log(`   - Departments: ${companies.length * 8}`);
     console.log(`   - Roles: ${companies.length * baseRoles.length}`);
