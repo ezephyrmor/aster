@@ -5,6 +5,8 @@
   "scripts": {
     "postinstall": "prisma generate",
     "dev": "next dev",
+    "dev+": "npm run clean && npm run dev",
+    "clean": "rm -rf .next node_modules/.cache .turbo",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
