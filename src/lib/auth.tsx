@@ -50,13 +50,24 @@ function AuthContextProvider({ children }: { children: ReactNode }) {
       });
 
       if (result?.error) {
-        return { success: false, error: result.error };
+        // Map NextAuth error codes to user friendly messages
+        let errorMessage = "Invalid username or password";
+
+        if (result.error === "CredentialsSignin") {
+          errorMessage = "Invalid username or password";
+        } else if (result.error === "missing_credentials") {
+          errorMessage = "Please enter both username and password";
+        } else if (result.error) {
+          errorMessage = result.error;
+        }
+
+        return { success: false, error: errorMessage };
       }
 
       return { success: true };
     } catch (error) {
       console.error("Login error:", error);
-      return { success: false, error: "Network error" };
+      return { success: false, error: "An error occurred while signing in" };
     }
   };
 
