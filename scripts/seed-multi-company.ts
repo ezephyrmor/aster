@@ -372,7 +372,8 @@ async function seedCompany(companyId: number, companyData: any) {
   const managerRole = roles.find((r) => r.name === "manager");
   const employeeRole = roles.find((r) => r.name === "employee");
 
-  // Create Admin user
+  // Create admin user for all companies
+  // For company 1, this will be overwritten by seed-admin.ts later with the correct known password
   const adminUser = await createUser(
     companyId,
     "System",
