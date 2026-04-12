@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
+import { auth } from "@/lib/next-auth";
 
 // GET /api/leaves/requests - Get leave requests
 // Query params: userId, teamId, statusId, page, limit, search, leaveType, isPaid, sortBy, sortOrder
@@ -262,10 +263,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get current session for company ID
+    const session = await auth();
+
     // Create the leave request
     const leaveRequest = await prisma.leaveRequest.create({
       data: {
         userId: parseInt(userId),
+        companyId: session?.user?.companyId,
         leaveTypeId: parseInt(leaveTypeId),
         statusId: pendingStatus?.id || 1,
         startDate: start,
