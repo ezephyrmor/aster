@@ -24,8 +24,8 @@ async function main() {
   });
   console.log("   ✅ Default company created\n");
 
-  // Seed roles for default company (id: 1)
-  console.log("📋 Seeding roles...");
+  // Seed roles for ALL companies
+  console.log("📋 Seeding roles for all companies...");
   const roles = [
     { name: "admin", description: "System Administrator" },
     { name: "hr", description: "Human Resources" },
@@ -33,22 +33,30 @@ async function main() {
     { name: "employee", description: "Regular Employee" },
   ];
 
-  for (const role of roles) {
-    await prisma.role.upsert({
-      where: {
-        companyId_name: {
-          companyId: 1,
-          name: role.name,
+  const companies = await prisma.company.findMany();
+  let roleCount = 0;
+
+  for (const company of companies) {
+    for (const role of roles) {
+      await prisma.role.upsert({
+        where: {
+          companyId_name: {
+            companyId: company.id,
+            name: role.name,
+          },
         },
-      },
-      update: {},
-      create: {
-        ...role,
-        companyId: 1,
-      },
-    });
+        update: {},
+        create: {
+          ...role,
+          companyId: company.id,
+        },
+      });
+      roleCount++;
+    }
   }
-  console.log(`   ✅ Created ${roles.length} roles`);
+  console.log(
+    `   ✅ Created ${roleCount} roles for ${companies.length} companies`,
+  );
 
   // Seed employee statuses
   console.log("\n📋 Seeding employee statuses...");
