@@ -109,4 +109,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   pages: {
     signIn: "/login",
   },
+
+  // Suppress CredentialsSignin errors from being logged to console
+  onError: (error) => {
+    // Ignore expected authentication failure errors
+    if (error.name === "CredentialsSignin") {
+      return;
+    }
+    // Log all other actual errors
+    console.error("Auth error:", error);
+  },
 });
