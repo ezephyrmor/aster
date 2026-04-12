@@ -132,40 +132,8 @@ async function main() {
   }
   console.log(`   ✅ Created ${positions.length} positions`);
 
-  // Seed common departments
-  console.log("\n📋 Seeding departments...");
-  const departments = [
-    {
-      name: "Engineering",
-      description: "Software development and technical operations",
-    },
-    { name: "Product", description: "Product management and strategy" },
-    { name: "Design", description: "User experience and interface design" },
-    { name: "Marketing", description: "Marketing and brand management" },
-    { name: "Sales", description: "Sales and business development" },
-    { name: "Human Resources", description: "HR and people operations" },
-    { name: "Finance", description: "Financial planning and accounting" },
-    { name: "Operations", description: "Business operations and logistics" },
-    { name: "Customer Success", description: "Customer support and success" },
-    { name: "Legal", description: "Legal and compliance" },
-  ];
-
-  for (const department of departments) {
-    await prisma.department.upsert({
-      where: {
-        companyId_name: {
-          companyId: 1,
-          name: department.name,
-        },
-      },
-      update: {},
-      create: {
-        ...department,
-        companyId: 1,
-      },
-    });
-  }
-  console.log(`   ✅ Created ${departments.length} departments`);
+  // NOTE: Departments are now created by seed-multi-company.ts with company-specific appropriate departments
+  // No generic departments are seeded here anymore
 
   // Seed common industries
   console.log("\n📋 Seeding industries...");
@@ -196,7 +164,9 @@ async function main() {
   console.log(`   - Roles: ${roles.length}`);
   console.log(`   - Employee Statuses: ${statuses.length}`);
   console.log(`   - Positions: ${positions.length}`);
-  console.log(`   - Departments: ${departments.length}`);
+  console.log(
+    `   - Departments: See seed-multi-company.ts for company-specific departments`,
+  );
   console.log(`   - Industries: ${industries.length}`);
 }
 

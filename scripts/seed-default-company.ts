@@ -69,30 +69,6 @@ async function main() {
     },
   ];
 
-  // Get admin role first
-  const adminRole = await prisma.role.findFirst({
-    where: {
-      companyId: 1,
-      name: "admin",
-    },
-  });
-
-  if (!adminRole) {
-    console.error("❌ Admin role not found. Run seed-lookup-tables first.");
-    process.exit(1);
-  }
-
-  // Get default position and department
-  const defaultPosition = await prisma.position.findFirst({
-    where: { companyId: 1 },
-  });
-  const defaultDepartment = await prisma.department.findFirst({
-    where: { companyId: 1 },
-  });
-  const activeStatus = await prisma.employeeStatusModel.findFirst({
-    where: { name: "active" },
-  });
-
   for (const companyData of companies) {
     const { profile, ...company } = companyData;
 
@@ -110,45 +86,6 @@ async function main() {
     console.log(
       `✅ Company created: ${createdCompany.name} (ID: ${createdCompany.id})`,
     );
-
-    // Create admin user for this company
-    const slug = createdCompany.name
-      .toLowerCase()
-      .replace(/\s+/g, "-")
-      .replace(/[^a-z0-9-]/g, "");
-    const adminUsername = `admin-${slug}`;
-
-    // Generate password
-    const salt = generateSalt();
-    const passwordHash = await hashPassword("password123", salt);
-
-    // Create admin user if doesn't exist
-    const existingAdmin = await prisma.user.findUnique({
-      where: { username: adminUsername },
-    });
-
-    if (!existingAdmin) {
-      await prisma.user.create({
-        data: {
-          username: adminUsername,
-          passwordHash,
-          salt,
-          companyId: createdCompany.id,
-          roleId: adminRole.id,
-          employeeProfile: {
-            create: {
-              firstName: createdCompany.name,
-              lastName: "Administrator",
-              positionId: defaultPosition?.id || 1,
-              departmentId: defaultDepartment?.id || 1,
-              statusId: activeStatus?.id || 1,
-            },
-          },
-        },
-      });
-
-      console.log(`   ✅ Admin user created: ${adminUsername}`);
-    }
   }
 
   // Backfill all existing records with default company id

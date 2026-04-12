@@ -1,7 +1,7 @@
 /**
  * Seed script to create fully isolated multiple companies
  * Run with: npx tsx scripts/seed-multi-company.ts
- * 
+ *
  * Creates:
  * - 5 separate companies
  * - 1 Admin + 2 HR + 5 Managers + 50 Employees per company
@@ -16,11 +16,36 @@ import { generateUsername, generatePassword } from "../src/lib/userGenerator";
 const prisma = new PrismaClient();
 
 const companies = [
-  { id: 1, name: "Aster HR System", timezone: "Asia/Manila", adminEmail: "admin@aster.local" },
-  { id: 2, name: "Acme Corporation", timezone: "America/New_York", adminEmail: "admin@acme-corp.com" },
-  { id: 3, name: "Global Tech Solutions", timezone: "Europe/London", adminEmail: "admin@globaltechsolutions.co.uk" },
-  { id: 4, name: "Pacific Retail Group", timezone: "Australia/Sydney", adminEmail: "admin@pacificretail.com.au" },
-  { id: 5, name: "Metro Healthcare Services", timezone: "Asia/Tokyo", adminEmail: "admin@metrohealthcare.jp" }
+  {
+    id: 1,
+    name: "Aster HR System",
+    timezone: "Asia/Manila",
+    adminEmail: "admin@aster.local",
+  },
+  {
+    id: 2,
+    name: "Acme Corporation",
+    timezone: "America/New_York",
+    adminEmail: "admin@acme-corp.com",
+  },
+  {
+    id: 3,
+    name: "Global Tech Solutions",
+    timezone: "Europe/London",
+    adminEmail: "admin@globaltechsolutions.co.uk",
+  },
+  {
+    id: 4,
+    name: "Pacific Retail Group",
+    timezone: "Australia/Sydney",
+    adminEmail: "admin@pacificretail.com.au",
+  },
+  {
+    id: 5,
+    name: "Metro Healthcare Services",
+    timezone: "Asia/Tokyo",
+    adminEmail: "admin@metrohealthcare.jp",
+  },
 ];
 
 const basePositions = [
@@ -35,25 +60,72 @@ const basePositions = [
   "Marketing Specialist",
   "Sales Representative",
   "Customer Support",
-  "Office Administrator"
+  "Office Administrator",
 ];
 
-const baseDepartments = [
-  "Engineering",
-  "Product",
-  "Human Resources",
-  "Finance",
-  "Marketing",
-  "Sales",
-  "Customer Support",
-  "Operations"
-];
+const companyDepartments: Record<number, string[]> = {
+  1: [
+    // Aster HR System (SaaS)
+    "Engineering",
+    "Product",
+    "Human Resources",
+    "Finance",
+    "Marketing",
+    "Sales",
+    "Customer Support",
+    "Operations",
+  ],
+  2: [
+    // Acme Corporation (Manufacturing)
+    "Production",
+    "Quality Control",
+    "Logistics",
+    "Maintenance",
+    "Procurement",
+    "Human Resources",
+    "Finance",
+    "Safety",
+  ],
+  3: [
+    // Global Tech Solutions (Software)
+    "Engineering",
+    "DevOps",
+    "Product",
+    "Design",
+    "Customer Success",
+    "Human Resources",
+    "Finance",
+    "Sales",
+  ],
+  4: [
+    // Pacific Retail Group (Retail)
+    "Store Operations",
+    "Merchandising",
+    "Loss Prevention",
+    "Supply Chain",
+    "E-Commerce",
+    "Human Resources",
+    "Finance",
+    "Marketing",
+  ],
+  5: [
+    // Metro Healthcare Services (Healthcare)
+    "Clinical Services",
+    "Nursing",
+    "Pharmacy",
+    "Laboratory",
+    "Patient Administration",
+    "Human Resources",
+    "Finance",
+    "Facilities",
+  ],
+};
 
 const baseRoles = [
   { name: "admin", description: "System Administrator" },
   { name: "hr", description: "Human Resources Officer" },
   { name: "manager", description: "Department Manager" },
-  { name: "employee", description: "Regular Employee" }
+  { name: "employee", description: "Regular Employee" },
 ];
 
 const baseLeaveTypes = [
@@ -61,7 +133,7 @@ const baseLeaveTypes = [
   { name: "Sick Leave", defaultDaysLimit: 10, color: "green" },
   { name: "Emergency Leave", defaultDaysLimit: 5, color: "orange" },
   { name: "Bereavement Leave", defaultDaysLimit: 3, color: "gray" },
-  { name: "Maternity Leave", defaultDaysLimit: 60, color: "purple" }
+  { name: "Maternity Leave", defaultDaysLimit: 60, color: "purple" },
 ];
 
 async function seedCompany(companyId: number, companyData: any) {
@@ -74,8 +146,8 @@ async function seedCompany(companyId: number, companyData: any) {
       data: {
         name,
         companyId,
-        description: `${name} position for ${companyData.name}`
-      }
+        description: `${name} position for ${companyData.name}`,
+      },
     });
     positions.push(position);
   }
@@ -83,13 +155,15 @@ async function seedCompany(companyId: number, companyData: any) {
 
   // Create departments for this company
   const departments = [];
-  for (const name of baseDepartments) {
+  const departmentList = companyDepartments[companyId] || companyDepartments[1];
+
+  for (const name of departmentList) {
     const department = await prisma.department.create({
       data: {
         name,
         companyId,
-        description: `${name} department for ${companyData.name}`
-      }
+        description: `${name} department for ${companyData.name}`,
+      },
     });
     departments.push(department);
   }
@@ -102,8 +176,8 @@ async function seedCompany(companyId: number, companyData: any) {
       data: {
         name: role.name,
         companyId,
-        description: role.description
-      }
+        description: role.description,
+      },
     });
     roles.push(createdRole);
   }
@@ -114,39 +188,67 @@ async function seedCompany(companyId: number, companyData: any) {
     await prisma.leaveType.create({
       data: {
         ...leaveType,
-        companyId
-      }
+        companyId,
+      },
     });
   }
   console.log(`   ✅ Created ${baseLeaveTypes.length} leave types`);
 
   // Get role ids
-  const adminRole = roles.find(r => r.name === "admin");
-  const hrRole = roles.find(r => r.name === "hr");
-  const managerRole = roles.find(r => r.name === "manager");
-  const employeeRole = roles.find(r => r.name === "employee");
+  const adminRole = roles.find((r) => r.name === "admin");
+  const hrRole = roles.find((r) => r.name === "hr");
+  const managerRole = roles.find((r) => r.name === "manager");
+  const employeeRole = roles.find((r) => r.name === "employee");
 
   // Create Admin user
-  const adminUser = await createUser(companyId, "System", "Administrator", adminRole.id, positions[0].id, departments[0].id);
+  const adminUser = await createUser(
+    companyId,
+    "System",
+    "Administrator",
+    adminRole.id,
+    positions[0].id,
+    departments[0].id,
+  );
   console.log(`   ✅ Created admin user: ${adminUser.username}`);
 
   // Create 2 HR Officers
   for (let i = 0; i < 2; i++) {
-    const hrUser = await createUser(companyId, "HR", `Officer ${i+1}`, hrRole.id, positions[4].id, departments[2].id);
+    const hrUser = await createUser(
+      companyId,
+      "HR",
+      `Officer ${i + 1}`,
+      hrRole.id,
+      positions[4].id,
+      departments[2].id,
+    );
     console.log(`   ✅ Created HR user: ${hrUser.username}`);
   }
 
   // Create 5 Managers
   for (let i = 0; i < 5; i++) {
-    const managerUser = await createUser(companyId, "Manager", `${i+1}`, managerRole.id, positions[3].id, departments[i % departments.length].id);
+    const managerUser = await createUser(
+      companyId,
+      "Manager",
+      `${i + 1}`,
+      managerRole.id,
+      positions[3].id,
+      departments[i % departments.length].id,
+    );
     console.log(`   ✅ Created manager user: ${managerUser.username}`);
   }
 
   // Create 50 Employees
   for (let i = 0; i < 50; i++) {
-    const empUser = await createUser(companyId, "Employee", `${i+1}`, employeeRole.id, positions[i % positions.length].id, departments[i % departments.length].id);
+    const empUser = await createUser(
+      companyId,
+      "Employee",
+      `${i + 1}`,
+      employeeRole.id,
+      positions[i % positions.length].id,
+      departments[i % departments.length].id,
+    );
     if (i % 10 === 0) {
-      console.log(`   ✅ Created ${i+1}/50 employees`);
+      console.log(`   ✅ Created ${i + 1}/50 employees`);
     }
   }
   console.log(`   ✅ Created 50 employees`);
@@ -154,7 +256,14 @@ async function seedCompany(companyId: number, companyData: any) {
   console.log(`✅ Company ${companyData.name} seeding complete!`);
 }
 
-async function createUser(companyId: number, firstName: string, lastName: string, roleId: number, positionId: number, departmentId: number) {
+async function createUser(
+  companyId: number,
+  firstName: string,
+  lastName: string,
+  roleId: number,
+  positionId: number,
+  departmentId: number,
+) {
   const username = generateUsername(firstName, lastName);
   const password = generatePassword();
   const salt = generateSalt();
@@ -171,14 +280,22 @@ async function createUser(companyId: number, firstName: string, lastName: string
         create: {
           firstName,
           lastName,
-          dateOfBirth: new Date(1980 + Math.floor(Math.random() * 30), Math.floor(Math.random() * 12), Math.floor(Math.random() * 28)),
-          hireDate: new Date(2020 + Math.floor(Math.random() * 5), Math.floor(Math.random() * 12), Math.floor(Math.random() * 28)),
+          dateOfBirth: new Date(
+            1980 + Math.floor(Math.random() * 30),
+            Math.floor(Math.random() * 12),
+            Math.floor(Math.random() * 28),
+          ),
+          hireDate: new Date(
+            2020 + Math.floor(Math.random() * 5),
+            Math.floor(Math.random() * 12),
+            Math.floor(Math.random() * 28),
+          ),
           positionId,
           departmentId,
-          statusId: 1
-        }
-      }
-    }
+          statusId: 1,
+        },
+      },
+    },
   });
 }
 
@@ -211,13 +328,16 @@ async function main() {
     console.log("\n📊 Summary:");
     console.log(`   - Companies: ${companies.length}`);
     console.log(`   - Total users: ${companies.length * 58}`);
-    console.log(`   - Positions: ${companies.length * ${basePositions.length}}`);
-    console.log(`   - Departments: ${companies.length * ${baseDepartments.length}}`);
-    console.log(`   - Roles: ${companies.length * ${baseRoles.length}}`);
-    console.log(`   - Leave Types: ${companies.length * ${baseLeaveTypes.length}}`);
-    
-    console.log("\n✅ System is now fully populated with multiple isolated companies!");
+    console.log(`   - Positions: ${companies.length * basePositions.length}`);
+    console.log(`   - Departments: ${companies.length * 8}`);
+    console.log(`   - Roles: ${companies.length * baseRoles.length}`);
+    console.log(
+      `   - Leave Types: ${companies.length * baseLeaveTypes.length}`,
+    );
 
+    console.log(
+      "\n✅ System is now fully populated with multiple isolated companies!",
+    );
   } catch (err) {
     console.error("❌ Error during seed process:", err);
     process.exit(1);
