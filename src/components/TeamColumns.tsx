@@ -12,6 +12,10 @@ export interface Team {
     id: number;
     name: string;
   };
+  company?: {
+    id: number;
+    name: string;
+  } | null;
   _count: {
     members: number;
   };
@@ -58,6 +62,18 @@ export const columns: ColumnDef<Team>[] = [
     },
     filterFn: (row, id, value) => {
       return value.includes(row.original.brand.id.toString());
+    },
+  },
+  {
+    accessorKey: "company.name",
+    header: () => <div className="hidden md:block">Company</div>,
+    cell: ({ row }) => {
+      const company = row.original.company;
+      return (
+        <div className="hidden md:block text-muted-foreground">
+          {company?.name || "-"}
+        </div>
+      );
     },
   },
   {

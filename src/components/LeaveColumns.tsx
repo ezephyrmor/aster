@@ -21,6 +21,10 @@ export interface LeaveRequest {
       lastName: string;
     } | null;
   };
+  company?: {
+    id: number;
+    name: string;
+  } | null;
   leaveType: {
     id: number;
     name: string;
@@ -263,6 +267,18 @@ export function useLeaveColumns({
         if (value === "true") return row.original.isPaid === true;
         if (value === "false") return row.original.isPaid === false;
         return true;
+      },
+    },
+    {
+      accessorKey: "company.name",
+      header: () => <div className="hidden lg:block">Company</div>,
+      cell: ({ row }) => {
+        const company = row.original.company;
+        return (
+          <div className="hidden lg:block text-muted-foreground">
+            {company?.name || "-"}
+          </div>
+        );
       },
     },
     {

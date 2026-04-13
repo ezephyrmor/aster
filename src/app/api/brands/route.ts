@@ -73,6 +73,7 @@ export const GET = withAuth(
       const brands = await prisma.brand.findMany({
         where,
         include: {
+          company: true,
           industry: true,
           manager: {
             include: {

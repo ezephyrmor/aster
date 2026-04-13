@@ -61,6 +61,7 @@ export const GET = withAuth(
       const teams = await prisma.team.findMany({
         where,
         include: {
+          company: true,
           members: {
             include: {
               user: {

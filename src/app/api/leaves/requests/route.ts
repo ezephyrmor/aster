@@ -112,6 +112,7 @@ export const GET = withAuth(
       const leaveRequests = await prisma.leaveRequest.findMany({
         where: whereClause,
         include: {
+          company: true,
           user: {
             include: {
               employeeProfile: true,

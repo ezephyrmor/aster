@@ -71,6 +71,7 @@ export const GET = withAuth(
       const schedules = await prisma.workSchedule.findMany({
         where: whereClause,
         include: {
+          company: true,
           user: {
             include: {
               employeeProfile: true,

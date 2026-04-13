@@ -75,6 +75,7 @@ export const GET = withAuth(
       const infractions = await prisma.infraction.findMany({
         where,
         include: {
+          company: true,
           user: {
             include: {
               employeeProfile: {
