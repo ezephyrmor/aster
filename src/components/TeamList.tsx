@@ -23,6 +23,7 @@ export default function TeamList({ onAddClick }: TeamListProps) {
     setSorting,
     search,
     setSearch,
+    extraParams,
     setExtraParams,
   } = useServerSideDataTable<Team>({
     apiEndpoint: "/api/teams",
@@ -39,7 +40,7 @@ export default function TeamList({ onAddClick }: TeamListProps) {
         { value: "active", label: "Active" },
         { value: "inactive", label: "Inactive" },
       ],
-      value: "",
+      value: extraParams.status || "",
       onChange: (value: string) =>
         setExtraParams((prev) => ({ ...prev, status: value })),
     },

@@ -27,6 +27,7 @@ export default function BrandList({ onAddClick }: BrandListProps) {
     setSorting,
     search,
     setSearch,
+    extraParams,
     setExtraParams,
   } = useServerSideDataTable<Brand>({
     apiEndpoint: "/api/brands",
@@ -48,7 +49,7 @@ export default function BrandList({ onAddClick }: BrandListProps) {
         { value: "inactive", label: "Inactive" },
         { value: "archived", label: "Archived" },
       ],
-      value: "",
+      value: extraParams.status || "",
       onChange: (value: string) =>
         setExtraParams((prev) => ({ ...prev, status: value })),
     },
@@ -57,7 +58,7 @@ export default function BrandList({ onAddClick }: BrandListProps) {
       label: "Industry",
       type: "select",
       options: industries.map((ind: string) => ({ value: ind, label: ind })),
-      value: "",
+      value: extraParams.industry || "",
       onChange: (value: string) =>
         setExtraParams((prev) => ({ ...prev, industry: value })),
     },

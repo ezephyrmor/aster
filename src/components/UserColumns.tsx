@@ -141,7 +141,7 @@ export const columns: ColumnDef<User>[] = [
       );
     },
     filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id));
+      return value.length === 0 || value.includes(row.getValue(id));
     },
   },
   {
@@ -170,7 +170,7 @@ export const columns: ColumnDef<User>[] = [
       );
     },
     filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id));
+      return value.length === 0 || value.includes(row.getValue(id));
     },
   },
   {
