@@ -34,28 +34,33 @@ export const GET = withAuth(
         sortBy = "createdAt";
       }
 
-      // Build where clause for filtering
-      const whereClauses: any[] = [];
+      // Base filter always applies company scope FIRST - cannot be bypassed
+      const where: any = {};
 
-      // Apply company id filter from current user session
+      // Apply mandatory company id filter from current user session
       if (companyId) {
-        whereClauses.push({ companyId });
+        where.companyId = companyId;
       }
+
+      // Build additional filter conditions
+      const filterConditions: any[] = [];
 
       // Role filter (by role name)
       if (role) {
-        whereClauses.push({ role: { name: role } });
+        filterConditions.push({ role: { name: role } });
       }
 
       // Status filter (through employeeProfile, by status name)
       if (status) {
-        whereClauses.push({ employeeProfile: { status: { name: status } } });
+        filterConditions.push({
+          employeeProfile: { status: { name: status } },
+        });
       }
 
       // Search filter (employee name only) - case insensitive for SQLite
       if (search) {
         const searchLower = search.toLowerCase();
-        whereClauses.push({
+        filterConditions.push({
           OR: [
             {
               employeeProfile: {
@@ -71,13 +76,13 @@ export const GET = withAuth(
         });
       }
 
-      // Combine all where clauses with AND
-      const where =
-        whereClauses.length > 0
-          ? whereClauses.length === 1
-            ? whereClauses[0]
-            : { AND: whereClauses }
-          : {};
+      // Combine all additional filters with AND
+      if (filterConditions.length > 0) {
+        where.AND =
+          filterConditions.length === 1
+            ? filterConditions[0]
+            : { AND: filterConditions };
+      }
 
       // Get total count for pagination
       const total = await prisma.user.count({ where });
@@ -110,6 +115,7 @@ export const GET = withAuth(
             },
           },
           role: true,
+          company: true,
         },
         skip,
         take: limit,
@@ -122,6 +128,7 @@ export const GET = withAuth(
         username: user.username,
         createdAt: user.createdAt,
         role: user.role.name,
+        company: user.company?.name || null,
         employeeProfile: user.employeeProfile
           ? {
               firstName: user.employeeProfile.firstName,

@@ -7,6 +7,7 @@ export interface User {
   id: number;
   username: string;
   role: string;
+  company?: string | null;
   employeeProfile: {
     firstName: string;
     lastName: string;
@@ -49,24 +50,6 @@ function formatStatus(status: string | null | undefined) {
 }
 
 export const columns: ColumnDef<User>[] = [
-  {
-    accessorKey: "username",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="h-8 px-2"
-        >
-          Username
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
-    cell: ({ getValue }) => (
-      <div className="font-medium">{getValue() as string}</div>
-    ),
-  },
   {
     accessorKey: "employeeProfile",
     header: ({ column }) => {
@@ -117,6 +100,18 @@ export const columns: ColumnDef<User>[] = [
       return (
         <div className="hidden lg:block text-muted-foreground">
           {department || "-"}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "company",
+    header: () => <div className="hidden xl:block">Company</div>,
+    cell: ({ row }) => {
+      const company = row.original.company;
+      return (
+        <div className="hidden xl:block text-muted-foreground">
+          {company || "-"}
         </div>
       );
     },
