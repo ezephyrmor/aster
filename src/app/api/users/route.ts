@@ -167,7 +167,7 @@ export const GET = withAuth(
 
 // POST /api/users - Create new user
 export const POST = withAuth(
-  withValidation(CreateUserSchema, async (data) => {
+  withValidation(CreateUserSchema, async (data, _request, auth) => {
     try {
       const {
         username,
@@ -228,9 +228,15 @@ export const POST = withAuth(
       const salt = generateSalt();
       const hashedPassword = await hashPassword(generatedPassword, salt);
 
-      // Get role ID
+      // Get role ID - safe fallback for middleware parameter order
+      const companyId = auth?.user?.companyId || 1;
       const roleRecord = await prisma.role.findUnique({
-        where: { name: role || "employee" },
+        where: {
+          companyId_name: {
+            companyId,
+            name: role || "employee",
+          },
+        },
       });
 
       if (!roleRecord) {
@@ -243,9 +249,14 @@ export const POST = withAuth(
       // Get position ID if provided
       let positionId: number | null = null;
       if (position) {
-        // Try to find by name first
+        // Try to find by name first (company scoped)
         let positionRecord = await prisma.position.findUnique({
-          where: { name: position },
+          where: {
+            companyId_name: {
+              companyId,
+              name: position,
+            },
+          },
         });
 
         // If not found and position is a number, try by ID
@@ -261,9 +272,14 @@ export const POST = withAuth(
       // Get department ID if provided
       let departmentId: number | null = null;
       if (department) {
-        // Try to find by name first
+        // Try to find by name first (company scoped)
         let departmentRecord = await prisma.department.findUnique({
-          where: { name: department },
+          where: {
+            companyId_name: {
+              companyId,
+              name: department,
+            },
+          },
         });
 
         // If not found and department is a number, try by ID

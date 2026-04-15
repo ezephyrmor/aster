@@ -163,6 +163,9 @@ model EmployeeProfile {
   personalEmail String?             @map("personal_email") @db.VarChar(255)
   address       String?             @db.Text
   hireDate      DateTime?           @map("hire_date")
+  emergencyContactName     String?  @map("emergency_contact_name") @db.VarChar(200)
+  emergencyContactNumber   String?  @map("emergency_contact_number") @db.VarChar(50)
+  emergencyContactRelation String?  @map("emergency_contact_relation") @db.VarChar(100)
   createdAt     DateTime            @default(now()) @map("created_at")
   updatedAt     DateTime            @updatedAt @map("updated_at")
   departmentId  Int?                @map("department_id")

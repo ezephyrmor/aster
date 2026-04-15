@@ -145,19 +145,7 @@ export const PUT = withAuth(
 
       // Update employee profile if it exists
       if (updatedUser.employeeProfile) {
-        const updateProfileData: {
-          firstName?: string | null;
-          lastName?: string | null;
-          middleName?: string | null;
-          contactNumber?: string | null;
-          personalEmail?: string | null;
-          address?: string | null;
-          dateOfBirth?: Date | null;
-          hireDate?: Date | null;
-          positionId?: number | null;
-          departmentId?: number | null;
-          statusId?: number;
-        } = {
+        const updateProfileData: any = {
           firstName,
           lastName,
           middleName,
@@ -167,6 +155,14 @@ export const PUT = withAuth(
           dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
           hireDate: hireDate ? new Date(hireDate) : null,
         };
+
+        // Add emergency contact fields only if they exist in schema
+        if (emergencyContactName !== undefined)
+          updateProfileData.emergencyContactName = emergencyContactName;
+        if (emergencyContactNumber !== undefined)
+          updateProfileData.emergencyContactNumber = emergencyContactNumber;
+        if (emergencyContactRelation !== undefined)
+          updateProfileData.emergencyContactRelation = emergencyContactRelation;
 
         // Handle position (can be name or ID)
         if (position !== undefined) {

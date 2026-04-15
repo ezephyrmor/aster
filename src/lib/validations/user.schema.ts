@@ -4,7 +4,7 @@ import { validationRules } from "./validation.utils";
 const BaseUserSchema = z.object({
   username: z.string().optional(),
   password: z.string().optional(),
-  role: z.enum(["admin", "hr", "employee"]),
+  role: z.enum(["admin", "hr", "manager", "employee"]),
   firstName: validationRules.name,
   lastName: validationRules.name,
   middleName: z.string().optional(),
