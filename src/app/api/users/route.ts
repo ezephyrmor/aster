@@ -329,6 +329,9 @@ export const POST = withAuth(
               positionId,
               departmentId,
               hireDate: hireDate ? new Date(hireDate) : null,
+              emergencyContactName,
+              emergencyContactNumber,
+              emergencyContactRelation,
               statusId: statusId || 1, // Default to "active" status
             },
           },
