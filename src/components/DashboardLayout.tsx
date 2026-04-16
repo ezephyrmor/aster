@@ -32,6 +32,7 @@ export default function DashboardLayout({
   const [remainingSessionTime, setRemainingSessionTime] = useState(0);
   const [showIdleWarning, setShowIdleWarning] = useState(false);
   const { data: session, update } = useSession();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -93,10 +94,20 @@ export default function DashboardLayout({
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="flex min-h-screen">
-        {/* Sidebar - Fixed width, full height */}
-        <div className="w-64 flex-shrink-0">
+        {/* Sidebar - Responsive */}
+        <div
+          className={`fixed lg:relative inset-y-0 left-0 z-50 w-64 flex-shrink-0 transform transition-transform duration-300 ease-in-out lg:transform-none ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
+        >
           <Sidebar />
         </div>
+
+        {/* Mobile Overlay */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
 
         {/* Main Content Area - Takes remaining space */}
         <div className="flex-1 flex flex-col min-w-0">
@@ -105,6 +116,26 @@ export default function DashboardLayout({
             <div className="px-4 sm:px-6 lg:px-8 py-4">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-4">
+                  {/* Hamburger Menu Button - Mobile Only */}
+                  <button
+                    onClick={() => setSidebarOpen(!sidebarOpen)}
+                    className="lg:hidden p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
+                  >
+                    <svg
+                      className="w-6 h-6 text-zinc-600 dark:text-zinc-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 6h16M4 12h16M4 18h16"
+                      />
+                    </svg>
+                  </button>
+
                   <div className="h-10 w-10 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
                     {icon || (
                       <svg
