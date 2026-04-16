@@ -390,8 +390,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       {/* Sidebar */}
       <div
         className={`
-        fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-700
-        flex flex-col h-full
+        fixed lg:sticky lg:top-0 inset-y-0 left-0 z-50 w-64 bg-white dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-700
+        flex flex-col h-screen
         transform transition-transform duration-300 ease-in-out
         ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
       `}
