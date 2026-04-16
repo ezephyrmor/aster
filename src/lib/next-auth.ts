@@ -3,13 +3,20 @@ import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import prisma from "@/lib/db";
 import { comparePassword } from "@/lib/password";
+import {
+  generateFingerprint,
+  getClientIp,
+  generateNonce,
+} from "@/lib/security";
+import SESSION_CONFIG from "@/lib/session.config";
+import type { NextRequest } from "next/server";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   session: {
     strategy: "jwt",
-    maxAge: 15,
-    updateAge: 5,
+    maxAge: SESSION_CONFIG.maxAge,
+    updateAge: SESSION_CONFIG.updateAge,
   },
   providers: [
     Credentials({
@@ -18,7 +25,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         username: { label: "Username", type: "text" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         if (!credentials?.username || !credentials?.password) {
           return null;
         }
@@ -78,12 +85,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
 
-        // Return user data (excluding password)
+        // Return user data including captured security attributes
         return {
           id: user.id.toString(),
           username: user.username,
           roleId: user.roleId,
           role: user.role,
+          ip: getClientIp(req),
+          fingerprint: await generateFingerprint(req),
+          userAgent: req.headers.get("user-agent") || "",
+          timestamp: Math.floor(Date.now() / 1000),
+          nonce: generateNonce(),
         };
       },
     }),
@@ -95,7 +107,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.username = user.username;
         token.roleId = user.roleId;
         token.role = user.role;
+
+        // Security attributes captured during signIn callback
+        if ((user as any).ip) token.ip = (user as any).ip;
+        if ((user as any).fingerprint)
+          token.fingerprint = (user as any).fingerprint;
+        if ((user as any).userAgent) token.userAgent = (user as any).userAgent;
+        if ((user as any).timestamp) token.timestamp = (user as any).timestamp;
+        if ((user as any).nonce) token.nonce = (user as any).nonce;
       }
+
+      // Always ensure timestamp and nonce exist
+      if (!token.timestamp) {
+        token.timestamp = Math.floor(Date.now() / 1000);
+        token.nonce = generateNonce();
+      }
+
       return token;
     },
     async session({ session, token }) {
@@ -105,6 +132,36 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.roleId = token.roleId as number;
         session.user.role = token.role;
       }
+
+      /**
+       * DEBUG_SESSION_SECURITY
+       *
+       * When set to true, exposes internal security validation attributes on the session object.
+       * These attributes include: client IP address, browser fingerprint hash, user agent string,
+       * session creation timestamp, and cryptographically secure nonce.
+       *
+       * ⚠️ SECURITY WARNING: Never enable this in production environments.
+       * This is for development debugging purposes only. Exposing these attributes
+       * in production can leak sensitive security information to client-side code.
+       */
+      console.log("Session security attributes:", {
+        ip: token.ip,
+        fingerprint: token.fingerprint,
+        userAgent: token.userAgent,
+        timestamp: token.timestamp,
+        nonce: token.nonce,
+      });
+      if (process.env.DEBUG_SESSION_SECURITY === "true") {
+        // @ts-ignore - Add security debug info to session
+        session.security = {
+          ip: token.ip,
+          fingerprint: token.fingerprint,
+          userAgent: token.userAgent,
+          timestamp: token.timestamp,
+          nonce: token.nonce,
+        };
+      }
+
       return session;
     },
   },

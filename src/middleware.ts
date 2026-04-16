@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { auth } from "@/lib/next-auth";
+import { validateSessionSecurity } from "@/lib/security";
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -30,6 +31,30 @@ export async function middleware(request: NextRequest) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("callbackUrl", request.nextUrl.pathname);
     return NextResponse.redirect(loginUrl);
+  }
+
+  // Extract token from auth (we need to access the raw JWT token)
+  // @ts-ignore - token is available on session in NextAuth v5
+  const token = session?.token;
+
+  // Validate session security attributes
+  if (token) {
+    const securityCheck = await validateSessionSecurity(token, request);
+    if (!securityCheck.valid) {
+      console.log(`Session invalid: ${securityCheck.reason}`);
+
+      // Clear session and redirect to login
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("callbackUrl", request.nextUrl.pathname);
+      loginUrl.searchParams.set("reason", securityCheck.reason || "");
+
+      const response = NextResponse.redirect(loginUrl);
+      // Clear auth cookies
+      response.cookies.delete("next-auth.session-token");
+      response.cookies.delete("next-auth.csrf-token");
+
+      return response;
+    }
   }
 
   // Demo mode API rewrite logic

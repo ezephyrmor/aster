@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth";
 import Sidebar from "@/components/Sidebar";
 import ClockInButton from "@/components/ClockInButton";
 import Modal from "@/components/Modal";
+import SESSION_CONFIG from "@/lib/session.config";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -48,8 +49,11 @@ export default function DashboardLayout({
   // Auto refresh session on user activity
   useEffect(() => {
     const handleUserActivity = () => {
-      // Only refresh if we're below updateAge threshold (5 seconds)
-      if (remainingSessionTime <= 5 && remainingSessionTime > 0) {
+      // Only refresh if we're below auto refresh threshold
+      if (
+        remainingSessionTime <= SESSION_CONFIG.autoRefreshThreshold &&
+        remainingSessionTime > 0
+      ) {
         refreshSession();
       }
     };
@@ -78,8 +82,8 @@ export default function DashboardLayout({
       const remaining = Math.max(0, Math.floor((expiryTime - now) / 1000));
       setRemainingSessionTime(remaining);
 
-      // Show idle warning at 5 seconds remaining
-      if (remaining === 5 && !showIdleWarning) {
+      // Show idle warning at configured threshold
+      if (remaining === SESSION_CONFIG.warningTime && !showIdleWarning) {
         setShowIdleWarning(true);
       }
 
@@ -320,29 +324,23 @@ export default function DashboardLayout({
                     <Modal
                       isOpen={showIdleWarning}
                       onClose={() => {}}
-                      title="⚠️ Session Expiring Soon"
+                      title="Session Expiring"
                     >
-                      <div className="space-y-4">
-                        <div className="text-center space-y-2">
-                          <p className="text-lg font-medium text-zinc-800 dark:text-zinc-200">
-                            Your session will expire in
-                          </p>
-                          <div className="text-5xl font-bold font-mono text-red-600 dark:text-red-400 animate-pulse">
-                            {remainingSessionTime}s
-                          </div>
-                          <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                            Click below to stay logged in
-                          </p>
-                        </div>
-
+                      <div className="p-2 text-center">
+                        <p className="text-zinc-700 dark:text-zinc-300 mb-3">
+                          Your session will expire in{" "}
+                          <strong className="text-red-600 dark:text-red-400">
+                            {remainingSessionTime} seconds
+                          </strong>
+                        </p>
                         <button
                           onClick={async () => {
                             await refreshSession();
                             setShowIdleWarning(false);
                           }}
-                          className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors text-lg"
+                          className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium transition-colors"
                         >
-                          🔄 Stay Logged In
+                          Stay Logged In
                         </button>
                       </div>
                     </Modal>
@@ -359,6 +357,7 @@ export default function DashboardLayout({
                             {JSON.stringify(
                               {
                                 user: session?.user,
+                                security: session?.security,
                                 expires: session?.expires,
                                 authenticated: !!session,
                                 timestamp: new Date().toISOString(),
