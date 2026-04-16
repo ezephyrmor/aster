@@ -1,3 +1,8 @@
 @import "tailwindcss";
 
+/* Prevent white flash during session refresh / theme loads */
+html {
+  background-color: #18181b;
+}
+
 /* Custom global styles can be added here */

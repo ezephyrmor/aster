@@ -14,6 +14,14 @@ declare module "next-auth" {
 
   interface Session {
     user: User;
+    // Debug security attributes (only available in development mode)
+    security?: {
+      ip?: string;
+      fingerprint?: string;
+      userAgent?: string;
+      timestamp?: number;
+      nonce?: string;
+    };
   }
 }
 
@@ -27,5 +35,11 @@ declare module "next-auth/jwt" {
       name: string;
       description: string | null;
     };
+    // Security attributes
+    ip?: string;
+    fingerprint?: string;
+    userAgent?: string;
+    timestamp?: number;
+    nonce?: string;
   }
 }
