@@ -29,6 +29,7 @@ export default function DashboardLayout({
   const [showSessionModal, setShowSessionModal] = useState(false);
   const [remainingSessionTime, setRemainingSessionTime] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showIdleWarning, setShowIdleWarning] = useState(false);
   const { data: session, update } = useSession();
 
   useEffect(() => {
@@ -77,8 +78,14 @@ export default function DashboardLayout({
       const remaining = Math.max(0, Math.floor((expiryTime - now) / 1000));
       setRemainingSessionTime(remaining);
 
+      // Show idle warning at 5 seconds remaining
+      if (remaining === 5 && !showIdleWarning) {
+        setShowIdleWarning(true);
+      }
+
       // Auto redirect when session expires
       if (remaining <= 0) {
+        setShowIdleWarning(false);
         router.push("/login");
       }
     };
@@ -87,7 +94,7 @@ export default function DashboardLayout({
     const interval = setInterval(updateTimer, 1000);
 
     return () => clearInterval(interval);
-  }, [session, router]);
+  }, [session, router, showIdleWarning]);
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -308,6 +315,37 @@ export default function DashboardLayout({
                         </div>
                       </div>
                     )}
+
+                    {/* Idle Warning Modal */}
+                    <Modal
+                      isOpen={showIdleWarning}
+                      onClose={() => {}}
+                      title="⚠️ Session Expiring Soon"
+                    >
+                      <div className="space-y-4">
+                        <div className="text-center space-y-2">
+                          <p className="text-lg font-medium text-zinc-800 dark:text-zinc-200">
+                            Your session will expire in
+                          </p>
+                          <div className="text-5xl font-bold font-mono text-red-600 dark:text-red-400 animate-pulse">
+                            {remainingSessionTime}s
+                          </div>
+                          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                            Click below to stay logged in
+                          </p>
+                        </div>
+
+                        <button
+                          onClick={async () => {
+                            await refreshSession();
+                            setShowIdleWarning(false);
+                          }}
+                          className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors text-lg"
+                        >
+                          🔄 Stay Logged In
+                        </button>
+                      </div>
+                    </Modal>
 
                     {/* Session Debug Modal */}
                     <Modal
