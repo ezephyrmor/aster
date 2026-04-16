@@ -1,34 +1,51 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { auth } from "@/lib/next-auth";
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isDemoMode = process.env.DEMO_MODE === "true";
 
-  console.log("process.env.DEMO_MODE:", process.env.DEMO_MODE);
-
-  // Debug logging
-  console.log(`[Middleware] Path: ${pathname}, DEMO_MODE: ${isDemoMode}`);
-
-  // Only intercept if DEMO_MODE is enabled
-  if (!isDemoMode) {
-    console.log(`[Middleware] Skipping - DEMO_MODE not enabled`);
+  // Skip auth check for public routes
+  const publicPaths = ["/login", "/_next", "/favicon.ico", "/api/auth"];
+  if (publicPaths.some((path) => pathname.startsWith(path))) {
+    // Handle demo mode API rewrite for public paths
+    if (
+      isDemoMode &&
+      pathname.startsWith("/api/") &&
+      !pathname.startsWith("/api/demo")
+    ) {
+      const url = request.nextUrl.clone();
+      url.pathname = pathname.replace("/api/", "/api/demo/");
+      return NextResponse.rewrite(url);
+    }
     return NextResponse.next();
   }
 
-  // Intercept ALL API routes (not demo routes themselves)
-  if (pathname.startsWith("/api/") && !pathname.startsWith("/api/demo")) {
+  // Check for valid session
+  const session = await auth();
+
+  // If session is expired or invalid, redirect to login
+  if (!session) {
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("callbackUrl", request.nextUrl.pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // Demo mode API rewrite logic
+  if (
+    isDemoMode &&
+    pathname.startsWith("/api/") &&
+    !pathname.startsWith("/api/demo")
+  ) {
     const url = request.nextUrl.clone();
-    // Rewrite /api/users -> /api/demo/users, /api/auth/login -> /api/demo/auth/login, etc.
     url.pathname = pathname.replace("/api/", "/api/demo/");
-    console.log(`[Middleware] Rewriting ${pathname} -> ${url.pathname}`);
     return NextResponse.rewrite(url);
   }
 
-  console.log(`[Middleware] No rewrite needed for ${pathname}`);
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: "/api/:path*",
+  matcher: ["/dashboard/:path*", "/api/:path*"],
 };
