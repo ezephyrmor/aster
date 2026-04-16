@@ -22,24 +22,45 @@ export default function SessionTimer() {
 
   /**
    * Formats seconds into human readable time string
-   * Automatically uses appropriate units: seconds, minutes
+   * Automatically uses appropriate units: seconds, minutes, hours
+   * Skips zero values and handles proper singular/plural labels
    */
   const formatTime = (seconds: number): string => {
     if (seconds < 60) {
       return `${seconds} ${seconds === 1 ? "sec" : "secs"}`;
     }
 
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
+    if (seconds < 3600) {
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
 
+      const minuteLabel = mins === 1 ? "min" : "mins";
+      const secondLabel = secs === 1 ? "sec" : "secs";
+
+      if (secs === 0) {
+        return `${mins} ${minuteLabel}`;
+      }
+
+      return `${mins} ${minuteLabel} ${secs} ${secondLabel}`;
+    }
+
+    // Hours handling
+    const hrs = Math.floor(seconds / 3600);
+    const remaining = seconds % 3600;
+    const mins = Math.floor(remaining / 60);
+    const secs = remaining % 60;
+
+    const hourLabel = hrs === 1 ? "hr" : "hrs";
     const minuteLabel = mins === 1 ? "min" : "mins";
     const secondLabel = secs === 1 ? "sec" : "secs";
 
-    if (secs === 0) {
-      return `${mins} ${minuteLabel}`;
-    }
+    const parts: string[] = [];
 
-    return `${mins} ${minuteLabel} ${secs} ${secondLabel}`;
+    parts.push(`${hrs} ${hourLabel}`);
+    if (mins > 0) parts.push(`${mins} ${minuteLabel}`);
+    if (secs > 0) parts.push(`${secs} ${secondLabel}`);
+
+    return parts.join(" ");
   };
 
   // Manual session refresh

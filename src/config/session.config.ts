@@ -10,24 +10,24 @@ export const SESSION_CONFIG = {
    * Default: 15 seconds (for development)
    * Production recommended: 3600 (1 hour) or 28800 (8 hours)
    */
-  maxAge: 15,
+  maxAge: 320,
 
   /**
    * Session update threshold in seconds
    * Controls when NextAuth will automatically refresh the session
    * Must be less than maxAge
    */
-  updateAge: 5,
+  updateAge: 240,
 
   /**
    * Time before session expiration to show warning modal (seconds)
    */
-  warningTime: 5,
+  warningTime: 30,
 
   /**
    * Auto refresh session on user activity when remaining time is below this threshold
    */
-  autoRefreshThreshold: 5,
+  autoRefreshThreshold: 30,
 
   /**
    * Idle timeout settings (optional future use)
