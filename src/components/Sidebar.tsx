@@ -7,12 +7,16 @@ import { useAuth } from "@/lib/auth";
 // Admin role ID
 const ADMIN_ROLE_ID = 1;
 
-export default function Sidebar() {
+interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Check if any href in a group is active
   const isGroupActive = (hrefs: string[]) => {
@@ -383,33 +387,13 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Mobile menu button */}
-      <button
-        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-md bg-white dark:bg-zinc-800 shadow-lg border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors"
-      >
-        <svg
-          className="w-6 h-6 text-zinc-700 dark:text-zinc-300"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M4 6h16M4 12h16M4 18h16"
-          />
-        </svg>
-      </button>
-
       {/* Sidebar */}
       <div
         className={`
-        fixed lg:static inset-y-0 left-0 z-40 w-64 bg-white dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-700
-        flex flex-col h-full
+        fixed lg:sticky lg:top-0 inset-y-0 left-0 z-50 w-64 bg-white dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-700
+        flex flex-col h-screen
         transform transition-transform duration-300 ease-in-out
-        ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+        ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
       `}
       >
         {/* Sidebar Header */}
@@ -440,7 +424,7 @@ export default function Sidebar() {
             </div>
           </div>
           <button
-            onClick={() => setIsMobileMenuOpen(false)}
+            onClick={onClose}
             className="lg:hidden p-1 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800"
           >
             <svg
@@ -802,10 +786,10 @@ export default function Sidebar() {
       </div>
 
       {/* Overlay for mobile */}
-      {isMobileMenuOpen && (
+      {isOpen && (
         <div
           className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
-          onClick={() => setIsMobileMenuOpen(false)}
+          onClick={onClose}
         />
       )}
     </>
