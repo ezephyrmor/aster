@@ -28,6 +28,7 @@ export default function DashboardLayout({
   const { user, isLoading, logout } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showSessionModal, setShowSessionModal] = useState(false);
   const [remainingSessionTime, setRemainingSessionTime] = useState(0);
   const [showIdleWarning, setShowIdleWarning] = useState(false);
@@ -94,20 +95,8 @@ export default function DashboardLayout({
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="flex min-h-screen">
-        {/* Sidebar - Responsive */}
-        <div
-          className={`fixed lg:relative inset-y-0 left-0 z-50 w-64 flex-shrink-0 transform transition-transform duration-300 ease-in-out lg:transform-none ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
-        >
-          <Sidebar />
-        </div>
-
-        {/* Mobile Overlay */}
-        {sidebarOpen && (
-          <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
+        {/* Sidebar */}
+        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
         {/* Main Content Area - Takes remaining space */}
         <div className="flex-1 flex flex-col min-w-0">
