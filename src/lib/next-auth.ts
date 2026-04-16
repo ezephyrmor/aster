@@ -7,6 +7,7 @@ import {
   generateFingerprint,
   getClientIp,
   generateNonce,
+  securityConfig,
 } from "@/lib/security";
 import SESSION_CONFIG from "@/lib/session.config";
 import type { NextRequest } from "next/server";
@@ -144,14 +145,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
        * This is for development debugging purposes only. Exposing these attributes
        * in production can leak sensitive security information to client-side code.
        */
-      console.log("Session security attributes:", {
-        ip: token.ip,
-        fingerprint: token.fingerprint,
-        userAgent: token.userAgent,
-        timestamp: token.timestamp,
-        nonce: token.nonce,
-      });
-      if (process.env.DEBUG_SESSION_SECURITY === "true") {
+      if (securityConfig.debugSessionSecurity) {
         // @ts-ignore - Add security debug info to session
         session.security = {
           ip: token.ip,

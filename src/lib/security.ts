@@ -85,6 +85,9 @@ export const securityConfig = {
 
   /** Maximum allowed token age for anti-replay (seconds) */
   maxTokenAge: 300,
+
+  /** Expose security attributes in session object (debug only) */
+  debugSessionSecurity: true,
 } as const;
 
 /**
