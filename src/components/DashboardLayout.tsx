@@ -7,7 +7,7 @@ import { useAuth } from "@/lib/auth";
 import Sidebar from "@/components/Sidebar";
 import ClockInButton from "@/components/ClockInButton";
 import Modal from "@/components/Modal";
-import SESSION_CONFIG from "@/lib/session.config";
+import { SESSION_CONFIG } from "@/config";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;

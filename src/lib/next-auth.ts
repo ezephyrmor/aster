@@ -8,8 +8,8 @@ import {
   getClientIp,
   generateNonce,
   securityConfig,
-} from "@/lib/security";
-import SESSION_CONFIG from "@/lib/session.config";
+  SESSION_CONFIG,
+} from "@/config";
 import type { NextRequest } from "next/server";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
