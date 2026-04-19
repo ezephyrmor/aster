@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useAuth } from "@/lib/auth";
 import Sidebar from "@/components/Sidebar";
 import ClockInButton from "@/components/ClockInButton";
 import Modal from "@/components/Modal";
+import SessionTimer from "@/components/SessionTimer";
+import { SESSION_CONFIG } from "@/config";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -26,14 +28,46 @@ export default function DashboardLayout({
   const { user, isLoading, logout } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showSessionModal, setShowSessionModal] = useState(false);
-  const { data: session } = useSession();
+  const [remainingSessionTime, setRemainingSessionTime] = useState(0);
+  const [showIdleWarning, setShowIdleWarning] = useState(false);
+  const { data: session, update } = useSession();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !user) {
       router.push("/login");
     }
   }, [user, isLoading, router]);
+
+  // Real-time session timer for debugging
+  useEffect(() => {
+    if (!session?.expires) return;
+
+    const updateTimer = () => {
+      const expiryTime = new Date(session.expires).getTime();
+      const now = Date.now();
+      const remaining = Math.max(0, Math.floor((expiryTime - now) / 1000));
+      setRemainingSessionTime(remaining);
+
+      // Show idle warning at configured threshold
+      if (remaining === SESSION_CONFIG.warningTime && !showIdleWarning) {
+        setShowIdleWarning(true);
+      }
+
+      // Auto redirect when session expires
+      if (remaining <= 0) {
+        setShowIdleWarning(false);
+        router.push("/login");
+      }
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+
+    return () => clearInterval(interval);
+  }, [session, router, showIdleWarning]);
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -61,10 +95,8 @@ export default function DashboardLayout({
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="flex min-h-screen">
-        {/* Sidebar - Fixed width, full height */}
-        <div className="w-64 flex-shrink-0">
-          <Sidebar />
-        </div>
+        {/* Sidebar */}
+        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
         {/* Main Content Area - Takes remaining space */}
         <div className="flex-1 flex flex-col min-w-0">
@@ -73,6 +105,26 @@ export default function DashboardLayout({
             <div className="px-4 sm:px-6 lg:px-8 py-4">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-4">
+                  {/* Hamburger Menu Button - Mobile Only */}
+                  <button
+                    onClick={() => setSidebarOpen(!sidebarOpen)}
+                    className="lg:hidden p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
+                  >
+                    <svg
+                      className="w-6 h-6 text-zinc-600 dark:text-zinc-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 6h16M4 12h16M4 18h16"
+                      />
+                    </svg>
+                  </button>
+
                   <div className="h-10 w-10 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
                     {icon || (
                       <svg
@@ -103,6 +155,10 @@ export default function DashboardLayout({
                 </div>
                 <div className="flex items-center gap-4">
                   <ClockInButton />
+
+                  {/* Session Timer */}
+                  <SessionTimer />
+
                   <div className="h-8 w-px bg-zinc-200 dark:bg-zinc-700" />
                   <div className="relative">
                     <button
@@ -215,6 +271,31 @@ export default function DashboardLayout({
                       </div>
                     )}
 
+                    {/* Idle Warning Modal */}
+                    <Modal
+                      isOpen={showIdleWarning}
+                      onClose={() => {}}
+                      title="Session Expiring"
+                    >
+                      <div className="p-2 text-center">
+                        <p className="text-zinc-700 dark:text-zinc-300 mb-3">
+                          Your session will expire in{" "}
+                          <strong className="text-red-600 dark:text-red-400">
+                            {remainingSessionTime} seconds
+                          </strong>
+                        </p>
+                        <button
+                          onClick={async () => {
+                            await update();
+                            setShowIdleWarning(false);
+                          }}
+                          className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium transition-colors"
+                        >
+                          Stay Logged In
+                        </button>
+                      </div>
+                    </Modal>
+
                     {/* Session Debug Modal */}
                     <Modal
                       isOpen={showSessionModal}
@@ -227,6 +308,7 @@ export default function DashboardLayout({
                             {JSON.stringify(
                               {
                                 user: session?.user,
+                                security: session?.security,
                                 expires: session?.expires,
                                 authenticated: !!session,
                                 timestamp: new Date().toISOString(),
