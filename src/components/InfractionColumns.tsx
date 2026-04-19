@@ -25,6 +25,10 @@ export interface Infraction {
       position: { name: string } | null;
     } | null;
   };
+  company?: {
+    id: number;
+    name: string;
+  } | null;
   offense: {
     id: number;
     name: string;
@@ -243,6 +247,18 @@ export function useInfractionColumns({
       cell: ({ getValue }) => {
         const date = getValue() as string;
         return <div>{formatDate(date)}</div>;
+      },
+    },
+    {
+      accessorKey: "company.name",
+      header: () => <div className="hidden lg:block">Company</div>,
+      cell: ({ row }) => {
+        const company = row.original.company;
+        return (
+          <div className="hidden lg:block text-muted-foreground">
+            {company?.name || "-"}
+          </div>
+        );
       },
     },
     {

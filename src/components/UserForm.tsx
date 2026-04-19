@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CreateUserSchema, UpdateUserSchema } from "@/lib/validations";
 import type { z } from "zod";
+import LookupDropdown from "./LookupDropdown";
 
 type CreateUserData = z.infer<typeof CreateUserSchema>;
 type UpdateUserData = z.infer<typeof UpdateUserSchema>;
@@ -172,28 +173,16 @@ export default function UserForm({
             </div>
           )}
 
-          <div>
-            <label
-              htmlFor="role"
-              className="block text-sm font-medium text-gray-700 dark:text-zinc-300"
-            >
-              Role *
-            </label>
-            <select
-              id="role"
-              {...register("role")}
-              className={inputClass("role")}
-            >
-              <option value="employee">Employee</option>
-              <option value="hr">HR</option>
-              <option value="admin">Admin</option>
-            </select>
-            {fieldError("role") && (
-              <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                {fieldError("role")}
-              </p>
-            )}
-          </div>
+          <LookupDropdown
+            endpoint="/api/roles"
+            name="role"
+            label="Role"
+            register={register}
+            error={fieldError("role")}
+            defaultValue={initialData?.role || ""}
+            placeholder="Select role"
+            required={true}
+          />
         </div>
       </div>
 
@@ -357,47 +346,25 @@ export default function UserForm({
           Employment Information
         </h3>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-          <div>
-            <label
-              htmlFor="position"
-              className="block text-sm font-medium text-gray-700 dark:text-zinc-300"
-            >
-              Position
-            </label>
-            <input
-              type="text"
-              id="position"
-              {...register("position")}
-              className={inputClass("position")}
-              placeholder="Software Engineer"
-            />
-            {fieldError("position") && (
-              <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                {fieldError("position")}
-              </p>
-            )}
-          </div>
+          <LookupDropdown
+            endpoint="/api/positions"
+            name="position"
+            label="Position"
+            register={register}
+            error={fieldError("position")}
+            defaultValue={initialData?.position || ""}
+            placeholder="Select position"
+          />
 
-          <div>
-            <label
-              htmlFor="department"
-              className="block text-sm font-medium text-gray-700 dark:text-zinc-300"
-            >
-              Department
-            </label>
-            <input
-              type="text"
-              id="department"
-              {...register("department")}
-              className={inputClass("department")}
-              placeholder="Engineering"
-            />
-            {fieldError("department") && (
-              <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                {fieldError("department")}
-              </p>
-            )}
-          </div>
+          <LookupDropdown
+            endpoint="/api/departments"
+            name="department"
+            label="Department"
+            register={register}
+            error={fieldError("department")}
+            defaultValue={initialData?.department || ""}
+            placeholder="Select department"
+          />
 
           <div>
             <label

@@ -60,7 +60,9 @@ export default function CalendarWidget({ userId }: CalendarWidgetProps) {
         url += `&userId=${userId}&includeLeaves=true`;
       }
 
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        credentials: "include",
+      });
       if (response.ok) {
         const data = await response.json();
         // Handle both array response and paginated response
@@ -216,6 +218,8 @@ export default function CalendarWidget({ userId }: CalendarWidgetProps) {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
+    // Show current year for display to match calendar grid
+    date.setFullYear(new Date().getFullYear());
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
 

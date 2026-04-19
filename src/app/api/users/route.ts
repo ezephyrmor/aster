@@ -6,153 +6,168 @@ import { withValidation, CreateUserSchema } from "@/lib/validations";
 import { withAuth } from "@/lib/api-auth";
 
 // GET /api/users - List all users with pagination, search, and filtering
-export const GET = withAuth(async (request: NextRequest) => {
-  try {
-    const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "10");
-    const search = searchParams.get("search") || "";
-    const role = searchParams.get("role") || "";
-    const status = searchParams.get("status") || "";
-    let sortBy = searchParams.get("sortBy") || "createdAt";
-    const sortOrder = searchParams.get("sortOrder") || "desc";
+export const GET = withAuth(
+  async (request: NextRequest, _context: any, auth: any) => {
+    try {
+      const { searchParams } = new URL(request.url);
+      const page = parseInt(searchParams.get("page") || "1");
+      const limit = parseInt(searchParams.get("limit") || "10");
+      const search = searchParams.get("search") || "";
+      const role = searchParams.get("role") || "";
+      const status = searchParams.get("status") || "";
+      let sortBy = searchParams.get("sortBy") || "createdAt";
+      const sortOrder = searchParams.get("sortOrder") || "desc";
+      const companyId = auth.user.companyId;
 
-    const skip = (page - 1) * limit;
+      const skip = (page - 1) * limit;
 
-    // Validate sortBy to prevent invalid fields
-    const validSortFields = [
-      "username",
-      "role",
-      "createdAt",
-      "employeeProfile.firstName",
-      "employeeProfile.lastName",
-      "employeeProfile.status",
-    ];
-    if (!validSortFields.includes(sortBy)) {
-      sortBy = "createdAt";
-    }
+      // Validate sortBy to prevent invalid fields
+      const validSortFields = [
+        "username",
+        "role",
+        "createdAt",
+        "employeeProfile.firstName",
+        "employeeProfile.lastName",
+        "employeeProfile.status",
+      ];
+      if (!validSortFields.includes(sortBy)) {
+        sortBy = "createdAt";
+      }
 
-    // Build where clause for filtering
-    const whereClauses: any[] = [];
+      // Base filter always applies company scope FIRST - cannot be bypassed
+      const where: any = {};
 
-    // Role filter (by role name)
-    if (role) {
-      whereClauses.push({ role: { name: role } });
-    }
+      // Apply mandatory company id filter from current user session
+      if (companyId) {
+        where.companyId = companyId;
+      }
 
-    // Status filter (through employeeProfile, by status name)
-    if (status) {
-      whereClauses.push({ employeeProfile: { status: { name: status } } });
-    }
+      // Build additional filter conditions
+      const filterConditions: any[] = [];
 
-    // Search filter (employee name only) - case insensitive for SQLite
-    if (search) {
-      const searchLower = search.toLowerCase();
-      whereClauses.push({
-        OR: [
-          {
-            employeeProfile: {
-              firstName: { contains: searchLower },
+      // Role filter (by role name)
+      if (role) {
+        filterConditions.push({ role: { name: role } });
+      }
+
+      // Status filter (through employeeProfile, by status name)
+      if (status) {
+        filterConditions.push({
+          employeeProfile: { status: { name: status } },
+        });
+      }
+
+      // Search filter (employee name only) - case insensitive for SQLite
+      if (search) {
+        const searchLower = search.toLowerCase();
+        filterConditions.push({
+          OR: [
+            {
+              employeeProfile: {
+                firstName: { contains: searchLower },
+              },
+            },
+            {
+              employeeProfile: {
+                lastName: { contains: searchLower },
+              },
+            },
+          ],
+        });
+      }
+
+      // Combine all additional filters with AND
+      if (filterConditions.length > 0) {
+        where.AND =
+          filterConditions.length === 1
+            ? filterConditions[0]
+            : { AND: filterConditions };
+      }
+
+      // Get total count for pagination
+      const total = await prisma.user.count({ where });
+
+      // Build orderBy - handle nested fields and relations
+      const orderBy: any =
+        sortBy === "employeeProfile.firstName"
+          ? { employeeProfile: { firstName: sortOrder as "asc" | "desc" } }
+          : sortBy === "employeeProfile.lastName"
+            ? { employeeProfile: { lastName: sortOrder as "asc" | "desc" } }
+            : sortBy === "employeeProfile.status"
+              ? {
+                  employeeProfile: {
+                    status: { name: sortOrder as "asc" | "desc" },
+                  },
+                }
+              : sortBy === "role"
+                ? { role: { name: sortOrder as "asc" | "desc" } }
+                : { [sortBy]: sortOrder };
+
+      // Get users with pagination, including related data
+      const users = await prisma.user.findMany({
+        where,
+        include: {
+          employeeProfile: {
+            include: {
+              position: true,
+              department: true,
+              status: true,
             },
           },
-          {
-            employeeProfile: {
-              lastName: { contains: searchLower },
-            },
-          },
-        ],
-      });
-    }
-
-    // Combine all where clauses with AND
-    const where =
-      whereClauses.length > 0
-        ? whereClauses.length === 1
-          ? whereClauses[0]
-          : { AND: whereClauses }
-        : {};
-
-    // Get total count for pagination
-    const total = await prisma.user.count({ where });
-
-    // Build orderBy - handle nested fields and relations
-    const orderBy: any =
-      sortBy === "employeeProfile.firstName"
-        ? { employeeProfile: { firstName: sortOrder as "asc" | "desc" } }
-        : sortBy === "employeeProfile.lastName"
-          ? { employeeProfile: { lastName: sortOrder as "asc" | "desc" } }
-          : sortBy === "employeeProfile.status"
-            ? {
-                employeeProfile: {
-                  status: { name: sortOrder as "asc" | "desc" },
-                },
-              }
-            : sortBy === "role"
-              ? { role: { name: sortOrder as "asc" | "desc" } }
-              : { [sortBy]: sortOrder };
-
-    // Get users with pagination, including related data
-    const users = await prisma.user.findMany({
-      where,
-      include: {
-        employeeProfile: {
-          include: {
-            position: true,
-            department: true,
-            status: true,
-          },
+          role: true,
+          company: true,
         },
-        role: true,
-      },
-      skip,
-      take: limit,
-      orderBy,
-    });
+        skip,
+        take: limit,
+        orderBy,
+      });
 
-    // Format response to maintain backward compatibility
-    const formattedUsers = users.map((user) => ({
-      id: user.id,
-      username: user.username,
-      createdAt: user.createdAt,
-      role: user.role.name,
-      employeeProfile: user.employeeProfile
-        ? {
-            firstName: user.employeeProfile.firstName,
-            lastName: user.employeeProfile.lastName,
-            middleName: user.employeeProfile.middleName,
-            dateOfBirth: user.employeeProfile.dateOfBirth,
-            contactNumber: user.employeeProfile.contactNumber,
-            personalEmail: user.employeeProfile.personalEmail,
-            address: user.employeeProfile.address,
-            hireDate: user.employeeProfile.hireDate,
-            position: user.employeeProfile.position?.name || null,
-            department: user.employeeProfile.department?.name || null,
-            status: user.employeeProfile.status?.name || "active",
-          }
-        : null,
-    }));
+      // Format response to maintain backward compatibility
+      const formattedUsers = users.map((user) => ({
+        id: user.id,
+        username: user.username,
+        createdAt: user.createdAt,
+        role: user.role.name,
+        company: user.company?.name || null,
+        employeeProfile: user.employeeProfile
+          ? {
+              firstName: user.employeeProfile.firstName,
+              lastName: user.employeeProfile.lastName,
+              middleName: user.employeeProfile.middleName,
+              dateOfBirth: user.employeeProfile.dateOfBirth,
+              contactNumber: user.employeeProfile.contactNumber,
+              personalEmail: user.employeeProfile.personalEmail,
+              address: user.employeeProfile.address,
+              hireDate: user.employeeProfile.hireDate,
+              position: user.employeeProfile.position?.name || null,
+              department: user.employeeProfile.department?.name || null,
+              status: user.employeeProfile.status?.name || "active",
+            }
+          : null,
+      }));
 
-    return NextResponse.json({
-      users: formattedUsers,
-      pagination: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      },
-    });
-  } catch (error) {
-    console.error("Error fetching users:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch users" },
-      { status: 500 },
-    );
-  }
-});
+      return NextResponse.json({
+        users: formattedUsers,
+        pagination: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit),
+        },
+      });
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      return NextResponse.json(
+        { error: "Failed to fetch users" },
+        { status: 500 },
+      );
+    }
+  },
+);
 
 // POST /api/users - Create new user
 export const POST = withAuth(
-  withValidation(CreateUserSchema, async (data) => {
+  withValidation(CreateUserSchema, async (data, _request, auth) => {
     try {
       const {
         username,
@@ -213,9 +228,15 @@ export const POST = withAuth(
       const salt = generateSalt();
       const hashedPassword = await hashPassword(generatedPassword, salt);
 
-      // Get role ID
+      // Get role ID - safe fallback for middleware parameter order
+      const companyId = auth?.user?.companyId || 1;
       const roleRecord = await prisma.role.findUnique({
-        where: { name: role || "employee" },
+        where: {
+          companyId_name: {
+            companyId,
+            name: role || "employee",
+          },
+        },
       });
 
       if (!roleRecord) {
@@ -228,9 +249,14 @@ export const POST = withAuth(
       // Get position ID if provided
       let positionId: number | null = null;
       if (position) {
-        // Try to find by name first
+        // Try to find by name first (company scoped)
         let positionRecord = await prisma.position.findUnique({
-          where: { name: position },
+          where: {
+            companyId_name: {
+              companyId,
+              name: position,
+            },
+          },
         });
 
         // If not found and position is a number, try by ID
@@ -246,9 +272,14 @@ export const POST = withAuth(
       // Get department ID if provided
       let departmentId: number | null = null;
       if (department) {
-        // Try to find by name first
+        // Try to find by name first (company scoped)
         let departmentRecord = await prisma.department.findUnique({
-          where: { name: department },
+          where: {
+            companyId_name: {
+              companyId,
+              name: department,
+            },
+          },
         });
 
         // If not found and department is a number, try by ID
@@ -298,6 +329,9 @@ export const POST = withAuth(
               positionId,
               departmentId,
               hireDate: hireDate ? new Date(hireDate) : null,
+              emergencyContactName,
+              emergencyContactNumber,
+              emergencyContactRelation,
               statusId: statusId || 1, // Default to "active" status
             },
           },

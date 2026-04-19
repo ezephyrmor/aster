@@ -50,7 +50,7 @@ export default function ScheduleList({
     setSorting,
     search,
     setSearch,
-    setExtraParams,
+    extraParams, setExtraParams,
     refresh,
   } = useServerSideDataTable<WorkSchedule>({
     apiEndpoint: "/api/schedules",

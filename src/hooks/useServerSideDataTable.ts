@@ -37,6 +37,7 @@ interface UseServerSideDataTableResult<T> {
   setSearch: React.Dispatch<React.SetStateAction<string>>;
   debouncedSearch: string;
   refresh: () => Promise<void>;
+  extraParams: Record<string, string>;
   setExtraParams: React.Dispatch<React.SetStateAction<Record<string, string>>>;
 }
 
@@ -209,6 +210,7 @@ export function useServerSideDataTable<T>({
     setSearch,
     debouncedSearch,
     refresh: fetchData,
+    extraParams,
     setExtraParams,
   };
 }

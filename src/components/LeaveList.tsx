@@ -23,6 +23,7 @@ export default function LeaveList({ onAddClick }: LeaveListProps) {
     setSorting,
     search,
     setSearch,
+    extraParams,
     setExtraParams,
   } = useServerSideDataTable<Leave>({
     apiEndpoint: "/api/leaves/requests",
@@ -41,7 +42,7 @@ export default function LeaveList({ onAddClick }: LeaveListProps) {
         { value: "rejected", label: "Rejected" },
         { value: "cancelled", label: "Cancelled" },
       ],
-      value: "",
+      value: extraParams.status || "",
       onChange: (value: string) =>
         setExtraParams((prev) => ({ ...prev, status: value })),
     },
@@ -55,7 +56,7 @@ export default function LeaveList({ onAddClick }: LeaveListProps) {
         { value: "emergency", label: "Emergency Leave" },
         { value: "bereavement", label: "Bereavement Leave" },
       ],
-      value: "",
+      value: extraParams.type || "",
       onChange: (value: string) =>
         setExtraParams((prev) => ({ ...prev, type: value })),
     },

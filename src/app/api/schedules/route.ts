@@ -1,96 +1,106 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
+import { withAuth } from "@/lib/api-auth";
 
 // GET /api/schedules - Get schedules for a user or all schedules (admin)
-export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId");
-    const date = searchParams.get("date"); // Get schedules for a specific date
+export const GET = withAuth(
+  async (request: NextRequest, _context: any, auth: any) => {
+    try {
+      const { searchParams } = new URL(request.url);
+      const userId = searchParams.get("userId");
+      const date = searchParams.get("date"); // Get schedules for a specific date
 
-    // Pagination parameters
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "10");
-    const sortBy = searchParams.get("sortBy") || "effectiveFrom";
-    const sortOrder = searchParams.get("sortOrder") || "desc";
-    const search = searchParams.get("search"); // Search by employee name
+      // Pagination parameters
+      const page = parseInt(searchParams.get("page") || "1");
+      const limit = parseInt(searchParams.get("limit") || "10");
+      const sortBy = searchParams.get("sortBy") || "effectiveFrom";
+      const sortOrder = searchParams.get("sortOrder") || "desc";
+      const search = searchParams.get("search"); // Search by employee name
+      const companyId = auth.user.companyId;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const whereClause: any = {};
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const whereClause: any = {};
 
-    if (userId) {
-      whereClause.userId = parseInt(userId);
-    }
+      // Apply company id filter from current user session
+      if (companyId) {
+        whereClause.companyId = companyId;
+      }
 
-    // If date is provided, filter by day of week
-    if (date) {
-      const targetDate = new Date(date);
-      const dayOfWeek = targetDate.getDay();
-      whereClause.dayOfWeek = dayOfWeek;
+      if (userId) {
+        whereClause.userId = parseInt(userId);
+      }
 
-      // Also filter by effective date range
-      whereClause.effectiveFrom = { lte: targetDate };
-      whereClause.OR = [
-        { effectiveTo: null },
-        { effectiveTo: { gte: targetDate } },
-      ];
-    }
+      // If date is provided, filter by day of week
+      if (date) {
+        const targetDate = new Date(date);
+        const dayOfWeek = targetDate.getDay();
+        whereClause.dayOfWeek = dayOfWeek;
 
-    // Search by employee name
-    if (search) {
-      whereClause.user = {
-        OR: [
-          { username: { contains: search } },
-          {
-            employeeProfile: {
-              firstName: { contains: search },
+        // Also filter by effective date range
+        whereClause.effectiveFrom = { lte: targetDate };
+        whereClause.OR = [
+          { effectiveTo: null },
+          { effectiveTo: { gte: targetDate } },
+        ];
+      }
+
+      // Search by employee name
+      if (search) {
+        whereClause.user = {
+          OR: [
+            { username: { contains: search } },
+            {
+              employeeProfile: {
+                firstName: { contains: search },
+              },
             },
-          },
-          {
-            employeeProfile: {
-              lastName: { contains: search },
+            {
+              employeeProfile: {
+                lastName: { contains: search },
+              },
             },
-          },
-        ],
-      };
-    }
+          ],
+        };
+      }
 
-    // Get total count for pagination
-    const total = await prisma.workSchedule.count({
-      where: whereClause,
-    });
+      // Get total count for pagination
+      const total = await prisma.workSchedule.count({
+        where: whereClause,
+      });
 
-    const schedules = await prisma.workSchedule.findMany({
-      where: whereClause,
-      include: {
-        user: {
-          include: {
-            employeeProfile: true,
+      const schedules = await prisma.workSchedule.findMany({
+        where: whereClause,
+        include: {
+          company: true,
+          user: {
+            include: {
+              employeeProfile: true,
+            },
           },
         },
-      },
-      skip: (page - 1) * limit,
-      take: limit,
-      orderBy: [{ [sortBy]: sortOrder }],
-    });
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: [{ [sortBy]: sortOrder }],
+      });
 
-    return NextResponse.json({
-      schedules,
-      pagination: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      },
-    });
-  } catch (error) {
-    console.error("Error fetching schedules:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch schedules" },
-      { status: 500 },
-    );
-  }
-}
+      return NextResponse.json({
+        schedules,
+        pagination: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit),
+        },
+      });
+    } catch (error) {
+      console.error("Error fetching schedules:", error);
+      return NextResponse.json(
+        { error: "Failed to fetch schedules" },
+        { status: 500 },
+      );
+    }
+  },
+);
 
 // POST /api/schedules - Create a new schedule
 export async function POST(request: NextRequest) {

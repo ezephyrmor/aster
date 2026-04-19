@@ -65,11 +65,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             passwordHash: true,
             salt: true,
             roleId: true,
+            companyId: true,
             role: {
               select: {
                 id: true,
                 name: true,
                 description: true,
+              },
+            },
+            company: {
+              select: {
+                name: true,
               },
             },
           },
@@ -95,6 +101,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           id: user.id.toString(),
           username: user.username,
           roleId: user.roleId,
+          companyId: user.companyId,
+          companyName: user.company?.name,
           role: user.role,
           ip: getClientIp(req),
           fingerprint: await generateFingerprint(req),
@@ -111,6 +119,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.id = user.id;
         token.username = user.username;
         token.roleId = user.roleId;
+        token.companyId = user.companyId;
+        token.companyName = user.companyName;
         token.role = user.role;
 
         // Security attributes captured during signIn callback
@@ -135,6 +145,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.id = token.id as string;
         session.user.username = token.username as string;
         session.user.roleId = token.roleId as number;
+        session.user.companyId = token.companyId as number;
+        session.user.companyName = token.companyName as string;
         session.user.role = token.role;
       }
 

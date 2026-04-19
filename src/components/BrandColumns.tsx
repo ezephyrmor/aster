@@ -11,6 +11,10 @@ export interface Brand {
   website?: string | null;
   industry?: string | null;
   status: string;
+  company?: {
+    id: number;
+    name: string;
+  } | null;
   manager?: {
     id: number;
     username: string;
@@ -83,6 +87,18 @@ export const columns: ColumnDef<Brand>[] = [
       return (
         <div className="hidden md:block text-muted-foreground">
           {industry || "-"}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "company.name",
+    header: () => <div className="hidden lg:block">Company</div>,
+    cell: ({ row }) => {
+      const company = row.original.company;
+      return (
+        <div className="hidden lg:block text-muted-foreground">
+          {company?.name || "-"}
         </div>
       );
     },

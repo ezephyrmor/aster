@@ -24,6 +24,7 @@ export default function UserList({ onAddClick }: UserListProps) {
     setSorting,
     search,
     setSearch,
+    extraParams,
     setExtraParams,
   } = useServerSideDataTable<User>({
     apiEndpoint: "/api/users",
@@ -42,7 +43,7 @@ export default function UserList({ onAddClick }: UserListProps) {
         { value: "hr", label: "HR" },
         { value: "employee", label: "Employee" },
       ],
-      value: "",
+      value: extraParams.role || "",
       onChange: (value: string) =>
         setExtraParams((prev) => ({ ...prev, role: value })),
     },
@@ -56,7 +57,7 @@ export default function UserList({ onAddClick }: UserListProps) {
         { value: "terminated", label: "Terminated" },
         { value: "inactive", label: "Inactive" },
       ],
-      value: "",
+      value: extraParams.status || "",
       onChange: (value: string) =>
         setExtraParams((prev) => ({ ...prev, status: value })),
     },
