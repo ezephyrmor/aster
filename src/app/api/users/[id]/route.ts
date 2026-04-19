@@ -209,17 +209,40 @@ export const PUT = withAuth(
         }
 
         // Handle status (can be name or ID)
+        let statusChanged = false;
+        let newStatusId: number | null = null;
+
         if (status !== undefined) {
-          let statusRecord = await prisma.employeeStatusModel.findUnique({
+          let statusRecord = null;
+
+          // First try exact match
+          statusRecord = await prisma.employeeStatusModel.findUnique({
             where: { name: status },
           });
+
+          // Try case insensitive match using manual lower case comparison
+          if (!statusRecord) {
+            const allStatuses = await prisma.employeeStatusModel.findMany();
+            statusRecord =
+              allStatuses.find(
+                (s) => s.name.toLowerCase() === status.toLowerCase(),
+              ) || null;
+          }
+
+          // Try by ID
           if (!statusRecord && !isNaN(parseInt(status))) {
             statusRecord = await prisma.employeeStatusModel.findUnique({
               where: { id: parseInt(status) },
             });
           }
+
           if (statusRecord) {
-            updateProfileData.statusId = statusRecord.id;
+            // Check if status actually changed
+            if (existingUser.employeeProfile?.statusId !== statusRecord.id) {
+              statusChanged = true;
+              newStatusId = statusRecord.id;
+              updateProfileData.statusId = statusRecord.id;
+            }
           }
         }
 
@@ -227,6 +250,31 @@ export const PUT = withAuth(
           where: { userId: userId },
           data: updateProfileData as any,
         });
+
+        // Create status history record if status was changed
+        if (statusChanged && newStatusId) {
+          // Get IP and user agent for audit log
+          const ipAddress =
+            request.headers.get("x-forwarded-for")?.split(",")[0] ||
+            request.headers.get("x-real-ip") ||
+            request.headers.get("remote-host") ||
+            null;
+
+          const userAgent = request.headers.get("user-agent") || null;
+
+          await prisma.employeeStatusHistory.create({
+            data: {
+              userId,
+              statusId: newStatusId,
+              effectiveDate: new Date(),
+              reason: "Status updated via profile edit",
+              notes: "Changed through user profile edit page",
+              performedBy: parseInt(auth.user.id),
+              ipAddress,
+              userAgent,
+            },
+          });
+        }
       }
 
       // Fetch updated user

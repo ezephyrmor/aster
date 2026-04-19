@@ -53,6 +53,9 @@ model EmployeeStatusModel {
   id               Int               @id @default(autoincrement())
   name             String            @unique @db.VarChar(50)
   description      String?           @db.Text
+  color            String            @default("gray") @db.VarChar(20)
+  isActive         Boolean           @default(true) @map("is_active")
+  sortOrder        Int               @default(0) @map("sort_order")
   createdAt        DateTime          @default(now()) @map("created_at")
   employeeProfiles EmployeeProfile[]
   statusHistory    EmployeeStatusHistory[]

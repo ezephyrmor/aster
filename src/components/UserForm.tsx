@@ -49,6 +49,7 @@ export default function UserForm({
       emergencyContactName: initialData?.emergencyContactName || "",
       emergencyContactNumber: initialData?.emergencyContactNumber || "",
       emergencyContactRelation: initialData?.emergencyContactRelation || "",
+      status: initialData?.status || "active",
     },
     mode: "onBlur",
   });
@@ -382,6 +383,36 @@ export default function UserForm({
             {fieldError("hireDate") && (
               <p className="mt-1 text-xs text-red-600 dark:text-red-400">
                 {fieldError("hireDate")}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label
+              htmlFor="status"
+              className="block text-sm font-medium text-gray-700 dark:text-zinc-300"
+            >
+              Employee Status
+            </label>
+            <select
+              id="status"
+              {...register("status")}
+              className={inputClass("status")}
+            >
+              <option value="active">Active</option>
+              <option value="probation">Probation</option>
+              <option value="contract">Contract</option>
+              <option value="on_leave">On Leave</option>
+              <option value="suspended">Suspended</option>
+              <option value="inactive">Inactive</option>
+              <option value="resigned">Resigned</option>
+              <option value="terminated">Terminated</option>
+              <option value="retired">Retired</option>
+              <option value="deceased">Deceased</option>
+            </select>
+            {fieldError("status") && (
+              <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                {fieldError("status")}
               </p>
             )}
           </div>
