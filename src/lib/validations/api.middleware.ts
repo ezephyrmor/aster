@@ -42,15 +42,19 @@ export async function validateRequestBody<T extends z.ZodTypeAny>(
  */
 export function withValidation<T extends z.ZodTypeAny>(
   schema: T,
-  handler: (data: z.infer<T>, request: Request) => Promise<NextResponse>,
+  handler: (
+    data: z.infer<T>,
+    request: Request,
+    ...args: any[]
+  ) => Promise<NextResponse>,
 ) {
-  return async (request: Request) => {
+  return async (request: Request, ...args: any[]) => {
     const { data, error } = await validateRequestBody(request, schema);
 
     if (error) {
       return error;
     }
 
-    return handler(data, request);
+    return handler(data, request, ...args);
   };
 }
