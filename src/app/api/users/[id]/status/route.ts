@@ -3,6 +3,8 @@ import prisma from "@/lib/db";
 import { auth } from "@/lib/next-auth";
 import { z } from "zod";
 
+export const runtime = "nodejs";
+
 const statusChangeSchema = z.object({
   statusId: z.number().int().positive(),
   effectiveDate: z.coerce.date().optional(),
