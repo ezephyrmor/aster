@@ -1,20 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
+import { requireAuth } from "@/lib/api-auth";
 
 // GET /api/my-infractions - Get current user's infractions
 export async function GET(request: NextRequest) {
   try {
-    // Get current user from cookie
-    const userCookie = request.cookies.get("user")?.value;
+    // Get authenticated user from NextAuth session
+    const authResult = await requireAuth(request);
 
-    if (!userCookie) {
-      return NextResponse.json(
-        { error: "Authentication required" },
-        { status: 401 },
-      );
+    // If authentication failed, return the error response
+    if (authResult instanceof Response) {
+      return authResult;
     }
-
-    const user = JSON.parse(userCookie);
 
     // Parse query parameters
     const { searchParams } = new URL(request.url);
@@ -25,7 +22,7 @@ export async function GET(request: NextRequest) {
       userId: number;
       acknowledgedBy?: number | null | { not: null };
     } = {
-      userId: user.id,
+      userId: Number(authResult.userId),
     };
 
     // Filter by status if provided
