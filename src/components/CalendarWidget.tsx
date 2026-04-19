@@ -28,6 +28,7 @@ export default function CalendarWidget({ userId }: CalendarWidgetProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   useEffect(() => {
     fetchEvents();
@@ -184,19 +185,33 @@ export default function CalendarWidget({ userId }: CalendarWidgetProps) {
 
   const getUpcomingEvents = () => {
     const now = new Date();
+    // Reset time to start of day for date-only comparison
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
     return events
       .filter((event) => {
+        // Create new Date object for comparison - DO NOT MUTATE ORIGINAL!
         const eventDate = new Date(event.startDate);
-        // Use current year for filtering upcoming events (matches calendar display)
-        eventDate.setFullYear(now.getFullYear());
-        return eventDate >= now;
+        // Create copy before modifying year
+        const compareDate = new Date(eventDate);
+        compareDate.setFullYear(now.getFullYear());
+        // Reset time to start of day to compare dates only
+        const eventDay = new Date(
+          compareDate.getFullYear(),
+          compareDate.getMonth(),
+          compareDate.getDate(),
+        );
+        return eventDay >= today;
       })
       .sort((a, b) => {
+        // Always create new Date instances for sorting
         const dateA = new Date(a.startDate);
         const dateB = new Date(b.startDate);
-        dateA.setFullYear(now.getFullYear());
-        dateB.setFullYear(now.getFullYear());
-        return dateA.getTime() - dateB.getTime();
+        const compareA = new Date(dateA);
+        const compareB = new Date(dateB);
+        compareA.setFullYear(now.getFullYear());
+        compareB.setFullYear(now.getFullYear());
+        return compareA.getTime() - compareB.getTime();
       })
       .slice(0, 5);
   };
@@ -209,22 +224,35 @@ export default function CalendarWidget({ userId }: CalendarWidgetProps) {
   };
 
   const monthNames = [
-    "January",
-    "February",
-    "March",
-    "April",
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
     "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
   ];
+
+  const getEventsForSelectedDate = () => {
+    if (!selectedDate) return [];
+    return events.filter((event) => {
+      const eventDate = new Date(event.startDate);
+      return (
+        eventDate.getDate() === selectedDate.getDate() &&
+        eventDate.getMonth() === selectedDate.getMonth() &&
+        eventDate.getFullYear() === selectedDate.getFullYear()
+      );
+    });
+  };
 
   const days = getDaysInMonth();
   const upcomingEvents = getUpcomingEvents();
+  const selectedDateEvents = getEventsForSelectedDate();
 
   return (
     <div className="bg-white dark:bg-zinc-800 rounded-xl shadow-lg border border-zinc-200 dark:border-zinc-700 overflow-hidden">
@@ -298,13 +326,19 @@ export default function CalendarWidget({ userId }: CalendarWidgetProps) {
           {days.map((day, index) => (
             <div
               key={index}
-              className={`min-h-8 p-1 rounded text-center ${
-                day.isToday
-                  ? "bg-blue-50 dark:bg-blue-900/20 border border-blue-500"
-                  : day.isCurrentMonth
-                    ? "hover:bg-zinc-100 dark:hover:bg-zinc-700"
-                    : "text-zinc-400 dark:text-zinc-500"
-              }`}
+              onClick={() => day.events.length > 0 && setSelectedDate(day.date)}
+              className={`min-h-8 p-1 rounded text-center cursor-pointer transition-colors ${
+                selectedDate &&
+                selectedDate.getDate() === day.date.getDate() &&
+                selectedDate.getMonth() === day.date.getMonth() &&
+                selectedDate.getFullYear() === day.date.getFullYear()
+                  ? "bg-blue-100 dark:bg-blue-900/40 border border-blue-600"
+                  : day.isToday
+                    ? "bg-blue-50 dark:bg-blue-900/20 border border-blue-500"
+                    : day.isCurrentMonth
+                      ? "hover:bg-zinc-100 dark:hover:bg-zinc-700"
+                      : "text-zinc-400 dark:text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+              } ${day.events.length > 0 ? "cursor-pointer" : "cursor-default"}`}
             >
               <div className="text-xs font-medium">{day.date.getDate()}</div>
               {day.events.length > 0 && (
@@ -323,8 +357,65 @@ export default function CalendarWidget({ userId }: CalendarWidgetProps) {
         </div>
       </div>
 
+      {/* Selected Date Events */}
+      {selectedDate && selectedDateEvents.length > 0 && (
+        <div className="border-t border-zinc-200 dark:border-zinc-700 p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+              Events for{" "}
+              {selectedDate.toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })}
+            </h4>
+            <button
+              onClick={() => setSelectedDate(null)}
+              className="p-1 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded transition-colors"
+            >
+              <svg
+                className="w-3 h-3 text-zinc-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+          <div className="space-y-2">
+            {selectedDateEvents.map((event) => (
+              <div
+                key={event.id}
+                className="flex items-center gap-3 p-2 rounded-lg bg-zinc-50 dark:bg-zinc-700/30 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
+              >
+                <div
+                  className={`w-2 h-2 rounded-full flex-shrink-0 ${getColorClass(event.color)}`}
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate">
+                    {event.title}
+                  </p>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                    {new Date(event.startDate).toLocaleTimeString("en-US", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Upcoming Events */}
-      {upcomingEvents.length > 0 && (
+      {!selectedDate && upcomingEvents.length > 0 && (
         <div className="border-t border-zinc-200 dark:border-zinc-700 p-4">
           <h4 className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-3">
             Upcoming Events

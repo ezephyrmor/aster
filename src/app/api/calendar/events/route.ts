@@ -71,10 +71,8 @@ export async function GET(request: NextRequest) {
       dateWhere.startDate = { lte: new Date(endDate) };
     }
 
-    // If userId is provided, filter calendar events by that user
-    if (userId) {
-      dateWhere.createdBy = parseInt(userId);
-    }
+    // Calendar events are company-wide, do NOT filter by creator user
+    // Only leave requests will be filtered by userId when provided
 
     // Fetch calendar events
     const events = await prisma.calendarEvent.findMany({
