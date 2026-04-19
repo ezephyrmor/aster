@@ -22,6 +22,7 @@ interface AuthContextType {
   login: (
     username: string,
     password: string,
+    captchaToken?: string,
   ) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
 }
@@ -39,11 +40,16 @@ function AuthContextProvider({ children }: { children: ReactNode }) {
       } as User)
     : null;
 
-  const login = async (username: string, password: string) => {
+  const login = async (
+    username: string,
+    password: string,
+    captchaToken?: string,
+  ) => {
     try {
       const result = await signIn("credentials", {
         username,
         password,
+        captchaToken,
         redirect: false,
       });
 

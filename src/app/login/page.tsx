@@ -16,8 +16,12 @@ export default function LoginPage() {
     setIsMounted(true);
   }, []);
 
-  const handleLogin = async (username: string, password: string) => {
-    const result = await login(username, password);
+  const handleLogin = async (
+    username: string,
+    password: string,
+    captchaToken: string,
+  ) => {
+    const result = await login(username, password, captchaToken);
     if (result.success) {
       setIsRedirecting(true);
       router.push("/dashboard");
