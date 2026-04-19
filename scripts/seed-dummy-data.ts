@@ -477,12 +477,18 @@ const middleNames = [
   "Pamela",
 ];
 
-// Status distribution
+// Status distribution - Realistic corporate employment demographics
 const statusWeights = [
-  { status: "active", weight: 0.75 },
-  { status: "on_leave", weight: 0.1 },
-  { status: "inactive", weight: 0.1 },
-  { status: "terminated", weight: 0.05 },
+  { status: "active", weight: 0.58 }, // Regular full-time employees
+  { status: "probation", weight: 0.12 }, // New hires < 90 days
+  { status: "contract", weight: 0.08 }, // Contractors & temps
+  { status: "on_leave", weight: 0.07 }, // Approved leave (vacation, sick, parental)
+  { status: "inactive", weight: 0.05 }, // LOA, furlough, temporary inactive
+  { status: "suspended", weight: 0.02 }, // Disciplinary / pending investigation
+  { status: "resigned", weight: 0.04 }, // Voluntary departures
+  { status: "terminated", weight: 0.02 }, // Involuntary termination
+  { status: "retired", weight: 0.015 }, // Retired employees
+  { status: "deceased", weight: 0.005 }, // Historical records
 ];
 
 function getRandomItem<T>(arr: T[]): T {
@@ -864,12 +870,30 @@ async function main() {
             userId: user.id,
             statusId: status.id,
             effectiveDate: statusChangeDate,
-            reason:
-              userData.status === "terminated"
-                ? "Employment terminated"
-                : userData.status === "on_leave"
-                  ? "Approved leave request"
-                  : "Account deactivated",
+            reason: (() => {
+              switch (userData.status) {
+                case "probation":
+                  return "New hire probationary period started";
+                case "contract":
+                  return "Contract employment initiated";
+                case "on_leave":
+                  return "Approved leave request";
+                case "suspended":
+                  return "Suspended pending disciplinary review";
+                case "inactive":
+                  return "Temporary leave of absence";
+                case "resigned":
+                  return "Voluntary resignation submitted";
+                case "terminated":
+                  return "Employment terminated";
+                case "retired":
+                  return "Official retirement from company";
+                case "deceased":
+                  return "Employee deceased - account maintained for records";
+                default:
+                  return "Account status updated";
+              }
+            })(),
             notes: "System generated record from seeding",
             performedBy: adminUser.id,
             ipAddress: "127.0.0.1",
