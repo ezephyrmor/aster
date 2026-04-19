@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import { formatCompanyDisplayName } from "@/lib/utils";
@@ -27,12 +27,24 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   // Group toggle states
   const [isPersonalOpen, setIsPersonalOpen] = useState(false);
   const [isManageOpen, setIsManageOpen] = useState(false);
+  const [isReportsOpen, setIsReportsOpen] = useState(false);
+
+  // Track when user has manually toggled a group that has active child
+  const [userToggledGroups, setUserToggledGroups] = useState<Set<string>>(
+    new Set(),
+  );
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
     await logout();
     router.push("/login");
   };
+
+  // Clear manual toggle state when navigation changes
+  useEffect(() => {
+    // Reset user toggles when navigating to a different page
+    setUserToggledGroups(new Set());
+  }, [pathname]);
 
   // Personal group items with hrefs for active state checking
   const personalItemsHrefs = [
@@ -51,10 +63,21 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     "/dashboard/infractions",
   ];
 
-  // Auto-expand groups when a child item is active
-  const shouldPersonalBeOpen =
-    isPersonalOpen || isGroupActive(personalItemsHrefs);
-  const shouldManageBeOpen = isManageOpen || isGroupActive(manageItemsHrefs);
+  // Reports group items with hrefs for active state checking
+  const reportsItemsHrefs = ["/dashboard/reports/headcount"];
+
+  // Group open logic: respect manual toggle if user has clicked it, otherwise auto-expand active groups
+  const shouldPersonalBeOpen = userToggledGroups.has("personal")
+    ? isPersonalOpen
+    : isPersonalOpen || isGroupActive(personalItemsHrefs);
+
+  const shouldManageBeOpen = userToggledGroups.has("manage")
+    ? isManageOpen
+    : isManageOpen || isGroupActive(manageItemsHrefs);
+
+  const shouldReportsBeOpen = userToggledGroups.has("reports")
+    ? isReportsOpen
+    : isReportsOpen || isGroupActive(reportsItemsHrefs);
 
   // Personal group items with icons
   const personalItems = [
@@ -92,6 +115,29 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             strokeLinejoin="round"
             strokeWidth={2}
             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
+        </svg>
+      ),
+    },
+  ];
+
+  // Reports group items
+  const reportsItems = [
+    {
+      name: "Headcount",
+      href: "/dashboard/reports/headcount",
+      icon: (
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
           />
         </svg>
       ),
@@ -325,26 +371,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       ),
     },
     {
-      name: "Reports",
-      href: null,
-      comingSoon: true,
-      icon: (
-        <svg
-          className="w-5 h-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-          />
-        </svg>
-      ),
-    },
-    {
       name: "Payroll",
       href: null,
       comingSoon: true,
@@ -505,7 +531,11 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                   ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
                   : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100"
               }`}
-              onClick={() => setIsPersonalOpen(!isPersonalOpen)}
+              onClick={() => {
+                // Mark this group as manually toggled by user
+                setUserToggledGroups((prev) => new Set([...prev, "personal"]));
+                setIsPersonalOpen(!isPersonalOpen);
+              }}
             >
               <span
                 className={
@@ -587,7 +617,11 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                   ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
                   : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100"
               }`}
-              onClick={() => setIsManageOpen(!isManageOpen)}
+              onClick={() => {
+                // Mark this group as manually toggled by user
+                setUserToggledGroups((prev) => new Set([...prev, "manage"]));
+                setIsManageOpen(!isManageOpen);
+              }}
             >
               <span
                 className={
@@ -632,6 +666,92 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             {shouldManageBeOpen && (
               <div className="ml-4 pl-4 border-l border-zinc-200 dark:border-zinc-700 space-y-1">
                 {manageItems.map((item) => (
+                  <div
+                    key={item.name}
+                    className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg cursor-pointer transition-colors ${
+                      pathname === item.href
+                        ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
+                        : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100"
+                    }`}
+                    onClick={() => {
+                      if (item.href) {
+                        router.push(item.href);
+                      }
+                    }}
+                  >
+                    <span
+                      className={
+                        pathname === item.href
+                          ? "text-blue-600 dark:text-blue-400"
+                          : "text-zinc-400 dark:text-zinc-500"
+                      }
+                    >
+                      {item.icon}
+                    </span>
+                    <span className="flex-1">{item.name}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Reports collapsible group */}
+          <div className="mt-2">
+            <div
+              className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg cursor-pointer transition-colors ${
+                isGroupActive(reportsItemsHrefs)
+                  ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
+                  : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100"
+              }`}
+              onClick={() => {
+                // Mark this group as manually toggled by user
+                setUserToggledGroups((prev) => new Set([...prev, "reports"]));
+                setIsReportsOpen(!isReportsOpen);
+              }}
+            >
+              <span
+                className={
+                  isGroupActive(reportsItemsHrefs)
+                    ? "text-blue-600 dark:text-blue-400"
+                    : "text-zinc-500 dark:text-zinc-400"
+                }
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 0 01.707.293l5.414 5.414a1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+              </span>
+              <span className="flex-1">Reports</span>
+              <svg
+                className={`w-4 h-4 transition-transform duration-200 ${
+                  shouldReportsBeOpen ? "rotate-180" : ""
+                } ${isGroupActive(reportsItemsHrefs) ? "text-blue-600 dark:text-blue-400" : "text-zinc-500 dark:text-zinc-400"}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </div>
+
+            {/* Reports sub-items */}
+            {shouldReportsBeOpen && (
+              <div className="ml-4 pl-4 border-l border-zinc-200 dark:border-zinc-700 space-y-1">
+                {reportsItems.map((item) => (
                   <div
                     key={item.name}
                     className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg cursor-pointer transition-colors ${
