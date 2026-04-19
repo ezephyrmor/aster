@@ -25,11 +25,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       credentials: {
         username: { label: "Username", type: "text" },
         password: { label: "Password", type: "password" },
+        captchaValidated: { label: "CAPTCHA Validated", type: "text" },
       },
       async authorize(credentials, req) {
         if (!credentials?.username || !credentials?.password) {
           return null;
         }
+
+        // CAPTCHA validation happens server-side in API route before reaching here
+        // No crypto imports in this file to maintain Edge Runtime compatibility
 
         // Check demo mode first
         if (process.env.DEMO_MODE === "true") {

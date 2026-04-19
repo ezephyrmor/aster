@@ -8,7 +8,13 @@ export async function middleware(request: NextRequest) {
   const isDemoMode = process.env.DEMO_MODE === "true";
 
   // Skip auth check for public routes
-  const publicPaths = ["/login", "/_next", "/favicon.ico", "/api/auth"];
+  const publicPaths = [
+    "/login",
+    "/_next",
+    "/favicon.ico",
+    "/api/auth",
+    "/api/captcha",
+  ];
   if (publicPaths.some((path) => pathname.startsWith(path))) {
     // Handle demo mode API rewrite for public paths
     if (
