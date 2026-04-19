@@ -22,6 +22,10 @@ export interface WorkSchedule {
     } | null;
     teams?: { name: string }[];
   };
+  company?: {
+    id: number;
+    name: string;
+  } | null;
 }
 
 const DAYS_OF_WEEK = [
@@ -155,6 +159,18 @@ export function useScheduleColumns({ onAction }: UseScheduleColumnsProps = {}) {
       cell: ({ getValue }) => {
         const breakMinutes = getValue() as number;
         return <div className="text-muted-foreground">{breakMinutes} min</div>;
+      },
+    },
+    {
+      accessorKey: "company.name",
+      header: () => <div className="hidden lg:block">Company</div>,
+      cell: ({ row }) => {
+        const company = row.original.company;
+        return (
+          <div className="hidden lg:block text-muted-foreground">
+            {company?.name || "-"}
+          </div>
+        );
       },
     },
     {

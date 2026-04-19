@@ -10,22 +10,53 @@ const prisma = new PrismaClient();
 async function main() {
   console.log("🌱 Seeding lookup tables...\n");
 
-  // Seed roles
-  console.log("📋 Seeding roles...");
+  // Create default company first
+  console.log("🏢 Creating default company...");
+  await prisma.company.upsert({
+    where: { id: 1 },
+    update: {},
+    create: {
+      id: 1,
+      name: "Aster HR System",
+      status: "active",
+      timezone: "Asia/Manila",
+    },
+  });
+  console.log("   ✅ Default company created\n");
+
+  // Seed roles for ALL companies
+  console.log("📋 Seeding roles for all companies...");
   const roles = [
-    { id: 1, name: "admin", description: "System Administrator" },
-    { id: 2, name: "hr", description: "Human Resources" },
-    { id: 3, name: "employee", description: "Regular Employee" },
+    { name: "admin", description: "System Administrator" },
+    { name: "hr", description: "Human Resources" },
+    { name: "manager", description: "Department Manager" },
+    { name: "employee", description: "Regular Employee" },
   ];
 
-  for (const role of roles) {
-    await prisma.role.upsert({
-      where: { name: role.name },
-      update: {},
-      create: role,
-    });
+  const companies = await prisma.company.findMany();
+  let roleCount = 0;
+
+  for (const company of companies) {
+    for (const role of roles) {
+      await prisma.role.upsert({
+        where: {
+          companyId_name: {
+            companyId: company.id,
+            name: role.name,
+          },
+        },
+        update: {},
+        create: {
+          ...role,
+          companyId: company.id,
+        },
+      });
+      roleCount++;
+    }
   }
-  console.log(`   ✅ Created ${roles.length} roles`);
+  console.log(
+    `   ✅ Created ${roleCount} roles for ${companies.length} companies`,
+  );
 
   // Seed employee statuses
   console.log("\n📋 Seeding employee statuses...");
@@ -86,39 +117,23 @@ async function main() {
 
   for (const position of positions) {
     await prisma.position.upsert({
-      where: { name: position.name },
+      where: {
+        companyId_name: {
+          companyId: 1,
+          name: position.name,
+        },
+      },
       update: {},
-      create: position,
+      create: {
+        ...position,
+        companyId: 1,
+      },
     });
   }
   console.log(`   ✅ Created ${positions.length} positions`);
 
-  // Seed common departments
-  console.log("\n📋 Seeding departments...");
-  const departments = [
-    {
-      name: "Engineering",
-      description: "Software development and technical operations",
-    },
-    { name: "Product", description: "Product management and strategy" },
-    { name: "Design", description: "User experience and interface design" },
-    { name: "Marketing", description: "Marketing and brand management" },
-    { name: "Sales", description: "Sales and business development" },
-    { name: "Human Resources", description: "HR and people operations" },
-    { name: "Finance", description: "Financial planning and accounting" },
-    { name: "Operations", description: "Business operations and logistics" },
-    { name: "Customer Success", description: "Customer support and success" },
-    { name: "Legal", description: "Legal and compliance" },
-  ];
-
-  for (const department of departments) {
-    await prisma.department.upsert({
-      where: { name: department.name },
-      update: {},
-      create: department,
-    });
-  }
-  console.log(`   ✅ Created ${departments.length} departments`);
+  // NOTE: Departments are now created by seed-multi-company.ts with company-specific appropriate departments
+  // No generic departments are seeded here anymore
 
   // Seed common industries
   console.log("\n📋 Seeding industries...");
@@ -149,7 +164,9 @@ async function main() {
   console.log(`   - Roles: ${roles.length}`);
   console.log(`   - Employee Statuses: ${statuses.length}`);
   console.log(`   - Positions: ${positions.length}`);
-  console.log(`   - Departments: ${departments.length}`);
+  console.log(
+    `   - Departments: See seed-multi-company.ts for company-specific departments`,
+  );
   console.log(`   - Industries: ${industries.length}`);
 }
 

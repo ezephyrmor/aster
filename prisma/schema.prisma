@@ -9,31 +9,43 @@ datasource db {
 
 model Position {
   id               Int               @id @default(autoincrement())
-  name             String            @unique @db.VarChar(100)
+  companyId        Int               @default(1) @map("company_id")
+  name             String            @db.VarChar(100)
   description      String?           @db.Text
   createdAt        DateTime          @default(now()) @map("created_at")
   employeeProfiles EmployeeProfile[]
+  company          Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
+  @@unique([companyId, name])
+  @@index([companyId])
   @@map("positions")
 }
 
 model Department {
   id               Int               @id @default(autoincrement())
-  name             String            @unique @db.VarChar(100)
+  companyId        Int               @default(1) @map("company_id")
+  name             String            @db.VarChar(100)
   description      String?           @db.Text
   createdAt        DateTime          @default(now()) @map("created_at")
   employeeProfiles EmployeeProfile[]
+  company          Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
+  @@unique([companyId, name])
+  @@index([companyId])
   @@map("departments")
 }
 
 model Role {
   id          Int      @id @default(autoincrement())
-  name        String   @unique @db.VarChar(50)
+  companyId   Int      @default(1) @map("company_id")
+  name        String   @db.VarChar(50)
   description String?  @db.Text
   createdAt   DateTime @default(now()) @map("created_at")
   users       User[]
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
+  @@unique([companyId, name])
+  @@index([companyId])
   @@map("roles")
 }
 
@@ -57,8 +69,62 @@ model Industry {
   @@map("industries")
 }
 
+enum CompanyStatus {
+  active
+  inactive
+  suspended
+  trial
+}
+
+model Company {
+  id        Int           @id @default(autoincrement())
+  name      String        @unique @db.VarChar(150)
+  status    CompanyStatus @default(active)
+  timezone  String        @default("Asia/Manila") @db.VarChar(50)
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime      @updatedAt @map("updated_at")
+
+  profiles         CompanyProfile[]
+  users            User[]
+  brands           Brand[]
+  teams            Team[]
+  positions        Position[]
+  departments      Department[]
+  roles            Role[]
+  calendarEvents   CalendarEvent[]
+  leaveTypes       LeaveType[]
+  leaveStatuses    LeaveStatus[]
+  leaveRequests    LeaveRequest[]
+  infractionTypes  InfractionType[]
+  infractionOffenses InfractionOffense[]
+  infractions Infraction[]
+  workSchedules WorkSchedule[]
+
+  @@map("companies")
+}
+
+model CompanyProfile {
+  id          Int       @id @default(autoincrement())
+  companyId   Int       @unique @map("company_id")
+  legalName   String?   @map("legal_name") @db.VarChar(200)
+  taxId       String?   @map("tax_id") @db.VarChar(50)
+  email       String?   @db.VarChar(200)
+  phone       String?   @db.VarChar(50)
+  address     String?   @db.Text
+  city        String?   @db.VarChar(100)
+  country     String?   @db.VarChar(100)
+  settings    Json?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  company     Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("company_profiles")
+}
+
 model User {
   id              Int              @id @default(autoincrement())
+  companyId       Int              @map("company_id") @default(1)
   username        String           @unique @db.VarChar(50)
   passwordHash    String           @map("password_hash") @db.VarChar(255)
   salt            String           @db.VarChar(255)
@@ -67,6 +133,7 @@ model User {
   employeeProfile EmployeeProfile?
   teamMembers     TeamMember[]
   role            Role             @relation(fields: [roleId], references: [id])
+  company         Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
   calendarEvents  CalendarEvent[]
   leaveCredits    LeaveCredit[]
   leaveRequests   LeaveRequest[]
@@ -81,6 +148,7 @@ model User {
   managedBrandsHistory BrandManagerHistory[] @relation("BrandManagerHistoryUsers")
 
   @@index([roleId], map: "users_role_id_fkey")
+  @@index([companyId], map: "users_company_id_fkey")
   @@map("users")
 }
 
@@ -95,6 +163,9 @@ model EmployeeProfile {
   personalEmail String?             @map("personal_email") @db.VarChar(255)
   address       String?             @db.Text
   hireDate      DateTime?           @map("hire_date")
+  emergencyContactName     String?  @map("emergency_contact_name") @db.VarChar(200)
+  emergencyContactNumber   String?  @map("emergency_contact_number") @db.VarChar(50)
+  emergencyContactRelation String?  @map("emergency_contact_relation") @db.VarChar(100)
   createdAt     DateTime            @default(now()) @map("created_at")
   updatedAt     DateTime            @updatedAt @map("updated_at")
   departmentId  Int?                @map("department_id")
@@ -113,6 +184,7 @@ model EmployeeProfile {
 
 model Brand {
   id          Int         @id @default(autoincrement())
+  companyId   Int         @map("company_id") @default(1)
   name        String      @unique @db.VarChar(100)
   description String?     @db.Text
   logo        String?     @db.VarChar(500)
@@ -122,6 +194,7 @@ model Brand {
   updatedAt   DateTime    @updatedAt @map("updated_at")
   createdBy   Int         @map("created_by")
   managerId   Int?        @map("manager_id")
+  company     Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
   manager     User?       @relation("BrandManagers", fields: [managerId], references: [id])
   industryId  Int?        @map("industry_id")
   industry    Industry?   @relation(fields: [industryId], references: [id])
@@ -130,6 +203,7 @@ model Brand {
 
   @@index([industryId], map: "brands_industry_id_fkey")
   @@index([managerId], map: "brands_manager_id_fkey")
+  @@index([companyId], map: "brands_company_id_fkey")
   @@map("brands")
 }
 
@@ -162,16 +236,19 @@ model BrandManagerHistory {
 
 model Team {
   id          Int           @id @default(autoincrement())
+  companyId   Int           @map("company_id") @default(1)
   name        String        @unique @db.VarChar(100)
   description String?       @db.Text
   createdAt   DateTime      @default(now()) @map("created_at")
   updatedAt   DateTime      @updatedAt @map("updated_at")
   brandId     Int           @map("brand_id")
+  company     Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
   history     TeamHistory[]
   members     TeamMember[]
   brand       Brand         @relation(fields: [brandId], references: [id])
 
   @@index([brandId], map: "teams_brand_id_fkey")
+  @@index([companyId], map: "teams_company_id_fkey")
   @@map("teams")
 }
 
@@ -232,6 +309,7 @@ enum TeamHistoryAction {
 
 model CalendarEvent {
   id          Int      @id @default(autoincrement())
+  companyId   Int      @default(1) @map("company_id")
   title       String   @db.VarChar(200)
   description String?  @db.Text
   startDate   DateTime @map("start_date")
@@ -241,7 +319,9 @@ model CalendarEvent {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
   user        User     @relation(fields: [createdBy], references: [id])
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
+  @@index([companyId])
   @@index([startDate], map: "calendar_events_start_date_idx")
   @@index([createdBy], map: "calendar_events_created_by_idx")
   @@map("calendar_events")
@@ -249,26 +329,34 @@ model CalendarEvent {
 
 model LeaveType {
   id               Int           @id @default(autoincrement())
-  name             String        @unique @db.VarChar(50)
+  companyId        Int           @default(1) @map("company_id")
+  name             String        @db.VarChar(50)
   description      String?       @db.Text
   defaultDaysLimit Int?          @map("default_days_limit")
   color            String        @default("purple") @db.VarChar(20)
   isActive         Boolean       @default(true) @map("is_active")
   createdAt        DateTime      @default(now()) @map("created_at")
   leaveRequests    LeaveRequest[]
+  company          Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
+  @@unique([companyId, name])
+  @@index([companyId])
   @@map("leave_types")
 }
 
 model LeaveStatus {
   id            Int           @id @default(autoincrement())
-  name          String        @unique @db.VarChar(50)
+  companyId     Int           @default(1) @map("company_id")
+  name          String        @db.VarChar(50)
   description   String?       @db.Text
   color         String        @default("gray") @db.VarChar(20)
   isFinal       Boolean       @default(false) @map("is_final")
   createdAt     DateTime      @default(now()) @map("created_at")
   leaveRequests LeaveRequest[]
+  company       Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
+  @@unique([companyId, name])
+  @@index([companyId])
   @@map("leave_statuses")
 }
 
@@ -288,6 +376,7 @@ model LeaveCredit {
 
 model LeaveRequest {
   id            Int       @id @default(autoincrement())
+  companyId     Int       @default(1) @map("company_id")
   userId        Int       @map("user_id")
   leaveTypeId   Int       @map("leave_type_id")
   statusId      Int       @default(1) @map("status_id")
@@ -305,8 +394,10 @@ model LeaveRequest {
   leaveType     LeaveType    @relation(fields: [leaveTypeId], references: [id])
   status        LeaveStatus  @relation(fields: [statusId], references: [id])
   reviewer      User?        @relation("ReviewedLeaves", fields: [reviewedBy], references: [id])
+  company       Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
   leaveUsage    LeaveUsage[]
 
+  @@index([companyId])
   @@index([userId], map: "leave_requests_user_id_idx")
   @@index([statusId], map: "leave_requests_status_id_idx")
   @@index([leaveTypeId], map: "leave_requests_leave_type_id_idx")
@@ -332,6 +423,7 @@ model LeaveUsage {
 model WorkSchedule {
   id           Int          @id @default(autoincrement())
   userId       Int          @map("user_id")
+  companyId    Int          @default(1) @map("company_id")
   dayOfWeek    Int          @map("day_of_week") // 0=Sunday, 1=Monday, ..., 6=Saturday
   startTime    String       @map("start_time") // Format: "HH:MM" (24-hour)
   endTime      String       @map("end_time") // Format: "HH:MM" (24-hour)
@@ -341,8 +433,10 @@ model WorkSchedule {
   createdAt    DateTime     @default(now()) @map("created_at")
   updatedAt    DateTime     @updatedAt @map("updated_at")
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company      Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
   attendance   Attendance[]
 
+  @@index([companyId])
   @@index([userId], map: "work_schedules_user_id_idx")
   @@index([dayOfWeek], map: "work_schedules_day_of_week_idx")
   @@map("work_schedules")
@@ -383,19 +477,24 @@ enum AttendanceStatus {
 
 model InfractionType {
   id          Int                @id @default(autoincrement())
-  name        String             @unique @db.VarChar(100)
+  companyId   Int                @default(1) @map("company_id")
+  name        String             @db.VarChar(100)
   description String?            @db.Text
   color       String             @default("red") @db.VarChar(20)
   isActive    Boolean            @default(true) @map("is_active")
   createdAt   DateTime           @default(now()) @map("created_at")
   offenses    InfractionOffense[]
   infractions Infraction[]
+  company     Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
+  @@unique([companyId, name])
+  @@index([companyId])
   @@map("infraction_types")
 }
 
 model InfractionOffense {
   id            Int                @id @default(autoincrement())
+  companyId     Int                @default(1) @map("company_id")
   name          String             @db.VarChar(100)
   description   String?            @db.Text
   severityLevel Int                @map("severity_level") // 1=Minor, 2=Major, 3=Severe
@@ -404,7 +503,10 @@ model InfractionOffense {
   isActive      Boolean            @default(true) @map("is_active")
   createdAt     DateTime           @default(now()) @map("created_at")
   infractions   Infraction[]
+  company       Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
+  @@unique([companyId, name])
+  @@index([companyId])
   @@index([typeId], map: "infraction_offenses_type_id_fkey")
   @@map("infraction_offenses")
 }
@@ -412,6 +514,7 @@ model InfractionOffense {
 model Infraction {
   id             Int                @id @default(autoincrement())
   userId         Int                @map("user_id")
+  companyId      Int                @default(1) @map("company_id")
   offenseId      Int                @map("offense_id")
   typeId         Int                @map("type_id")
   date           DateTime           @db.Date
@@ -424,11 +527,13 @@ model Infraction {
   updatedAt      DateTime           @updatedAt @map("updated_at")
 
   user           User               @relation("InfractionUsers", fields: [userId], references: [id])
+  company        Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
   offense        InfractionOffense  @relation(fields: [offenseId], references: [id])
   type           InfractionType     @relation(fields: [typeId], references: [id])
   creator        User               @relation("InfractionCreators", fields: [createdBy], references: [id])
   ackUser        User?              @relation("InfractionAckUsers", fields: [acknowledgedBy], references: [id])
 
+  @@index([companyId])
   @@index([userId], map: "infractions_user_id_idx")
   @@index([typeId], map: "infractions_type_id_idx")
   @@index([offenseId], map: "infractions_offense_id_idx")

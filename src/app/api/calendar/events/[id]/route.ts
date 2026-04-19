@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
+import { auth } from "@/lib/next-auth";
 
 // PUT - Update a calendar event
 export async function PUT(
@@ -7,6 +8,14 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const session = await auth();
+
+    if (!session?.user?.companyId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const companyId = session.user.companyId;
+
     const { id } = await params;
     const body = await request.json();
     const { title, description, startDate, endDate, color } = body;
@@ -16,9 +25,12 @@ export async function PUT(
       return NextResponse.json({ error: "Invalid event ID" }, { status: 400 });
     }
 
-    // Check if event exists
+    // Check if event exists and belongs to current company
     const existingEvent = await prisma.calendarEvent.findUnique({
-      where: { id: eventId },
+      where: {
+        id: eventId,
+        companyId,
+      },
     });
 
     if (!existingEvent) {
@@ -88,6 +100,14 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const session = await auth();
+
+    if (!session?.user?.companyId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const companyId = session.user.companyId;
+
     const { id } = await params;
     const eventId = parseInt(id);
 
@@ -95,9 +115,12 @@ export async function DELETE(
       return NextResponse.json({ error: "Invalid event ID" }, { status: 400 });
     }
 
-    // Check if event exists
+    // Check if event exists and belongs to current company
     const existingEvent = await prisma.calendarEvent.findUnique({
-      where: { id: eventId },
+      where: {
+        id: eventId,
+        companyId,
+      },
     });
 
     if (!existingEvent) {

@@ -46,16 +46,63 @@ npm run db:seed:all-data
 
 ## Configuration
 
-You can customize the seeding via environment variables:
+You can fully customize all seeding parameters via environment variables. All values have safe defaults so you only need to set what you want to change.
+
+### Complete list of configurable environment variables:
+
+| Variable                           | Default | Min | Max  | Description                                 |
+| ---------------------------------- | ------- | --- | ---- | ------------------------------------------- |
+| `SEED_EMPLOYEE_COUNT`              | 100     | 1   | 1000 | Number of employees to create               |
+| `SEED_BRAND_COUNT`                 | 15      | 1   | 100  | Number of brands to create                  |
+| `SEED_TEAM_COUNT`                  | 20      | 1   | 100  | Number of teams to create                   |
+|                                    |         |     |      |                                             |
+| `SEED_EMPLOYEE_STATUS_ACTIVE`      | 0.75    | 0   | 1    | Percentage of active employees              |
+| `SEED_EMPLOYEE_STATUS_ON_LEAVE`    | 0.1     | 0   | 1    | Percentage of employees on leave            |
+| `SEED_EMPLOYEE_STATUS_INACTIVE`    | 0.1     | 0   | 1    | Percentage of inactive employees            |
+| `SEED_EMPLOYEE_STATUS_TERMINATED`  | 0.05    | 0   | 1    | Percentage of terminated employees          |
+|                                    |         |     |      |                                             |
+| `SEED_SCHEDULE_COVERAGE`           | 0.8     | 0   | 1    | Percentage of employees that have schedules |
+|                                    |         |     |      |                                             |
+| `SEED_ATTENDANCE_DAYS_BACK`        | 30      | 7   | 180  | How many days back to generate attendance   |
+| `SEED_ATTENDANCE_PRESENT`          | 0.5     | 0   | 1    | Attendance status distribution              |
+| `SEED_ATTENDANCE_LATE`             | 0.2     | 0   | 1    | Attendance status distribution              |
+| `SEED_ATTENDANCE_ABSENT`           | 0.1     | 0   | 1    | Attendance status distribution              |
+| `SEED_ATTENDANCE_UNDERTIME`        | 0.1     | 0   | 1    | Attendance status distribution              |
+| `SEED_ATTENDANCE_ON_LEAVE`         | 0.1     | 0   | 1    | Attendance status distribution              |
+|                                    |         |     |      |                                             |
+| `SEED_TEAM_MIN_MEMBERS`            | 3       | 1   | 20   | Minimum members per team                    |
+| `SEED_TEAM_MAX_MEMBERS`            | 6       | 1   | 50   | Maximum members per team                    |
+| `SEED_TEAM_WITH_LEADER`            | 0.7     | 0   | 1    | Percentage of teams with designated leader  |
+|                                    |         |     |      |                                             |
+| `SEED_LEAVE_REQUESTS_MIN`          | 2       | 0   | 10   | Minimum leave requests per employee         |
+| `SEED_LEAVE_REQUESTS_MAX`          | 3       | 0   | 20   | Maximum leave requests per employee         |
+|                                    |         |     |      |                                             |
+| `SEED_INFRACTION_COVERAGE`         | 0.6     | 0   | 1    | Percentage of employees with infractions    |
+| `SEED_INFRACTION_PER_EMPLOYEE_MIN` | 1       | 0   | 10   | Minimum infractions per employee            |
+| `SEED_INFRACTION_PER_EMPLOYEE_MAX` | 3       | 0   | 20   | Maximum infractions per employee            |
+| `SEED_INFRACTION_ACKNOWLEDGED`     | 0.6     | 0   | 1    | Percentage of acknowledged infractions      |
+|                                    |         |     |      |                                             |
+| `SEED_CREATE_ATTENDANCE`           | true    | -   | -    | Enable/disable attendance creation          |
+| `SEED_CREATE_SCHEDULES`            | true    | -   | -    | Enable/disable schedules creation           |
+| `SEED_CREATE_TEAMS`                | true    | -   | -    | Enable/disable teams creation               |
+| `SEED_CREATE_LEAVES`               | true    | -   | -    | Enable/disable leaves creation              |
+| `SEED_CREATE_INFRACTIONS`          | true    | -   | -    | Enable/disable infractions creation         |
+| `SEED_CREATE_BRANDS`               | true    | -   | -    | Enable/disable brands creation              |
+
+### Examples:
 
 ```bash
-# Custom counts (defaults: 100 employees, 15 brands, 20 teams)
-EMPLOYEE_COUNT=200 BRAND_COUNT=20 TEAM_COUNT=30 npm run db:seed:all-data
+# Custom counts
+SEED_EMPLOYEE_COUNT=200 SEED_BRAND_COUNT=20 SEED_TEAM_COUNT=30 npm run db:seed:all-data
 
-# Or create a .env file with:
-# EMPLOYEE_COUNT=200
-# BRAND_COUNT=20
-# TEAM_COUNT=30
+# Minimal test setup
+SEED_EMPLOYEE_COUNT=10 SEED_ATTENDANCE_DAYS_BACK=7 npm run db:seed:all-data
+
+# Or create a .env file with any combination:
+SEED_EMPLOYEE_COUNT=50
+SEED_SCHEDULE_COVERAGE=0.95
+SEED_INFRACTION_COVERAGE=0.3
+SEED_CREATE_ATTENDANCE=false
 ```
 
 ## Data Distribution

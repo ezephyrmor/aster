@@ -305,31 +305,26 @@ function getRandomHour(): number {
 async function main() {
   console.log("🌱 Seeding calendar events...");
 
-  // Get or create a user to assign events to
-  let user = await prisma.user.findFirst();
-  if (!user) {
-    console.log("No user found. Creating a default user...");
-    // First check if role exists, if not create it
-    let role = await prisma.role.findFirst({
-      where: { name: "ADMIN" },
+  // Get all companies
+  const companies = await prisma.company.findMany();
+  console.log(`Found ${companies.length} companies`);
+
+  // Group users by company
+  const usersByCompany: Record<number, any[]> = {};
+
+  for (const company of companies) {
+    const users = await prisma.user.findMany({
+      where: { companyId: company.id },
+      take: 10,
     });
-    if (!role) {
-      role = await prisma.role.create({
-        data: { name: "ADMIN", description: "Administrator role" },
-      });
+
+    if (users.length > 0) {
+      usersByCompany[company.id] = users;
+      console.log(
+        `  • Company ${company.id} (${company.name}): ${users.length} users`,
+      );
     }
-
-    user = await prisma.user.create({
-      data: {
-        username: "admin",
-        passwordHash: "$2b$10$rQZ8M.xMvMvMvMvMvMvMv.1234567890abcdef",
-        salt: "salt123",
-        roleId: role.id,
-      },
-    });
   }
-
-  console.log(`Using user ID: ${user.id} (${user.username})`);
 
   const categories = Object.keys(eventTemplates);
   const startDate = new Date(2026, 0, 1); // January 2026
@@ -369,13 +364,21 @@ async function main() {
           0,
         );
 
+        // Pick random company for this event
+        const randomCompanyId = getRandomItem(
+          Object.keys(usersByCompany).map(Number),
+        );
+        const companyUsers = usersByCompany[randomCompanyId];
+        const randomUser = getRandomItem(companyUsers);
+
         events.push({
           title: generateEventName(category),
           description: generateEventDescription(),
           startDate: startDateEvent,
           endDate: endDateEvent,
           color: getRandomItem(colors) as EventColor,
-          createdBy: user.id,
+          createdBy: randomUser.id,
+          companyId: randomCompanyId,
         });
 
         eventCount++;

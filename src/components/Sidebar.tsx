@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth";
+import { formatCompanyDisplayName } from "@/lib/utils";
 
 // Admin role ID
 const ADMIN_ROLE_ID = 1;
@@ -415,8 +416,29 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               </svg>
             </div>
             <div>
-              <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">
-                Admin Panel
+              <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 cursor-default tooltip relative">
+                {user?.companyName
+                  ? formatCompanyDisplayName(user.companyName)
+                  : "Admin Panel"}
+                <span className="tooltip-text bg-zinc-800 text-white text-xs px-2 py-1 rounded absolute left-1/2 -translate-x-1/2 top-full mt-2 opacity-0 invisible transition-all duration-200 whitespace-nowrap shadow-lg z-50">
+                  {user?.companyName || "Admin Panel"}
+                </span>
+                <style jsx>{`
+                  .tooltip:hover .tooltip-text {
+                    opacity: 1;
+                    visibility: visible;
+                  }
+                  .tooltip-text::after {
+                    content: "";
+                    position: absolute;
+                    bottom: 100%;
+                    left: 50%;
+                    margin-left: -4px;
+                    border-width: 4px;
+                    border-style: solid;
+                    border-color: transparent transparent #27272a transparent;
+                  }
+                `}</style>
               </h2>
               <p className="text-xs text-zinc-500 dark:text-zinc-400">
                 Control Center
