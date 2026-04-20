@@ -10,6 +10,8 @@ import { cn } from "@/lib/utils";
 export function Form<T extends Record<string, any>>({
   schema,
   defaultValues,
+  values,
+  disabled = false,
   onSubmit,
   children,
   className,
@@ -19,7 +21,9 @@ export function Form<T extends Record<string, any>>({
   const form = useForm<T>({
     resolver: schema ? zodResolver(schema) : undefined,
     defaultValues,
+    values,
     mode: "onBlur",
+    disabled,
   });
 
   const handleSubmit = form.handleSubmit(async (values) => {

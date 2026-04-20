@@ -167,6 +167,7 @@ export default function UserForm({
       <Form
         schema={isEditMode ? UpdateUserSchema : CreateUserSchema}
         defaultValues={defaultValues}
+        values={initialData}
         onSubmit={handleFormSubmit}
         className="space-y-8"
       >

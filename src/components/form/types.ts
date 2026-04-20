@@ -22,6 +22,8 @@ export interface FieldProps<T extends FieldValues = FieldValues> {
 export interface FormProps<T extends FieldValues = FieldValues> {
   schema?: ZodSchema<T>;
   defaultValues?: T;
+  values?: T;
+  disabled?: boolean;
   onSubmit: (values: T) => Promise<void> | void;
   children: React.ReactNode;
   className?: string;
