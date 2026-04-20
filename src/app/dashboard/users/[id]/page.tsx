@@ -220,6 +220,7 @@ export default function EditUserPage({
           initialData={userData}
           onSubmit={handleSubmit}
           onCancel={() => router.back()}
+          userId={resolvedParams.id}
         />
       )}
 
