@@ -199,95 +199,6 @@ export default function UserForm({
   return (
     <>
       <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-8">
-        {/* Account Information */}
-        <div className="bg-white dark:bg-zinc-800 px-6 py-5 shadow sm:rounded-lg sm:px-6">
-          <h3 className="text-lg font-medium leading-6 text-gray-900 dark:text-zinc-100 mb-4">
-            Account Information
-          </h3>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-            <div>
-              <label
-                htmlFor="username"
-                className="block text-sm font-medium text-gray-700 dark:text-zinc-300"
-              >
-                Username
-              </label>
-              <input
-                type="text"
-                id="username"
-                value={
-                  isEditMode
-                    ? initialData?.username || ""
-                    : generateUsernamePreview()
-                }
-                readOnly
-                className="mt-1 block w-full rounded-md border-gray-300 dark:border-zinc-600 shadow-sm sm:text-sm bg-gray-100 dark:bg-zinc-700 cursor-not-allowed"
-                placeholder={isEditMode ? "Locked" : "Auto-generated"}
-              />
-              <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400">
-                {isEditMode
-                  ? "Username cannot be changed"
-                  : "Auto-generated from name (e.g., djoe-a7k9)"}
-              </p>
-            </div>
-
-            {!isEditMode && (
-              <div>
-                <label
-                  htmlFor="password"
-                  className="block text-sm font-medium text-gray-700 dark:text-zinc-300"
-                >
-                  Password
-                </label>
-                <input
-                  type="text"
-                  id="password"
-                  value="Auto-generated"
-                  readOnly
-                  className="mt-1 block w-full rounded-md border-gray-300 dark:border-zinc-600 shadow-sm sm:text-sm bg-gray-50 dark:bg-zinc-700"
-                />
-                <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400">
-                  A secure password will be generated automatically
-                </p>
-              </div>
-            )}
-
-            {isEditMode && (
-              <div>
-                <label
-                  htmlFor="password"
-                  className="block text-sm font-medium text-gray-700 dark:text-zinc-300"
-                >
-                  New Password (leave blank to keep current)
-                </label>
-                <input
-                  type="password"
-                  id="password"
-                  {...register("password")}
-                  className={inputClass("password")}
-                  placeholder="••••••••"
-                />
-                {fieldError("password") && (
-                  <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                    {fieldError("password")}
-                  </p>
-                )}
-              </div>
-            )}
-
-            <LookupDropdown
-              endpoint="/api/roles"
-              name="role"
-              label="Role"
-              register={register}
-              error={fieldError("role")}
-              defaultValue={initialData?.role || ""}
-              placeholder="Select role"
-              required={true}
-            />
-          </div>
-        </div>
-
         {/* Personal Information */}
         <div className="bg-white dark:bg-zinc-800 px-6 py-5 shadow sm:rounded-lg sm:px-6">
           <h3 className="text-lg font-medium leading-6 text-gray-900 dark:text-zinc-100 mb-4">
@@ -299,7 +210,7 @@ export default function UserForm({
                 htmlFor="firstName"
                 className="block text-sm font-medium text-gray-700 dark:text-zinc-300"
               >
-                First Name *
+                First Name <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -320,7 +231,7 @@ export default function UserForm({
                 htmlFor="lastName"
                 className="block text-sm font-medium text-gray-700 dark:text-zinc-300"
               >
-                Last Name *
+                Last Name <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -448,6 +359,17 @@ export default function UserForm({
             Employment Information
           </h3>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <LookupDropdown
+              endpoint="/api/roles"
+              name="role"
+              label="Role"
+              register={register}
+              error={fieldError("role")}
+              defaultValue={initialData?.role || ""}
+              placeholder="Select role"
+              required={true}
+            />
+
             <LookupDropdown
               endpoint="/api/positions"
               name="position"

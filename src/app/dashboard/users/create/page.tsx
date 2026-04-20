@@ -76,8 +76,8 @@ export default function CreateUserPage() {
 
   return (
     <DashboardLayout
-      title="Add New User"
-      subtitle="Create a new employee account"
+      title="Create Employee Profile"
+      subtitle="Add a new employee to the system"
       icon={
         <svg
           className="w-6 h-6 text-white"
