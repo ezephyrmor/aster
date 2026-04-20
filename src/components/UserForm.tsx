@@ -43,17 +43,17 @@ export default function UserForm({
   );
   const [isStatusUpdating, setIsStatusUpdating] = useState(false);
 
-  const STATUS_ID_MAP: Record<string, number> = {
-    active: 1,
-    probation: 2,
-    contract: 3,
-    on_leave: 4,
-    suspended: 5,
-    inactive: 6,
-    resigned: 7,
-    terminated: 8,
-    retired: 9,
-    deceased: 10,
+  const [statuses, setStatuses] = useState<{ id: number; name: string }[]>([]);
+
+  useEffect(() => {
+    fetch("/api/employee-statuses")
+      .then((res) => res.json())
+      .then((data) => setStatuses(data))
+      .catch(() => {});
+  }, []);
+
+  const getStatusId = (statusName: string) => {
+    return statuses.find((s) => s.name === statusName)?.id;
   };
 
   const handleStatusConfirm = async () => {
@@ -61,7 +61,11 @@ export default function UserForm({
 
     setIsStatusUpdating(true);
     try {
-      const statusId = STATUS_ID_MAP[pendingStatus];
+      const statusId = getStatusId(pendingStatus);
+
+      if (!statusId) {
+        throw new Error("Invalid status selected");
+      }
 
       const response = await fetch(`/api/users/${userId}/status`, {
         method: "POST",
@@ -252,21 +256,12 @@ export default function UserForm({
 
             <TextField name="hireDate" label="Hire Date" type="date" />
 
-            <Select
+            <AsyncSelect
               name="status"
               label="Employee Status"
-              options={[
-                { value: "active", label: "Active" },
-                { value: "probation", label: "Probation" },
-                { value: "contract", label: "Contract" },
-                { value: "on_leave", label: "On Leave" },
-                { value: "suspended", label: "Suspended" },
-                { value: "inactive", label: "Inactive" },
-                { value: "resigned", label: "Resigned" },
-                { value: "terminated", label: "Terminated" },
-                { value: "retired", label: "Retired" },
-                { value: "deceased", label: "Deceased" },
-              ]}
+              endpoint="/api/employee-statuses"
+              placeholder="Select status"
+              required
             />
           </div>
         </div>
