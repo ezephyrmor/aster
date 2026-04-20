@@ -128,6 +128,11 @@ export default function UserForm({
       // Actually update the form value on success
       setValue("status", pendingStatus, { shouldValidate: true });
       addToast("Employee status updated successfully", "success");
+
+      // Refresh page to reload server data
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
     } catch (err) {
       addToast("Failed to update employee status", "error");
     } finally {
