@@ -24,7 +24,20 @@ const BaseUserSchema = z.object({
   emergencyContactName: z.string().optional(),
   emergencyContactNumber: validationRules.phone.optional().or(z.literal("")),
   emergencyContactRelation: z.string().optional(),
-  status: z.enum(["active", "inactive", "suspended"]).default("active"),
+  status: z
+    .enum([
+      "active",
+      "probation",
+      "contract",
+      "on_leave",
+      "suspended",
+      "inactive",
+      "resigned",
+      "terminated",
+      "retired",
+      "deceased",
+    ])
+    .default("active"),
 });
 
 /**

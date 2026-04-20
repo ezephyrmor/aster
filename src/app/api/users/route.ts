@@ -167,7 +167,7 @@ export const GET = withAuth(
 
 // POST /api/users - Create new user
 export const POST = withAuth(
-  withValidation(CreateUserSchema, async (data, _request, auth) => {
+  withValidation(CreateUserSchema, async (data, request, _context, auth) => {
     try {
       const {
         username,
@@ -228,8 +228,8 @@ export const POST = withAuth(
       const salt = generateSalt();
       const hashedPassword = await hashPassword(generatedPassword, salt);
 
-      // Get role ID - safe fallback for middleware parameter order
-      const companyId = auth?.user?.companyId || 1;
+      // Get role ID
+      const companyId = auth.user.companyId;
       const roleRecord = await prisma.role.findUnique({
         where: {
           companyId_name: {
@@ -311,41 +311,62 @@ export const POST = withAuth(
       }
 
       // Create user and employee profile in a transaction
-      const user = await prisma.user.create({
-        data: {
-          username: generatedUsername,
-          passwordHash: hashedPassword,
-          salt,
-          roleId: roleRecord.id,
-          employeeProfile: {
-            create: {
-              firstName,
-              lastName,
-              middleName,
-              contactNumber,
-              personalEmail,
-              address,
-              dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
-              positionId,
-              departmentId,
-              hireDate: hireDate ? new Date(hireDate) : null,
-              emergencyContactName,
-              emergencyContactNumber,
-              emergencyContactRelation,
-              statusId: statusId || 1, // Default to "active" status
+      const user = await prisma.$transaction(async (tx) => {
+        const newUser = await tx.user.create({
+          data: {
+            username: generatedUsername,
+            passwordHash: hashedPassword,
+            salt,
+            roleId: roleRecord.id,
+            employeeProfile: {
+              create: {
+                firstName,
+                lastName,
+                middleName,
+                contactNumber,
+                personalEmail,
+                address,
+                dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+                positionId,
+                departmentId,
+                hireDate: hireDate ? new Date(hireDate) : null,
+                emergencyContactName,
+                emergencyContactNumber,
+                emergencyContactRelation,
+                statusId: statusId || 1, // Default to "active" status
+              },
             },
           },
-        },
-        include: {
-          employeeProfile: {
-            include: {
-              position: true,
-              department: true,
-              status: true,
+          include: {
+            employeeProfile: {
+              include: {
+                position: true,
+                department: true,
+                status: true,
+              },
             },
+            role: true,
           },
-          role: true,
-        },
+        });
+
+        // Automatically create initial status history record
+        await tx.employeeStatusHistory.create({
+          data: {
+            userId: newUser.id,
+            statusId: statusId || 1,
+            effectiveDate: newUser.employeeProfile?.hireDate || new Date(),
+            reason: "Employee account created",
+            notes: "System generated record on account creation",
+            performedBy: parseInt(auth.user.id),
+            ipAddress:
+              request.headers.get("x-forwarded-for") ||
+              (request as any).ip ||
+              null,
+            userAgent: request.headers.get("user-agent") || null,
+          },
+        });
+
+        return newUser;
       });
 
       // Return generated credentials if they were auto-generated

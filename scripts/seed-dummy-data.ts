@@ -477,12 +477,18 @@ const middleNames = [
   "Pamela",
 ];
 
-// Status distribution
+// Status distribution - Realistic corporate employment demographics
 const statusWeights = [
-  { status: "active", weight: 0.75 },
-  { status: "on_leave", weight: 0.1 },
-  { status: "inactive", weight: 0.1 },
-  { status: "terminated", weight: 0.05 },
+  { status: "active", weight: 0.58 }, // Regular full-time employees
+  { status: "probation", weight: 0.12 }, // New hires < 90 days
+  { status: "contract", weight: 0.08 }, // Contractors & temps
+  { status: "on_leave", weight: 0.07 }, // Approved leave (vacation, sick, parental)
+  { status: "inactive", weight: 0.05 }, // LOA, furlough, temporary inactive
+  { status: "suspended", weight: 0.02 }, // Disciplinary / pending investigation
+  { status: "resigned", weight: 0.04 }, // Voluntary departures
+  { status: "terminated", weight: 0.02 }, // Involuntary termination
+  { status: "retired", weight: 0.015 }, // Retired employees
+  { status: "deceased", weight: 0.005 }, // Historical records
 ];
 
 function getRandomItem<T>(arr: T[]): T {
@@ -832,6 +838,110 @@ async function main() {
       console.log(
         `   ✅ Created user: ${username} (${userData.position} - ${userData.department})`,
       );
+
+      // ALWAYS create initial ACTIVE status record first (100% of employees)
+      const activeStatus =
+        statuses.find((s) => s.name === "active") || statuses[0];
+      const terminatedStatus =
+        statuses.find((s) => s.name === "terminated") || statuses[0];
+      await prisma.employeeStatusHistory.create({
+        data: {
+          userId: user.id,
+          statusId: activeStatus.id,
+          effectiveDate: new Date(userData.hireDate),
+          reason: "Initial hire date",
+          notes: "System generated record from seeding",
+          performedBy: adminUser.id,
+          ipAddress: "127.0.0.1",
+          userAgent: "Seed script",
+        },
+      });
+
+      // Add additional status changes if user is not currently active
+      if (userData.status !== "active") {
+        const statusChangeDate = new Date(userData.hireDate);
+        // Random date between 30-365 days after hire
+        statusChangeDate.setDate(
+          statusChangeDate.getDate() + Math.floor(Math.random() * 335) + 30,
+        );
+
+        await prisma.employeeStatusHistory.create({
+          data: {
+            userId: user.id,
+            statusId: status.id,
+            effectiveDate: statusChangeDate,
+            reason: (() => {
+              switch (userData.status) {
+                case "probation":
+                  return "New hire probationary period started";
+                case "contract":
+                  return "Contract employment initiated";
+                case "on_leave":
+                  return "Approved leave request";
+                case "suspended":
+                  return "Suspended pending disciplinary review";
+                case "inactive":
+                  return "Temporary leave of absence";
+                case "resigned":
+                  return "Voluntary resignation submitted";
+                case "terminated":
+                  return "Employment terminated";
+                case "retired":
+                  return "Official retirement from company";
+                case "deceased":
+                  return "Employee deceased - account maintained for records";
+                default:
+                  return "Account status updated";
+              }
+            })(),
+            notes: "System generated record from seeding",
+            performedBy: adminUser.id,
+            ipAddress: "127.0.0.1",
+            userAgent: "Seed script",
+          },
+        });
+      }
+
+      // Add random past termination history for 10% of currently active users
+      if (userData.status === "active" && Math.random() < 0.1) {
+        const terminationDate = new Date(userData.hireDate);
+        terminationDate.setDate(
+          terminationDate.getDate() + Math.floor(Math.random() * 200) + 60,
+        );
+
+        const rehireDate = new Date(terminationDate);
+        rehireDate.setDate(
+          rehireDate.getDate() + Math.floor(Math.random() * 150) + 30,
+        );
+
+        // Termination record
+        await prisma.employeeStatusHistory.create({
+          data: {
+            userId: user.id,
+            statusId: terminatedStatus.id,
+            effectiveDate: terminationDate,
+            reason: "Employment terminated",
+            notes: "Random generated past employment history",
+            performedBy: adminUser.id,
+            ipAddress: "127.0.0.1",
+            userAgent: "Seed script",
+          },
+        });
+
+        // Rehire record
+        await prisma.employeeStatusHistory.create({
+          data: {
+            userId: user.id,
+            statusId: activeStatus.id,
+            effectiveDate: rehireDate,
+            reason: "Employee rehired",
+            notes: "Random generated past employment history",
+            performedBy: adminUser.id,
+            ipAddress: "127.0.0.1",
+            userAgent: "Seed script",
+          },
+        });
+      }
     }
 
     // Create 10 dummy brands

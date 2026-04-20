@@ -53,8 +53,12 @@ model EmployeeStatusModel {
   id               Int               @id @default(autoincrement())
   name             String            @unique @db.VarChar(50)
   description      String?           @db.Text
+  color            String            @default("gray") @db.VarChar(20)
+  isActive         Boolean           @default(true) @map("is_active")
+  sortOrder        Int               @default(0) @map("sort_order")
   createdAt        DateTime          @default(now()) @map("created_at")
   employeeProfiles EmployeeProfile[]
+  statusHistory    EmployeeStatusHistory[]
 
   @@map("employee_statuses")
 }
@@ -146,6 +150,7 @@ model User {
   managedBrands   Brand[]          @relation("BrandManagers")
   brandManagerHistory BrandManagerHistory[] @relation("BrandManagerHistoryPerformedBy")
   managedBrandsHistory BrandManagerHistory[] @relation("BrandManagerHistoryUsers")
+  performedStatusHistory EmployeeStatusHistory[] @relation("EmployeeStatusHistoryPerformedBy")
 
   @@index([roleId], map: "users_role_id_fkey")
   @@index([companyId], map: "users_company_id_fkey")
@@ -175,11 +180,34 @@ model EmployeeProfile {
   position      Position?           @relation(fields: [positionId], references: [id])
   status        EmployeeStatusModel @relation(fields: [statusId], references: [id])
   user          User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  statusHistory EmployeeStatusHistory[]
 
   @@index([departmentId], map: "employee_profiles_department_id_fkey")
   @@index([positionId], map: "employee_profiles_position_id_fkey")
   @@index([statusId], map: "employee_profiles_status_id_fkey")
   @@map("employee_profiles")
+}
+
+model EmployeeStatusHistory {
+  id              Int                 @id @default(autoincrement())
+  userId          Int                 @map("user_id")
+  employeeProfile EmployeeProfile     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  statusId        Int                 @map("status_id")
+  status          EmployeeStatusModel @relation(fields: [statusId], references: [id])
+  effectiveDate   DateTime            @default(now()) @map("effective_date")
+  reason          String?             @db.Text
+  notes           String?             @db.Text
+  performedBy     Int                 @map("performed_by")
+  performedByUser User                @relation("EmployeeStatusHistoryPerformedBy", fields: [performedBy], references: [id])
+  createdAt       DateTime            @default(now()) @map("created_at")
+  ipAddress       String?             @map("ip_address") @db.VarChar(45)
+  userAgent       String?             @map("user_agent") @db.Text
+
+  @@index([userId], map: "employee_status_history_user_id_fkey")
+  @@index([statusId], map: "employee_status_history_status_id_fkey")
+  @@index([performedBy], map: "employee_status_history_performed_by_fkey")
+  @@index([effectiveDate], map: "employee_status_history_effective_date_idx")
+  @@map("employee_status_history")
 }
 
 model Brand {

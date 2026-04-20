@@ -4,6 +4,7 @@ import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import UserForm from "@/components/UserForm";
 import DashboardLayout from "@/components/DashboardLayout";
+import { format, formatDistanceToNow } from "date-fns";
 
 interface UserFormData {
   role: "admin" | "hr" | "employee";
@@ -33,6 +34,24 @@ export default function EditUserPage({
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [userData, setUserData] = useState<UserFormData | null>(null);
+  const [activeTab, setActiveTab] = useState<"profile" | "status">("profile");
+  const [statusHistory, setStatusHistory] = useState<any[]>([]);
+  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
+
+  const fetchStatusHistory = async () => {
+    try {
+      setIsHistoryLoading(true);
+      const response = await fetch(`/api/users/${resolvedParams.id}/status`);
+      if (response.ok) {
+        const result = await response.json();
+        setStatusHistory(result.data || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch status history:", err);
+    } finally {
+      setIsHistoryLoading(false);
+    }
+  };
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -83,6 +102,12 @@ export default function EditUserPage({
 
     fetchUser();
   }, [resolvedParams.id]);
+
+  useEffect(() => {
+    if (activeTab === "status") {
+      fetchStatusHistory();
+    }
+  }, [activeTab, resolvedParams.id]);
 
   const handleSubmit = async (data: UserFormData) => {
     try {
@@ -164,12 +189,127 @@ export default function EditUserPage({
         </div>
       )}
 
-      {userData && (
+      {/* Tabs */}
+      <div className="border-b border-zinc-200 dark:border-zinc-700 mb-6">
+        <div className="flex gap-4">
+          <button
+            onClick={() => setActiveTab("profile")}
+            className={`pb-3 px-1 font-medium text-sm transition-colors ${
+              activeTab === "profile"
+                ? "text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400"
+                : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300"
+            }`}
+          >
+            Profile
+          </button>
+          <button
+            onClick={() => setActiveTab("status")}
+            className={`pb-3 px-1 font-medium text-sm transition-colors ${
+              activeTab === "status"
+                ? "text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400"
+                : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300"
+            }`}
+          >
+            Status History
+          </button>
+        </div>
+      </div>
+
+      {activeTab === "profile" && userData && (
         <UserForm
           initialData={userData}
           onSubmit={handleSubmit}
           onCancel={() => router.back()}
+          userId={resolvedParams.id}
         />
+      )}
+
+      {activeTab === "status" && (
+        <div>
+          {isHistoryLoading ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+            </div>
+          ) : statusHistory.length === 0 ? (
+            <div className="text-center py-16">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+                <svg
+                  className="w-8 h-8 text-zinc-400 dark:text-zinc-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <p className="text-zinc-500 dark:text-zinc-400 font-medium">
+                No status history
+              </p>
+              <p className="text-sm text-zinc-400 dark:text-zinc-500 mt-1">
+                Status changes will appear here when they are made
+              </p>
+            </div>
+          ) : (
+            <div className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 divide-y divide-zinc-100 dark:divide-zinc-700 rounded-lg overflow-hidden">
+              {statusHistory.map((record, index) => {
+                const colors = {
+                  active: "bg-green-500",
+                  probation: "bg-blue-500",
+                  contract: "bg-purple-500",
+                  on_leave: "bg-yellow-500",
+                  suspended: "bg-orange-500",
+                  inactive: "bg-zinc-500",
+                  resigned: "bg-sky-500",
+                  terminated: "bg-red-500",
+                  retired: "bg-teal-500",
+                  deceased: "bg-zinc-600",
+                };
+                const color =
+                  colors[record.status.code as keyof typeof colors] ||
+                  "bg-zinc-500";
+                const isLatest = index === 0;
+                return (
+                  <div
+                    key={record.id}
+                    className={`px-3 py-2.5 flex items-center gap-3 ${isLatest ? "bg-green-50 dark:bg-green-900/10" : ""}`}
+                  >
+                    <div
+                      className={`w-2 h-2 rounded-full ${color} flex-shrink-0`}
+                    />
+                    <div className="w-32 flex-shrink-0">
+                      <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
+                        {record.status.name}
+                        {isLatest && (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                            CURRENT
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                    {record.reason && (
+                      <p className="text-xs text-zinc-600 dark:text-zinc-400 flex-1 truncate italic">
+                        "{record.reason}"
+                      </p>
+                    )}
+                    {!record.reason && <div className="flex-1" />}
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 flex-shrink-0 w-28 text-right">
+                      {record.performedByUser?.employeeProfile?.firstName}{" "}
+                      {record.performedByUser?.employeeProfile?.lastName}
+                    </p>
+                    <p className="text-xs text-zinc-600 dark:text-zinc-400 flex-shrink-0 w-24 text-right">
+                      {format(new Date(record.effectiveDate), "MMM dd, yyyy")}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       )}
     </DashboardLayout>
   );

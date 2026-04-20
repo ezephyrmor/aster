@@ -61,17 +61,99 @@ async function main() {
   // Seed employee statuses
   console.log("\n📋 Seeding employee statuses...");
   const statuses = [
-    { id: 1, name: "active", description: "Currently active employee" },
-    { id: 2, name: "on_leave", description: "On temporary leave" },
-    { id: 3, name: "terminated", description: "Employment terminated" },
-    { id: 4, name: "inactive", description: "Inactive employee" },
+    {
+      id: 1,
+      name: "active",
+      description: "Currently active employee",
+      color: "green",
+      sortOrder: 1,
+      isActive: true,
+    },
+    {
+      id: 2,
+      name: "probation",
+      description: "Probationary employee",
+      color: "amber",
+      sortOrder: 2,
+      isActive: true,
+    },
+    {
+      id: 3,
+      name: "contract",
+      description: "Contract / temporary worker",
+      color: "blue",
+      sortOrder: 3,
+      isActive: true,
+    },
+    {
+      id: 4,
+      name: "on_leave",
+      description: "On approved leave",
+      color: "indigo",
+      sortOrder: 4,
+      isActive: true,
+    },
+    {
+      id: 5,
+      name: "suspended",
+      description: "Suspended pending investigation",
+      color: "orange",
+      sortOrder: 5,
+      isActive: true,
+    },
+    {
+      id: 6,
+      name: "inactive",
+      description: "Temporarily inactive",
+      color: "slate",
+      sortOrder: 6,
+      isActive: true,
+    },
+    {
+      id: 7,
+      name: "resigned",
+      description: "Employee resigned",
+      color: "violet",
+      sortOrder: 7,
+      isActive: true,
+    },
+    {
+      id: 8,
+      name: "terminated",
+      description: "Employment terminated",
+      color: "red",
+      sortOrder: 8,
+      isActive: true,
+    },
+    {
+      id: 9,
+      name: "retired",
+      description: "Retired employee",
+      color: "emerald",
+      sortOrder: 9,
+      isActive: true,
+    },
+    {
+      id: 10,
+      name: "deceased",
+      description: "Deceased",
+      color: "rose",
+      sortOrder: 10,
+      isActive: true,
+    },
   ];
 
   for (const status of statuses) {
+    const { id, ...statusWithoutId } = status;
     await prisma.employeeStatusModel.upsert({
       where: { name: status.name },
-      update: {},
-      create: status,
+      update: {
+        description: status.description,
+        color: status.color,
+        sortOrder: status.sortOrder,
+        isActive: status.isActive,
+      },
+      create: statusWithoutId,
     });
   }
   console.log(`   ✅ Created ${statuses.length} employee statuses`);
