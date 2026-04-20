@@ -5,5 +5,6 @@ export { SubmitButton } from "./SubmitButton";
 export { Textarea } from "./Textarea";
 export { Select } from "./Select";
 export { RadioGroup } from "./RadioGroup";
+export { AsyncSelect } from "./AsyncSelect";
 export { useFormContext } from "./FormContext";
 export type { FormProps, FieldProps } from "./types";
