@@ -4,7 +4,7 @@ import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import UserForm from "@/components/UserForm";
 import DashboardLayout from "@/components/DashboardLayout";
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 
 interface UserFormData {
   role: "admin" | "hr" | "employee";
@@ -231,60 +231,82 @@ export default function EditUserPage({
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
             </div>
           ) : statusHistory.length === 0 ? (
-            <div className="text-center py-12 text-zinc-500 dark:text-zinc-400">
-              No status history records found for this employee.
+            <div className="text-center py-16">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+                <svg
+                  className="w-8 h-8 text-zinc-400 dark:text-zinc-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <p className="text-zinc-500 dark:text-zinc-400 font-medium">
+                No status history
+              </p>
+              <p className="text-sm text-zinc-400 dark:text-zinc-500 mt-1">
+                Status changes will appear here when they are made
+              </p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {statusHistory.map((record) => (
-                <div
-                  key={record.id}
-                  className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg p-4"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-zinc-100 dark:bg-zinc-700 flex items-center justify-center">
-                        <svg
-                          className="w-5 h-5 text-zinc-500 dark:text-zinc-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                          />
-                        </svg>
-                      </div>
-                      <div>
-                        <p className="font-medium text-zinc-900 dark:text-zinc-100">
-                          {record.status.name}
-                        </p>
-                        <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                          Changed by{" "}
-                          {record.performedByUser?.employeeProfile?.firstName}{" "}
-                          {record.performedByUser?.employeeProfile?.lastName}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm text-zinc-700 dark:text-zinc-300">
-                        {format(new Date(record.effectiveDate), "MMM dd, yyyy")}
-                      </p>
-                      <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                        {format(new Date(record.createdAt), "h:mm a")}
+            <div className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 divide-y divide-zinc-100 dark:divide-zinc-700 rounded-lg overflow-hidden">
+              {statusHistory.map((record, index) => {
+                const colors = {
+                  active: "bg-green-500",
+                  probation: "bg-blue-500",
+                  contract: "bg-purple-500",
+                  on_leave: "bg-yellow-500",
+                  suspended: "bg-orange-500",
+                  inactive: "bg-zinc-500",
+                  resigned: "bg-sky-500",
+                  terminated: "bg-red-500",
+                  retired: "bg-teal-500",
+                  deceased: "bg-zinc-600",
+                };
+                const color =
+                  colors[record.status.code as keyof typeof colors] ||
+                  "bg-zinc-500";
+                const isLatest = index === 0;
+                return (
+                  <div
+                    key={record.id}
+                    className={`px-3 py-2.5 flex items-center gap-3 ${isLatest ? "bg-green-50 dark:bg-green-900/10" : ""}`}
+                  >
+                    <div
+                      className={`w-2 h-2 rounded-full ${color} flex-shrink-0`}
+                    />
+                    <div className="w-32 flex-shrink-0">
+                      <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
+                        {record.status.name}
+                        {isLatest && (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                            CURRENT
+                          </span>
+                        )}
                       </p>
                     </div>
-                  </div>
-                  {record.reason && (
-                    <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-700/50 p-3 rounded">
-                      {record.reason}
+                    {record.reason && (
+                      <p className="text-xs text-zinc-600 dark:text-zinc-400 flex-1 truncate italic">
+                        "{record.reason}"
+                      </p>
+                    )}
+                    {!record.reason && <div className="flex-1" />}
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 flex-shrink-0 w-28 text-right">
+                      {record.performedByUser?.employeeProfile?.firstName}{" "}
+                      {record.performedByUser?.employeeProfile?.lastName}
                     </p>
-                  )}
-                </div>
-              ))}
+                    <p className="text-xs text-zinc-600 dark:text-zinc-400 flex-shrink-0 w-24 text-right">
+                      {format(new Date(record.effectiveDate), "MMM dd, yyyy")}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
