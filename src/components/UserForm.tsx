@@ -1,13 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useFormContext as useRhfFormContext } from "react-hook-form";
+import { Form } from "./form/Form";
+import { TextField } from "./form/TextField";
+import { Textarea } from "./form/Textarea";
+import { Select } from "./form/Select";
+import { AsyncSelect } from "./form/AsyncSelect";
+import { SubmitButton } from "./form/SubmitButton";
 import { CreateUserSchema, UpdateUserSchema } from "@/lib/validations";
 import type { z } from "zod";
-import LookupDropdown from "./LookupDropdown";
 import Modal from "./Modal";
 import { useToast } from "@/lib/toast";
+import { Button } from "./ui/button";
 
 type CreateUserData = z.infer<typeof CreateUserSchema>;
 type UpdateUserData = z.infer<typeof UpdateUserSchema>;
@@ -27,7 +32,6 @@ export default function UserForm({
   userId,
 }: UserFormProps) {
   const isEditMode = !!initialData;
-  const [isLoading, setIsLoading] = useState(false);
   const { addToast } = useToast();
 
   // Status change modal state
@@ -39,56 +43,6 @@ export default function UserForm({
   );
   const [isStatusUpdating, setIsStatusUpdating] = useState(false);
 
-  const {
-    register,
-    handleSubmit,
-    watch,
-    setValue,
-    getValues,
-    formState: { errors },
-  } = useForm<UserFormData>({
-    resolver: zodResolver(isEditMode ? UpdateUserSchema : CreateUserSchema),
-    defaultValues: {
-      username: initialData?.username || "",
-      password: "",
-      role: initialData?.role || "employee",
-      firstName: initialData?.firstName || "",
-      lastName: initialData?.lastName || "",
-      middleName: initialData?.middleName || "",
-      contactNumber: initialData?.contactNumber || "",
-      personalEmail: initialData?.personalEmail || "",
-      address: initialData?.address || "",
-      dateOfBirth: initialData?.dateOfBirth || "",
-      position: initialData?.position || "",
-      department: initialData?.department || "",
-      hireDate: initialData?.hireDate || "",
-      emergencyContactName: initialData?.emergencyContactName || "",
-      emergencyContactNumber: initialData?.emergencyContactNumber || "",
-      emergencyContactRelation: initialData?.emergencyContactRelation || "",
-      status: initialData?.status || "active",
-    },
-    mode: "onBlur",
-  });
-
-  // Watch for status changes
-  const currentStatus = watch("status");
-  const originalStatus = initialData?.status;
-
-  useEffect(() => {
-    if (
-      isEditMode &&
-      userId &&
-      currentStatus !== originalStatus &&
-      currentStatus
-    ) {
-      // Temporarily revert the value while modal is open
-      setValue("status", originalStatus || "active", { shouldValidate: false });
-      setPendingStatus(currentStatus);
-      setStatusModalOpen(true);
-    }
-  }, [currentStatus, originalStatus, isEditMode, userId, setValue]);
-
-  // Status string to ID mapping (matches seeded employee_status lookup table)
   const STATUS_ID_MAP: Record<string, number> = {
     active: 1,
     probation: 2,
@@ -125,8 +79,6 @@ export default function UserForm({
         throw new Error("Failed to update status");
       }
 
-      // Actually update the form value on success
-      setValue("status", pendingStatus, { shouldValidate: true });
       addToast("Employee status updated successfully", "success");
 
       // Refresh page to reload server data
@@ -137,7 +89,6 @@ export default function UserForm({
       addToast("Failed to update employee status", "error");
     } finally {
       setIsStatusUpdating(false);
-      // Close modal after loading state is cleared
       setTimeout(() => {
         setStatusModalOpen(false);
         setPendingStatus(null);
@@ -154,202 +105,119 @@ export default function UserForm({
     setEffectiveDate(new Date().toISOString().split("T")[0]);
   };
 
-  const firstName = watch("firstName");
-  const lastName = watch("lastName");
-
-  // Auto-generate username preview
-  const generateUsernamePreview = () => {
-    if (!firstName || !lastName) return "";
-    const lastNameInitial = lastName.charAt(0).toLowerCase();
-    const firstNameLower = firstName.toLowerCase();
-    return `${lastNameInitial}${firstNameLower}`;
+  const defaultValues = {
+    username: initialData?.username || "",
+    password: "",
+    role: initialData?.role || "employee",
+    firstName: initialData?.firstName || "",
+    lastName: initialData?.lastName || "",
+    middleName: initialData?.middleName || "",
+    contactNumber: initialData?.contactNumber || "",
+    personalEmail: initialData?.personalEmail || "",
+    address: initialData?.address || "",
+    dateOfBirth: initialData?.dateOfBirth || "",
+    position: initialData?.position || "",
+    department: initialData?.department || "",
+    hireDate: initialData?.hireDate || "",
+    emergencyContactName: initialData?.emergencyContactName || "",
+    emergencyContactNumber: initialData?.emergencyContactNumber || "",
+    emergencyContactRelation: initialData?.emergencyContactRelation || "",
+    status: initialData?.status || "active",
   };
 
-  const onFormSubmit = async (data: UserFormData) => {
-    setIsLoading(true);
-    try {
-      const submitData = { ...data };
+  const handleFormSubmit = async (data: UserFormData) => {
+    const submitData = { ...data };
 
-      // For new users, let API auto-generate credentials
-      if (!isEditMode) {
-        delete (submitData as any).username;
-        delete (submitData as any).password;
-      }
-
-      await onSubmit(submitData);
-    } finally {
-      setIsLoading(false);
+    // For new users, let API auto-generate credentials
+    if (!isEditMode) {
+      delete (submitData as any).username;
+      delete (submitData as any).password;
     }
+
+    await onSubmit(submitData);
   };
 
-  // Error message helper
-  const fieldError = (fieldName: keyof UserFormData) => {
-    return errors[fieldName]?.message as string | undefined;
-  };
+  // Watch for status changes
+  function StatusChangeWatcher() {
+    const { watch, setValue } = useRhfFormContext<UserFormData>();
+    const currentStatus = watch("status");
+    const originalStatus = initialData?.status;
 
-  // Input class helper
-  const inputClass = (fieldName: keyof UserFormData) => {
-    return `mt-1 block w-full rounded-md border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:text-zinc-100 ${
-      errors[fieldName]
-        ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-        : ""
-    }`;
-  };
+    useEffect(() => {
+      if (
+        isEditMode &&
+        userId &&
+        currentStatus !== originalStatus &&
+        currentStatus
+      ) {
+        // Temporarily revert the value while modal is open
+        setValue("status", originalStatus || "active", {
+          shouldValidate: false,
+        });
+        setPendingStatus(currentStatus);
+        setStatusModalOpen(true);
+      }
+    }, [currentStatus, originalStatus, isEditMode, userId, setValue]);
+
+    return null;
+  }
 
   return (
     <>
-      <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-8">
+      <Form
+        schema={isEditMode ? UpdateUserSchema : CreateUserSchema}
+        defaultValues={defaultValues}
+        onSubmit={handleFormSubmit}
+        className="space-y-8"
+      >
+        <StatusChangeWatcher />
+
         {/* Personal Information */}
         <div className="bg-white dark:bg-zinc-800 px-6 py-5 shadow sm:rounded-lg sm:px-6">
           <h3 className="text-lg font-medium leading-6 text-gray-900 dark:text-zinc-100 mb-4">
             Personal Information
           </h3>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-            <div>
-              <label
-                htmlFor="firstName"
-                className="block text-sm font-medium text-gray-700 dark:text-zinc-300"
-              >
-                First Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                id="firstName"
-                {...register("firstName")}
-                className={inputClass("firstName")}
-                placeholder="John"
-              />
-              {fieldError("firstName") && (
-                <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                  {fieldError("firstName")}
-                </p>
-              )}
-            </div>
+            <TextField
+              name="firstName"
+              label="First Name"
+              placeholder="John"
+              required
+            />
 
-            <div>
-              <label
-                htmlFor="lastName"
-                className="block text-sm font-medium text-gray-700 dark:text-zinc-300"
-              >
-                Last Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                id="lastName"
-                {...register("lastName")}
-                className={inputClass("lastName")}
-                placeholder="Doe"
-              />
-              {fieldError("lastName") && (
-                <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                  {fieldError("lastName")}
-                </p>
-              )}
-            </div>
+            <TextField
+              name="lastName"
+              label="Last Name"
+              placeholder="Doe"
+              required
+            />
 
-            <div>
-              <label
-                htmlFor="middleName"
-                className="block text-sm font-medium text-gray-700 dark:text-zinc-300"
-              >
-                Middle Name
-              </label>
-              <input
-                type="text"
-                id="middleName"
-                {...register("middleName")}
-                className={inputClass("middleName")}
-                placeholder="M."
-              />
-              {fieldError("middleName") && (
-                <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                  {fieldError("middleName")}
-                </p>
-              )}
-            </div>
+            <TextField name="middleName" label="Middle Name" placeholder="M." />
 
-            <div>
-              <label
-                htmlFor="dateOfBirth"
-                className="block text-sm font-medium text-gray-700 dark:text-zinc-300"
-              >
-                Date of Birth
-              </label>
-              <input
-                type="date"
-                id="dateOfBirth"
-                {...register("dateOfBirth")}
-                className={inputClass("dateOfBirth")}
-              />
-              {fieldError("dateOfBirth") && (
-                <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                  {fieldError("dateOfBirth")}
-                </p>
-              )}
-            </div>
+            <TextField name="dateOfBirth" label="Date of Birth" type="date" />
 
-            <div className="sm:col-span-2">
-              <label
-                htmlFor="contactNumber"
-                className="block text-sm font-medium text-gray-700 dark:text-zinc-300"
-              >
-                Contact Number
-              </label>
-              <input
-                type="tel"
-                id="contactNumber"
-                {...register("contactNumber")}
-                className={inputClass("contactNumber")}
-                placeholder="+1 (555) 123-4567"
-              />
-              {fieldError("contactNumber") && (
-                <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                  {fieldError("contactNumber")}
-                </p>
-              )}
-            </div>
+            <TextField
+              name="contactNumber"
+              label="Contact Number"
+              placeholder="+1 (555) 123-4567"
+              className="sm:col-span-2"
+            />
 
-            <div className="sm:col-span-2">
-              <label
-                htmlFor="personalEmail"
-                className="block text-sm font-medium text-gray-700 dark:text-zinc-300"
-              >
-                Personal Email
-              </label>
-              <input
-                type="email"
-                id="personalEmail"
-                {...register("personalEmail")}
-                className={inputClass("personalEmail")}
-                placeholder="john.doe@example.com"
-              />
-              {fieldError("personalEmail") && (
-                <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                  {fieldError("personalEmail")}
-                </p>
-              )}
-            </div>
+            <TextField
+              name="personalEmail"
+              label="Personal Email"
+              type="email"
+              placeholder="john.doe@example.com"
+              className="sm:col-span-2"
+            />
 
-            <div className="sm:col-span-2">
-              <label
-                htmlFor="address"
-                className="block text-sm font-medium text-gray-700 dark:text-zinc-300"
-              >
-                Address
-              </label>
-              <textarea
-                id="address"
-                rows={2}
-                {...register("address")}
-                className={inputClass("address")}
-                placeholder="123 Main St, City, State, ZIP"
-              />
-              {fieldError("address") && (
-                <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                  {fieldError("address")}
-                </p>
-              )}
-            </div>
+            <Textarea
+              name="address"
+              label="Address"
+              placeholder="123 Main St, City, State, ZIP"
+              rows={2}
+              className="sm:col-span-2"
+            />
           </div>
         </div>
 
@@ -359,86 +227,46 @@ export default function UserForm({
             Employment Information
           </h3>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-            <LookupDropdown
-              endpoint="/api/roles"
+            <AsyncSelect
               name="role"
               label="Role"
-              register={register}
-              error={fieldError("role")}
-              defaultValue={initialData?.role || ""}
+              endpoint="/api/roles"
               placeholder="Select role"
-              required={true}
+              required
             />
 
-            <LookupDropdown
-              endpoint="/api/positions"
+            <AsyncSelect
               name="position"
               label="Position"
-              register={register}
-              error={fieldError("position")}
-              defaultValue={initialData?.position || ""}
+              endpoint="/api/positions"
               placeholder="Select position"
             />
 
-            <LookupDropdown
-              endpoint="/api/departments"
+            <AsyncSelect
               name="department"
               label="Department"
-              register={register}
-              error={fieldError("department")}
-              defaultValue={initialData?.department || ""}
+              endpoint="/api/departments"
               placeholder="Select department"
             />
 
-            <div>
-              <label
-                htmlFor="hireDate"
-                className="block text-sm font-medium text-gray-700 dark:text-zinc-300"
-              >
-                Hire Date
-              </label>
-              <input
-                type="date"
-                id="hireDate"
-                {...register("hireDate")}
-                className={inputClass("hireDate")}
-              />
-              {fieldError("hireDate") && (
-                <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                  {fieldError("hireDate")}
-                </p>
-              )}
-            </div>
+            <TextField name="hireDate" label="Hire Date" type="date" />
 
-            <div>
-              <label
-                htmlFor="status"
-                className="block text-sm font-medium text-gray-700 dark:text-zinc-300"
-              >
-                Employee Status
-              </label>
-              <select
-                id="status"
-                {...register("status")}
-                className={inputClass("status")}
-              >
-                <option value="active">Active</option>
-                <option value="probation">Probation</option>
-                <option value="contract">Contract</option>
-                <option value="on_leave">On Leave</option>
-                <option value="suspended">Suspended</option>
-                <option value="inactive">Inactive</option>
-                <option value="resigned">Resigned</option>
-                <option value="terminated">Terminated</option>
-                <option value="retired">Retired</option>
-                <option value="deceased">Deceased</option>
-              </select>
-              {fieldError("status") && (
-                <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                  {fieldError("status")}
-                </p>
-              )}
-            </div>
+            <Select
+              name="status"
+              label="Employee Status"
+              options={[
+                { value: "active", label: "Active" },
+                { value: "probation", label: "Probation" },
+                { value: "contract", label: "Contract" },
+                { value: "on_leave", label: "On Leave" },
+                { value: "suspended", label: "Suspended" },
+                { value: "inactive", label: "Inactive" },
+                { value: "resigned", label: "Resigned" },
+                { value: "terminated", label: "Terminated" },
+                { value: "retired", label: "Retired" },
+                { value: "deceased", label: "Deceased" },
+              ]}
+            />
           </div>
         </div>
 
@@ -448,89 +276,35 @@ export default function UserForm({
             Emergency Contact
           </h3>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-            <div>
-              <label
-                htmlFor="emergencyContactName"
-                className="block text-sm font-medium text-gray-700 dark:text-zinc-300"
-              >
-                Contact Name
-              </label>
-              <input
-                type="text"
-                id="emergencyContactName"
-                {...register("emergencyContactName")}
-                className={inputClass("emergencyContactName")}
-                placeholder="Jane Doe"
-              />
-              {fieldError("emergencyContactName") && (
-                <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                  {fieldError("emergencyContactName")}
-                </p>
-              )}
-            </div>
+            <TextField
+              name="emergencyContactName"
+              label="Contact Name"
+              placeholder="Jane Doe"
+            />
 
-            <div>
-              <label
-                htmlFor="emergencyContactRelation"
-                className="block text-sm font-medium text-gray-700 dark:text-zinc-300"
-              >
-                Relation
-              </label>
-              <input
-                type="text"
-                id="emergencyContactRelation"
-                {...register("emergencyContactRelation")}
-                className={inputClass("emergencyContactRelation")}
-                placeholder="Spouse"
-              />
-              {fieldError("emergencyContactRelation") && (
-                <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                  {fieldError("emergencyContactRelation")}
-                </p>
-              )}
-            </div>
+            <TextField
+              name="emergencyContactRelation"
+              label="Relation"
+              placeholder="Spouse"
+            />
 
-            <div>
-              <label
-                htmlFor="emergencyContactNumber"
-                className="block text-sm font-medium text-gray-700 dark:text-zinc-300"
-              >
-                Contact Number
-              </label>
-              <input
-                type="tel"
-                id="emergencyContactNumber"
-                {...register("emergencyContactNumber")}
-                className={inputClass("emergencyContactNumber")}
-                placeholder="+1 (555) 987-6543"
-              />
-              {fieldError("emergencyContactNumber") && (
-                <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                  {fieldError("emergencyContactNumber")}
-                </p>
-              )}
-            </div>
+            <TextField
+              name="emergencyContactNumber"
+              label="Contact Number"
+              placeholder="+1 (555) 987-6543"
+              className="sm:col-span-2"
+            />
           </div>
         </div>
 
         {/* Form Actions */}
-        <div className="flex justify-end space-x-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="rounded-md border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-4 py-2 text-sm font-medium text-gray-700 dark:text-zinc-300 shadow-sm hover:bg-gray-50 dark:hover:bg-zinc-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-zinc-900"
-          >
+        <div className="flex justify-end gap-3">
+          <Button type="button" variant="secondary" onClick={onCancel}>
             Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-zinc-900 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isLoading ? "Saving..." : "Save"}
-          </button>
+          </Button>
+          <SubmitButton>Save</SubmitButton>
         </div>
-      </form>
+      </Form>
 
       {/* Status Change Confirmation Modal */}
       <Modal
@@ -543,22 +317,21 @@ export default function UserForm({
         isLoading={isStatusUpdating}
         footer={
           <div className="flex justify-end gap-3 w-full">
-            <button
+            <Button
               type="button"
+              variant="secondary"
               onClick={handleStatusCancel}
               disabled={isStatusUpdating}
-              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 border border-gray-300 dark:border-zinc-600 rounded-md hover:bg-gray-50 dark:hover:bg-zinc-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-zinc-900 disabled:opacity-50"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               onClick={handleStatusConfirm}
               disabled={isStatusUpdating || !statusReason.trim()}
-              className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-zinc-900 disabled:opacity-50"
             >
               Confirm Change
-            </button>
+            </Button>
           </div>
         }
       >
@@ -566,7 +339,7 @@ export default function UserForm({
           <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-md">
             <p className="text-sm text-amber-800 dark:text-amber-200">
               You are about to change employee status from{" "}
-              <strong>{originalStatus}</strong> to{" "}
+              <strong>{initialData?.status}</strong> to{" "}
               <strong>{pendingStatus}</strong>.
             </p>
           </div>
