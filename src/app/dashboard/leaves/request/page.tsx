@@ -1,8 +1,32 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { z } from "zod";
 import { useAuth } from "@/lib/auth";
 import DashboardLayout from "@/components/DashboardLayout";
+import {
+  Form,
+  AsyncSelect,
+  Select,
+  TextField,
+  Textarea,
+  SubmitButton,
+} from "@/components/form";
+
+const LeaveRequestSchema = z
+  .object({
+    leaveTypeId: z.string().min(1, "Please select a leave type"),
+    startDate: z.string().min(1, "Start date is required"),
+    endDate: z.string().min(1, "End date is required"),
+    reason: z.string().optional(),
+    isPaid: z.enum(["paid", "unpaid"]).default("paid"),
+  })
+  .refine((data) => new Date(data.endDate) >= new Date(data.startDate), {
+    message: "End date must be after start date",
+    path: ["endDate"],
+  });
+
+type LeaveRequestFormData = z.infer<typeof LeaveRequestSchema>;
 
 interface LeaveType {
   id: number;
@@ -46,15 +70,6 @@ export default function LeaveRequestPage() {
   const [myRequests, setMyRequests] = useState<LeaveRequest[]>([]);
   const [credits, setCredits] = useState<LeaveCredit | null>(null);
   const [loading, setLoading] = useState(true);
-
-  // Form state
-  const [leaveTypeId, setLeaveTypeId] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [reason, setReason] = useState("");
-  const [isPaid, setIsPaid] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
   useEffect(() => {
@@ -71,9 +86,6 @@ export default function LeaveRequestPage() {
       if (response.ok) {
         const data = await response.json();
         setLeaveTypes(data);
-        if (data.length > 0) {
-          setLeaveTypeId(data[0].id.toString());
-        }
       }
     } catch (error) {
       console.error("Error fetching leave types:", error);
@@ -111,22 +123,8 @@ export default function LeaveRequestPage() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
+  const handleSubmit = async (values: LeaveRequestFormData) => {
     setSuccess("");
-
-    if (!leaveTypeId || !startDate || !endDate) {
-      setError("Please fill in all required fields");
-      return;
-    }
-
-    if (new Date(endDate) < new Date(startDate)) {
-      setError("End date must be after start date");
-      return;
-    }
-
-    setSubmitting(true);
 
     try {
       const response = await fetch("/api/leaves/requests", {
@@ -134,11 +132,11 @@ export default function LeaveRequestPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId: user?.id,
-          leaveTypeId: parseInt(leaveTypeId),
-          startDate,
-          endDate,
-          reason,
-          isPaid,
+          leaveTypeId: parseInt(values.leaveTypeId),
+          startDate: values.startDate,
+          endDate: values.endDate,
+          reason: values.reason,
+          isPaid: values.isPaid === "paid",
         }),
       });
 
@@ -146,25 +144,16 @@ export default function LeaveRequestPage() {
 
       if (response.ok) {
         setSuccess("Leave request submitted successfully!");
-        // Reset form
-        setLeaveTypeId(
-          leaveTypes.length > 0 ? leaveTypes[0].id.toString() : "",
-        );
-        setStartDate("");
-        setEndDate("");
-        setReason("");
         fetchMyRequests();
         fetchCredits();
         // Clear success message after 5 seconds
         setTimeout(() => setSuccess(""), 5000);
       } else {
-        setError(data.error || "Failed to submit leave request");
+        throw new Error(data.error || "Failed to submit leave request");
       }
     } catch (error) {
       console.error("Error submitting leave request:", error);
-      setError("Failed to submit leave request");
-    } finally {
-      setSubmitting(false);
+      throw error;
     }
   };
 
@@ -221,6 +210,11 @@ export default function LeaveRequestPage() {
     );
   }
 
+  const paymentTypeOptions = [
+    { value: "paid", label: "Paid (uses leave credits)" },
+    { value: "unpaid", label: "Unpaid (no credits used)" },
+  ];
+
   return (
     <DashboardLayout
       title="Leave Request"
@@ -249,98 +243,63 @@ export default function LeaveRequestPage() {
               Submit a Leave Request
             </h2>
 
-            {error && (
-              <div className="mb-4 p-4 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg">
-                {error}
-              </div>
-            )}
-
             {success && (
               <div className="mb-4 p-4 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg">
                 {success}
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-                  Leave Type
-                </label>
-                <select
-                  value={leaveTypeId}
-                  onChange={(e) => setLeaveTypeId(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  {leaveTypes.map((type) => (
-                    <option key={type.id} value={type.id}>
-                      {type.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            <Form<LeaveRequestFormData>
+              schema={LeaveRequestSchema}
+              defaultValues={{
+                leaveTypeId: "",
+                startDate: "",
+                endDate: "",
+                reason: "",
+                isPaid: "paid",
+              }}
+              onSubmit={handleSubmit}
+            >
+              <AsyncSelect
+                name="leaveTypeId"
+                label="Leave Type"
+                endpoint="/api/leaves/types"
+                placeholder="Select leave type"
+                required
+              />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-                    Start Date
-                  </label>
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    min={new Date().toISOString().split("T")[0]}
-                    className="w-full px-4 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-                    End Date
-                  </label>
-                  <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    min={startDate || new Date().toISOString().split("T")[0]}
-                    className="w-full px-4 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-                  Reason (Optional)
-                </label>
-                <textarea
-                  value={reason}
-                  onChange={(e) => setReason(e.target.value)}
-                  rows={3}
-                  placeholder="Provide a reason for your leave request..."
-                  className="w-full px-4 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                <TextField
+                  name="startDate"
+                  label="Start Date"
+                  type="date"
+                  min={new Date().toISOString().split("T")[0]}
+                />
+                <TextField
+                  name="endDate"
+                  label="End Date"
+                  type="date"
+                  min={new Date().toISOString().split("T")[0]}
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-                  Payment Type
-                </label>
-                <select
-                  value={isPaid ? "paid" : "unpaid"}
-                  onChange={(e) => setIsPaid(e.target.value === "paid")}
-                  className="w-full px-4 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="paid">Paid (uses leave credits)</option>
-                  <option value="unpaid">Unpaid (no credits used)</option>
-                </select>
-              </div>
+              <Textarea
+                name="reason"
+                label="Reason (Optional)"
+                placeholder="Provide a reason for your leave request..."
+                rows={3}
+              />
 
-              <button
-                type="submit"
-                disabled={submitting}
-                className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {submitting ? "Submitting..." : "Submit Leave Request"}
-              </button>
-            </form>
+              <Select
+                name="isPaid"
+                label="Payment Type"
+                options={paymentTypeOptions}
+              />
+
+              <SubmitButton className="w-full">
+                Submit Leave Request
+              </SubmitButton>
+            </Form>
           </div>
         </div>
 

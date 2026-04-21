@@ -12,6 +12,7 @@ export function Form<T extends Record<string, any>>({
   defaultValues,
   values,
   disabled = false,
+  resetOnSubmit = true,
   onSubmit,
   children,
   className,
@@ -30,6 +31,9 @@ export function Form<T extends Record<string, any>>({
     setIsSubmitting(true);
     try {
       await onSubmit(values);
+      if (resetOnSubmit) {
+        form.reset();
+      }
     } finally {
       setIsSubmitting(false);
     }

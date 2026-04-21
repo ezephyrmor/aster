@@ -10,6 +10,8 @@ interface TextFieldProps extends FieldProps {
   type?: "text" | "email" | "password" | "tel" | "date" | "number";
   placeholder?: string;
   className?: string;
+  min?: string;
+  max?: string;
 }
 
 export function TextField({
@@ -21,6 +23,8 @@ export function TextField({
   placeholder,
   rules,
   className,
+  min,
+  max,
 }: TextFieldProps) {
   const id = useId();
   const errorId = `${id}-error`;
@@ -51,6 +55,8 @@ export function TextField({
         type={type}
         placeholder={placeholder}
         disabled={disabled}
+        min={min}
+        max={max}
         aria-invalid={hasError}
         aria-describedby={hasError ? errorId : undefined}
         {...register(name as any, rules)}

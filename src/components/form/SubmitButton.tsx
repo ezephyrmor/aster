@@ -2,17 +2,34 @@
 
 import { useFormContext } from "./FormContext";
 import { Button } from "@/components/ui/button";
+import type { VariantProps } from "class-variance-authority";
+import type { buttonVariants } from "@/components/ui/button";
 
-interface SubmitButtonProps {
+type ButtonVariantProps = VariantProps<typeof buttonVariants>;
+
+interface SubmitButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>, ButtonVariantProps {
   children: React.ReactNode;
-  className?: string;
 }
 
-export function SubmitButton({ children, className }: SubmitButtonProps) {
+export function SubmitButton({
+  children,
+  variant = "default",
+  size,
+  className,
+  ...props
+}: SubmitButtonProps) {
   const { isSubmitting } = useFormContext();
 
   return (
-    <Button type="submit" disabled={isSubmitting} className={className}>
+    <Button
+      type="submit"
+      disabled={isSubmitting}
+      variant={variant}
+      size={size}
+      className={className}
+      {...props}
+    >
       {isSubmitting ? (
         <div className="flex items-center gap-2">
           <svg

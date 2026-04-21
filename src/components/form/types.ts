@@ -24,6 +24,7 @@ export interface FormProps<T extends FieldValues = FieldValues> {
   defaultValues?: T;
   values?: T;
   disabled?: boolean;
+  resetOnSubmit?: boolean;
   onSubmit: (values: T) => Promise<void> | void;
   children: React.ReactNode;
   className?: string;
