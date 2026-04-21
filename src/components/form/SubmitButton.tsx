@@ -14,7 +14,7 @@ interface SubmitButtonProps
 
 export function SubmitButton({
   children,
-  variant = "default",
+  variant = "blue",
   size,
   className,
   ...props
