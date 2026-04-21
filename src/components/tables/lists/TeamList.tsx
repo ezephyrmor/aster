@@ -3,8 +3,8 @@
 import {
   ServerSideDataTable,
   FilterConfig,
-} from "@/components/ServerSideDataTable";
-import { columns, Team } from "@/components/TeamColumns";
+} from "@/components/tables/ServerSideDataTable";
+import { columns, Team } from "@/components/tables/columns/TeamColumns";
 import { useServerSideDataTable } from "@/hooks/useServerSideDataTable";
 
 interface TeamListProps {

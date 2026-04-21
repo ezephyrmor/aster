@@ -3,8 +3,8 @@
 import {
   ServerSideDataTable,
   FilterConfig,
-} from "@/components/ServerSideDataTable";
-import { columns, Leave } from "@/components/LeaveColumns";
+} from "@/components/tables/ServerSideDataTable";
+import { columns, Leave } from "@/components/tables/columns/LeaveColumns";
 import { useServerSideDataTable } from "@/hooks/useServerSideDataTable";
 
 interface LeaveListProps {

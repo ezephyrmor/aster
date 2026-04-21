@@ -2,8 +2,8 @@
 
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
-import UserForm from "@/components/UserForm";
-import DashboardLayout from "@/components/DashboardLayout";
+import UserForm from "@/components/forms/UserForm";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 import { format, formatDistanceToNow } from "date-fns";
 
 interface UserFormData {

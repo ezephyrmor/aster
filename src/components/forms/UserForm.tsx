@@ -2,17 +2,17 @@
 
 import { useState, useEffect } from "react";
 import { useFormContext as useRhfFormContext } from "react-hook-form";
-import { Form } from "./form/Form";
-import { TextField } from "./form/TextField";
-import { Textarea } from "./form/Textarea";
-import { Select } from "./form/Select";
-import { AsyncSelect } from "./form/AsyncSelect";
-import { SubmitButton } from "./form/SubmitButton";
+import { Form } from "../form/Form";
+import { TextField } from "../form/TextField";
+import { Textarea } from "../form/Textarea";
+import { Select } from "../form/Select";
+import { AsyncSelect } from "../form/AsyncSelect";
+import { SubmitButton } from "../form/SubmitButton";
 import { CreateUserSchema, UpdateUserSchema } from "@/lib/validations";
 import type { z } from "zod";
-import Modal from "./Modal";
+import Modal from "../modals/Modal";
 import { useToast } from "@/lib/toast";
-import { Button } from "./ui/button";
+import { Button } from "../ui/button";
 
 type CreateUserData = z.infer<typeof CreateUserSchema>;
 type UpdateUserData = z.infer<typeof UpdateUserSchema>;

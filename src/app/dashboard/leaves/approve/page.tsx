@@ -1,5 +1,5 @@
-import DashboardLayout from "@/components/DashboardLayout";
-import LeaveList from "@/components/LeaveList";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import LeaveList from "@/components/tables/lists/LeaveList";
 
 export default function LeaveApprovePage() {
   return (

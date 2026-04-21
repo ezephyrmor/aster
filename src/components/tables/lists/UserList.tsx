@@ -1,23 +1,20 @@
 "use client";
 
-import { useState } from "react";
 import {
   ServerSideDataTable,
   FilterConfig,
-} from "@/components/ServerSideDataTable";
-import { columns, Brand } from "@/components/BrandColumns";
+} from "@/components/tables/ServerSideDataTable";
+import { columns, User } from "@/components/tables/columns/UserColumns";
 import { useServerSideDataTable } from "@/hooks/useServerSideDataTable";
 
-interface BrandListProps {
-  /** Optional callback when Create Brand button is clicked */
+interface UserListProps {
+  /** Optional callback when Add User button is clicked */
   onAddClick?: () => void;
 }
 
-export default function BrandList({ onAddClick }: BrandListProps) {
-  const [industries, setIndustries] = useState<string[]>([]);
-
+export default function UserList({ onAddClick }: UserListProps) {
   const {
-    data: brands,
+    data: users,
     loading,
     error,
     pagination,
@@ -29,42 +26,44 @@ export default function BrandList({ onAddClick }: BrandListProps) {
     setSearch,
     extraParams,
     setExtraParams,
-  } = useServerSideDataTable<Brand>({
-    apiEndpoint: "/api/brands",
+  } = useServerSideDataTable<User>({
+    apiEndpoint: "/api/users",
     defaultSortBy: "createdAt",
     defaultSortOrder: "desc",
-    onDataFetched: (data) => {
-      setIndustries(data.industries || []);
-    },
   });
 
   // Build filters configuration
   const filters: FilterConfig[] = [
+    {
+      id: "role",
+      label: "Role",
+      type: "select",
+      options: [
+        { value: "admin", label: "Admin" },
+        { value: "hr", label: "HR" },
+        { value: "employee", label: "Employee" },
+      ],
+      value: extraParams.role || "",
+      onChange: (value: string) =>
+        setExtraParams((prev) => ({ ...prev, role: value })),
+    },
     {
       id: "status",
       label: "Status",
       type: "select",
       options: [
         { value: "active", label: "Active" },
+        { value: "on_leave", label: "On Leave" },
+        { value: "terminated", label: "Terminated" },
         { value: "inactive", label: "Inactive" },
-        { value: "archived", label: "Archived" },
       ],
       value: extraParams.status || "",
       onChange: (value: string) =>
         setExtraParams((prev) => ({ ...prev, status: value })),
     },
-    {
-      id: "industry",
-      label: "Industry",
-      type: "select",
-      options: industries.map((ind: string) => ({ value: ind, label: ind })),
-      value: extraParams.industry || "",
-      onChange: (value: string) =>
-        setExtraParams((prev) => ({ ...prev, industry: value })),
-    },
   ];
 
-  // Create the Create Brand button if onAddClick is provided
+  // Create the Add User button if onAddClick is provided
   const searchAction = onAddClick ? (
     <button
       onClick={onAddClick}
@@ -83,19 +82,19 @@ export default function BrandList({ onAddClick }: BrandListProps) {
           d="M12 4.5v15m7.5-7.5h-15"
         />
       </svg>
-      Create Brand
+      Add User
     </button>
   ) : null;
 
   return (
     <ServerSideDataTable
       columns={columns}
-      data={brands}
+      data={users}
       totalCount={pagination.total}
       isLoading={loading}
       error={error}
       searchKey="name"
-      searchPlaceholder="Search by brand name..."
+      searchPlaceholder="Search by employee name..."
       searchValue={search}
       onSearchChange={setSearch}
       searchAction={searchAction}

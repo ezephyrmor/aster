@@ -4,12 +4,12 @@ import { useState, useEffect, useCallback } from "react";
 import {
   ServerSideDataTable,
   FilterConfig,
-} from "@/components/ServerSideDataTable";
+} from "@/components/tables/ServerSideDataTable";
 import {
   useScheduleColumns,
   WorkSchedule,
   ScheduleAction,
-} from "@/components/ScheduleColumns";
+} from "@/components/tables/columns/ScheduleColumns";
 import { useServerSideDataTable } from "@/hooks/useServerSideDataTable";
 
 interface Employee {

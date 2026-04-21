@@ -2,8 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import UserForm from "@/components/UserForm";
-import DashboardLayout from "@/components/DashboardLayout";
+import UserForm from "@/components/forms/UserForm";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 
 interface UserFormData {
   username?: string;

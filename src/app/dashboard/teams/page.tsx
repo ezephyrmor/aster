@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import TeamList from "@/components/TeamList";
-import DashboardLayout from "@/components/DashboardLayout";
+import TeamList from "@/components/tables/lists/TeamList";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 
 export default function TeamsPage() {
   const router = useRouter();

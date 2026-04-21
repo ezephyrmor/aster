@@ -1,16 +1,16 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import DashboardLayout from "@/components/DashboardLayout";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 import {
   ServerSideDataTable,
   FilterConfig,
-} from "@/components/ServerSideDataTable";
+} from "@/components/tables/ServerSideDataTable";
 import {
   useScheduleColumns,
   WorkSchedule,
   ScheduleAction,
-} from "@/components/ScheduleColumns";
+} from "@/components/tables/columns/ScheduleColumns";
 import { PaginationState, SortingState } from "@tanstack/react-table";
 
 interface Employee {

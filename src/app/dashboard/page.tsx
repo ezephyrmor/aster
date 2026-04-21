@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/lib/toast";
-import DashboardLayout from "@/components/DashboardLayout";
-import CalendarWidget from "@/components/CalendarWidget";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import CalendarWidget from "@/components/widgets/CalendarWidget";
 
 export default function DashboardPage() {
   const { user, isLoading } = useAuth();
