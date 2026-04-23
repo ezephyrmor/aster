@@ -75,7 +75,7 @@ export async function PUT(
     const { id } = await params;
     const teamId = parseInt(id);
     const body = await request.json();
-    const { name, description, brandId, performedBy } = body;
+    const { name, description, brandId, managerId, status, performedBy } = body;
 
     if (isNaN(teamId)) {
       return NextResponse.json({ error: "Invalid team ID" }, { status: 400 });
@@ -135,6 +135,8 @@ export async function PUT(
           description !== undefined ? description : existingTeam.description,
         brandId:
           brandId !== undefined ? parseInt(brandId) : existingTeam.brandId,
+        managerId,
+        status,
       },
     });
 
