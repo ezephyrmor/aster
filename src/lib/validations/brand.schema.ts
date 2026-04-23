@@ -17,13 +17,21 @@ export const BrandSchema = z.object({
     .string()
     .url("Must be a valid URL")
     .max(500, "Logo URL cannot exceed 500 characters")
-    .optional(),
+    .optional()
+    .or(z.literal(""))
+    .transform((value: string | undefined) =>
+      value === "" ? undefined : value,
+    ),
 
   website: z
     .string()
     .url("Must be a valid URL")
     .max(255, "Website URL cannot exceed 255 characters")
-    .optional(),
+    .optional()
+    .or(z.literal(""))
+    .transform((value: string | undefined) =>
+      value === "" ? undefined : value,
+    ),
 
   status: z.enum(["active", "inactive", "archived"]).default("active"),
 

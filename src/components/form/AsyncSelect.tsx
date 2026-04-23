@@ -32,8 +32,12 @@ export function AsyncSelect({
 
   const {
     register,
+    watch,
+    setValue,
     formState: { errors },
   } = form;
+
+  const fieldValue = watch(name);
 
   const [options, setOptions] = useState<LookupOption[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -50,7 +54,36 @@ export function AsyncSelect({
         }
 
         const data = await response.json();
-        setOptions(data);
+
+        // Handle both raw array and paginated responses
+        const optionsData = Array.isArray(data)
+          ? data
+          : data?.data || data?.users || [];
+
+        if (!Array.isArray(optionsData)) {
+          throw new Error("API returned invalid response format");
+        }
+
+        // Normalize options to ensure each has id and name fields
+        const normalizedOptions = optionsData.map((item: any) => {
+          if (item.name) return item;
+
+          // Handle user objects with nested employeeProfile
+          if (item.employeeProfile?.firstName) {
+            return {
+              id: item.id,
+              name: `${item.employeeProfile.firstName} ${item.employeeProfile.lastName}`,
+            };
+          }
+
+          // Fallback for other formats
+          return {
+            id: item.id,
+            name: item.label || item.title || `Item ${item.id}`,
+          };
+        });
+
+        setOptions(normalizedOptions);
       } catch (err) {
         setFetchError(
           err instanceof Error ? err.message : "Failed to load options",
@@ -61,7 +94,7 @@ export function AsyncSelect({
     };
 
     fetchOptions();
-  }, [endpoint]);
+  }, [endpoint, fieldValue]);
 
   const fieldError = errors[name as string];
   const hasError = !!fieldError || !!fetchError;
@@ -101,11 +134,17 @@ export function AsyncSelect({
           aria-invalid={hasError}
           aria-describedby={hasError ? errorId : undefined}
           className={inputClass}
-          {...register(name as any, rules)}
+          value={fieldValue?.toString() || ""}
+          onChange={(e) => {
+            const value = e.target.value;
+            setValue(name, value === "" ? undefined : Number(value), {
+              shouldValidate: true,
+            });
+          }}
         >
           <option value="">{placeholder}</option>
           {options.map((option) => (
-            <option key={option.id} value={option.name}>
+            <option key={option.id} value={option.id}>
               {option.name}
             </option>
           ))}

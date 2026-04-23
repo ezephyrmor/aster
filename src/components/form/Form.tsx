@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormContext } from "./FormContext";
@@ -26,6 +26,11 @@ export function Form<T extends Record<string, any>>({
     mode: "onBlur",
     disabled,
   });
+
+  useEffect(() => {
+    console.log("Form values updated:", values);
+    console.log("Current form state:", form.getValues());
+  }, [values, form]);
 
   const handleSubmit = form.handleSubmit(async (values) => {
     setIsSubmitting(true);
