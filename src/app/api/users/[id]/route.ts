@@ -23,27 +23,22 @@ export async function GET(
             position: true,
             department: true,
             status: true,
+            role: true,
           },
         },
-        role: true,
       },
     });
+
+    console.log("Fetched user:", user);
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Format response to maintain backward compatibility
+    // Return raw objects with ids - frontend handles name mapping
     const formattedUser = {
       ...user,
-      employeeProfile: user.employeeProfile
-        ? {
-            ...user.employeeProfile,
-            position: user.employeeProfile.position?.name || null,
-            department: user.employeeProfile.department?.name || null,
-            status: user.employeeProfile.status?.name || "active",
-          }
-        : null,
+      employeeProfile: user.employeeProfile,
     };
 
     return NextResponse.json(formattedUser);
@@ -119,42 +114,42 @@ export const PUT = withAuth(
         }
       }
 
-      // Update user (only role can be changed, username is locked)
-      interface UpdateUserData {
-        roleId?: number;
-      }
-      const updateUserData: UpdateUserData = {};
+      // Update employee profile
+      const updateProfileData: any = {};
+
+      // Update role if provided
       if (roleId !== undefined) {
-        updateUserData.roleId = roleId;
+        updateProfileData.roleId = roleId;
       }
 
       const updatedUser = await prisma.user.update({
         where: { id: userId },
-        data: updateUserData,
+        data: {},
         include: {
           employeeProfile: {
             include: {
               position: true,
               department: true,
               status: true,
+              role: true,
             },
           },
-          role: true,
         },
       });
 
       // Update employee profile if it exists
       if (updatedUser.employeeProfile) {
-        const updateProfileData: any = {
-          firstName,
-          lastName,
-          middleName,
-          contactNumber,
-          personalEmail,
-          address,
-          dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
-          hireDate: hireDate ? new Date(hireDate) : null,
-        };
+        // Add other profile fields
+        updateProfileData.firstName = firstName;
+        updateProfileData.lastName = lastName;
+        updateProfileData.middleName = middleName;
+        updateProfileData.contactNumber = contactNumber;
+        updateProfileData.personalEmail = personalEmail;
+        updateProfileData.address = address;
+        updateProfileData.dateOfBirth = dateOfBirth
+          ? new Date(dateOfBirth)
+          : null;
+        updateProfileData.hireDate = hireDate ? new Date(hireDate) : null;
 
         // Add emergency contact fields only if they exist in schema
         if (emergencyContactName !== undefined)
@@ -286,9 +281,9 @@ export const PUT = withAuth(
               position: true,
               department: true,
               status: true,
+              role: true,
             },
           },
-          role: true,
         },
       });
 
@@ -299,20 +294,10 @@ export const PUT = withAuth(
         );
       }
 
-      // Format response to maintain backward compatibility
+      // Return raw objects with ids - frontend handles name mapping
       const formattedUser = {
         ...updatedUserResult,
-        employeeProfile: updatedUserResult.employeeProfile
-          ? {
-              ...updatedUserResult.employeeProfile,
-              position:
-                updatedUserResult.employeeProfile.position?.name || null,
-              department:
-                updatedUserResult.employeeProfile.department?.name || null,
-              status:
-                updatedUserResult.employeeProfile.status?.name || "active",
-            }
-          : null,
+        employeeProfile: updatedUserResult.employeeProfile,
       };
 
       return NextResponse.json(formattedUser);

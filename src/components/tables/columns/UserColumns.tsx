@@ -1,21 +1,22 @@
-import { ColumnDef } from "@tanstack/react-table";
+zimport { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
+// Helper to safely extract values from nested objects or direct strings
+const extractValue = (value: any, property = "name") => {
+  if (!value) return null;
+  if (typeof value === "object" && value !== null) {
+    return value[property] || null;
+  }
+  return value;
+};
+
 export interface User {
   id: number;
   username: string;
-  role: string;
-  company?: string | null;
-  employeeProfile: {
-    firstName: string;
-    lastName: string;
-    position?: string | null;
-    department?: string | null;
-    status: string;
-    personalEmail?: string | null;
-  } | null;
+  company?: any | null;
+  employeeProfile: any | null;
 }
 
 function getStatusColor(status: string) {
@@ -84,7 +85,7 @@ export const columns: ColumnDef<User>[] = [
     accessorKey: "employeeProfile.position",
     header: () => <div className="hidden md:block">Position</div>,
     cell: ({ row }) => {
-      const position = row.original.employeeProfile?.position;
+      const position = extractValue(row.original.employeeProfile?.position);
       return (
         <div className="hidden md:block text-muted-foreground">
           {position || "-"}
@@ -96,7 +97,7 @@ export const columns: ColumnDef<User>[] = [
     accessorKey: "employeeProfile.department",
     header: () => <div className="hidden lg:block">Department</div>,
     cell: ({ row }) => {
-      const department = row.original.employeeProfile?.department;
+      const department = extractValue(row.original.employeeProfile?.department);
       return (
         <div className="hidden lg:block text-muted-foreground">
           {department || "-"}
@@ -108,7 +109,7 @@ export const columns: ColumnDef<User>[] = [
     accessorKey: "company",
     header: () => <div className="hidden xl:block">Company</div>,
     cell: ({ row }) => {
-      const company = row.original.company;
+      const company = extractValue(row.original.company);
       return (
         <div className="hidden xl:block text-muted-foreground">
           {company || "-"}
@@ -130,8 +131,8 @@ export const columns: ColumnDef<User>[] = [
         </Button>
       );
     },
-    cell: ({ getValue, row }) => {
-      const role = getValue() as string;
+    cell: ({ row }) => {
+      const role = extractValue(row.original.employeeProfile?.role);
       return (
         <span
           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleColor(role)}`}
@@ -159,7 +160,7 @@ export const columns: ColumnDef<User>[] = [
       );
     },
     cell: ({ row }) => {
-      const status = row.original.employeeProfile?.status;
+      const status = extractValue(row.original.employeeProfile?.status);
       if (!status) return null;
       return (
         <span

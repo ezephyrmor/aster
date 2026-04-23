@@ -47,7 +47,11 @@ export const GET = withAuth(
 
       // Role filter (by role name)
       if (role) {
-        filterConditions.push({ role: { name: role } });
+        filterConditions.push({
+          employeeProfile: {
+            role: { name: role },
+          },
+        });
       }
 
       // Status filter (through employeeProfile, by status name)
@@ -100,7 +104,11 @@ export const GET = withAuth(
                   },
                 }
               : sortBy === "role"
-                ? { role: { name: sortOrder as "asc" | "desc" } }
+                ? {
+                    employeeProfile: {
+                      role: { name: sortOrder as "asc" | "desc" },
+                    },
+                  }
                 : { [sortBy]: sortOrder };
 
       // Get users with pagination, including related data
@@ -112,9 +120,9 @@ export const GET = withAuth(
               position: true,
               department: true,
               status: true,
+              role: true,
             },
           },
-          role: true,
           company: true,
         },
         skip,
@@ -122,28 +130,13 @@ export const GET = withAuth(
         orderBy,
       });
 
-      // Format response to maintain backward compatibility
+      // Return raw objects with ids - frontend handles name mapping
       const formattedUsers = users.map((user) => ({
         id: user.id,
         username: user.username,
         createdAt: user.createdAt,
-        role: user.role.name,
-        company: user.company?.name || null,
-        employeeProfile: user.employeeProfile
-          ? {
-              firstName: user.employeeProfile.firstName,
-              lastName: user.employeeProfile.lastName,
-              middleName: user.employeeProfile.middleName,
-              dateOfBirth: user.employeeProfile.dateOfBirth,
-              contactNumber: user.employeeProfile.contactNumber,
-              personalEmail: user.employeeProfile.personalEmail,
-              address: user.employeeProfile.address,
-              hireDate: user.employeeProfile.hireDate,
-              position: user.employeeProfile.position?.name || null,
-              department: user.employeeProfile.department?.name || null,
-              status: user.employeeProfile.status?.name || "active",
-            }
-          : null,
+        company: user.company || null,
+        employeeProfile: user.employeeProfile,
       }));
 
       return NextResponse.json({
@@ -317,9 +310,9 @@ export const POST = withAuth(
             username: generatedUsername,
             passwordHash: hashedPassword,
             salt,
-            roleId: roleRecord.id,
             employeeProfile: {
               create: {
+                roleId: roleRecord.id,
                 firstName,
                 lastName,
                 middleName,
@@ -343,9 +336,9 @@ export const POST = withAuth(
                 position: true,
                 department: true,
                 status: true,
+                role: true,
               },
             },
-            role: true,
           },
         });
 

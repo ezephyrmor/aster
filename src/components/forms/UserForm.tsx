@@ -109,24 +109,40 @@ export default function UserForm({
     setEffectiveDate(new Date().toISOString().split("T")[0]);
   };
 
+  // Helper to safely extract values from nested objects or direct values
+  const extractValue = (value: any, property = "name") => {
+    if (!value) return "";
+    if (typeof value === "object" && value !== null) {
+      return value[property] || "";
+    }
+    return value;
+  };
+
+  // Extract data from employeeProfile if it exists, otherwise fall back to root
+  const profileData = initialData?.employeeProfile || initialData;
+
   const defaultValues = {
     username: initialData?.username || "",
     password: "",
-    role: initialData?.role || "employee",
-    firstName: initialData?.firstName || "",
-    lastName: initialData?.lastName || "",
-    middleName: initialData?.middleName || "",
-    contactNumber: initialData?.contactNumber || "",
-    personalEmail: initialData?.personalEmail || "",
-    address: initialData?.address || "",
-    dateOfBirth: initialData?.dateOfBirth || "",
-    position: initialData?.position || "",
-    department: initialData?.department || "",
-    hireDate: initialData?.hireDate || "",
-    emergencyContactName: initialData?.emergencyContactName || "",
-    emergencyContactNumber: initialData?.emergencyContactNumber || "",
-    emergencyContactRelation: initialData?.emergencyContactRelation || "",
-    status: initialData?.status || "active",
+    role: extractValue(profileData?.role) || "employee",
+    firstName: profileData?.firstName || "",
+    lastName: profileData?.lastName || "",
+    middleName: profileData?.middleName || "",
+    contactNumber: profileData?.contactNumber || "",
+    personalEmail: profileData?.personalEmail || "",
+    address: profileData?.address || "",
+    dateOfBirth: profileData?.dateOfBirth
+      ? new Date(profileData.dateOfBirth).toISOString().split("T")[0]
+      : "",
+    position: extractValue(profileData?.position) || "",
+    department: extractValue(profileData?.department) || "",
+    hireDate: profileData?.hireDate
+      ? new Date(profileData.hireDate).toISOString().split("T")[0]
+      : "",
+    emergencyContactName: profileData?.emergencyContactName || "",
+    emergencyContactNumber: profileData?.emergencyContactNumber || "",
+    emergencyContactRelation: profileData?.emergencyContactRelation || "",
+    status: extractValue(profileData?.status) || "active",
   };
 
   const handleFormSubmit = async (data: UserFormData) => {
@@ -145,7 +161,7 @@ export default function UserForm({
   function StatusChangeWatcher() {
     const { watch, setValue } = useRhfFormContext<UserFormData>();
     const currentStatus = watch("status");
-    const originalStatus = initialData?.status;
+    const originalStatus = extractValue(profileData?.status);
 
     useEffect(() => {
       if (
@@ -335,7 +351,7 @@ export default function UserForm({
           <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-md">
             <p className="text-sm text-amber-800 dark:text-amber-200">
               You are about to change employee status from{" "}
-              <strong>{initialData?.status}</strong> to{" "}
+              <strong>{extractValue(profileData?.status)}</strong> to{" "}
               <strong>{pendingStatus}</strong>.
             </p>
           </div>

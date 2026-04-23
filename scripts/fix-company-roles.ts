@@ -112,8 +112,8 @@ async function assignRolesToCompanyUsers(company: Company, roles: Role[]) {
 
   // Update all users
   for (const assignment of assignments) {
-    await prisma.user.update({
-      where: { id: assignment.userId },
+    await prisma.employeeProfile.update({
+      where: { userId: assignment.userId },
       data: { roleId: assignment.roleId },
     });
   }

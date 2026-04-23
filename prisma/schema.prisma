@@ -36,13 +36,13 @@ model Department {
 }
 
 model Role {
-  id          Int      @id @default(autoincrement())
-  companyId   Int      @default(1) @map("company_id")
-  name        String   @db.VarChar(50)
-  description String?  @db.Text
-  createdAt   DateTime @default(now()) @map("created_at")
-  users       User[]
-  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  id                 Int              @id @default(autoincrement())
+  companyId          Int              @default(1) @map("company_id")
+  name               String           @db.VarChar(50)
+  description        String?          @db.Text
+  createdAt          DateTime         @default(now()) @map("created_at")
+  employeeProfiles   EmployeeProfile[]
+  company            Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   @@unique([companyId, name])
   @@index([companyId])
@@ -133,10 +133,8 @@ model User {
   passwordHash    String           @map("password_hash") @db.VarChar(255)
   salt            String           @db.VarChar(255)
   createdAt       DateTime         @default(now()) @map("created_at")
-  roleId          Int              @default(3) @map("role_id")
   employeeProfile EmployeeProfile?
   teamMembers     TeamMember[]
-  role            Role             @relation(fields: [roleId], references: [id])
   company         Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
   calendarEvents  CalendarEvent[]
   leaveCredits    LeaveCredit[]
@@ -152,7 +150,6 @@ model User {
   managedBrandsHistory BrandManagerHistory[] @relation("BrandManagerHistoryUsers")
   performedStatusHistory EmployeeStatusHistory[] @relation("EmployeeStatusHistoryPerformedBy")
 
-  @@index([roleId], map: "users_role_id_fkey")
   @@index([companyId], map: "users_company_id_fkey")
   @@map("users")
 }
@@ -176,15 +173,18 @@ model EmployeeProfile {
   departmentId  Int?                @map("department_id")
   positionId    Int?                @map("position_id")
   statusId      Int                 @default(1) @map("status_id")
+  roleId        Int                 @default(3) @map("role_id")
   department    Department?         @relation(fields: [departmentId], references: [id])
   position      Position?           @relation(fields: [positionId], references: [id])
   status        EmployeeStatusModel @relation(fields: [statusId], references: [id])
+  role          Role                @relation(fields: [roleId], references: [id])
   user          User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   statusHistory EmployeeStatusHistory[]
 
   @@index([departmentId], map: "employee_profiles_department_id_fkey")
   @@index([positionId], map: "employee_profiles_position_id_fkey")
   @@index([statusId], map: "employee_profiles_status_id_fkey")
+  @@index([roleId], map: "employee_profiles_role_id_fkey")
   @@map("employee_profiles")
 }
 

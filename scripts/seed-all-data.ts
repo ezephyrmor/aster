@@ -718,7 +718,11 @@ async function main() {
 
     // Get or create admin user
     let adminUser = await prisma.user.findFirst({
-      where: { role: { name: "admin" } },
+      where: {
+        employeeProfile: {
+          role: { name: "admin" },
+        },
+      },
     });
     if (!adminUser) {
       const salt = generateSalt();
@@ -728,11 +732,11 @@ async function main() {
           username: "admin",
           passwordHash,
           salt,
-          roleId: adminRole.id,
           employeeProfile: {
             create: {
               firstName: "System",
               lastName: "Administrator",
+              roleId: adminRole.id,
               positionId: positions[0]?.id,
               departmentId: departments[0]?.id,
               statusId: statuses.find((s) => s.name === "active")?.id || 1,
@@ -779,11 +783,11 @@ async function main() {
             username,
             passwordHash,
             salt,
-            roleId: employeeRole.id,
             employeeProfile: {
               create: {
                 firstName,
                 lastName,
+                roleId: employeeRole.id,
                 middleName,
                 dateOfBirth: generateDateOfBirth(),
                 contactNumber: generatePhoneNumber(),

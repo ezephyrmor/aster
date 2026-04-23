@@ -479,12 +479,12 @@ async function createUser(
       username,
       passwordHash,
       salt,
-      roleId,
       companyId,
       employeeProfile: {
         create: {
           firstName,
           lastName,
+          roleId,
           dateOfBirth: new Date(
             1980 + Math.floor(Math.random() * 30),
             Math.floor(Math.random() * 12),

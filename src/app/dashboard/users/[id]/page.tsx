@@ -64,7 +64,7 @@ export default function EditUserPage({
 
         // Combine user and employeeProfile data for the form
         const formData: UserFormData = {
-          role: data.role?.name || "employee",
+          role: data.employeeProfile?.role?.id || "",
           firstName: data.employeeProfile?.firstName || "",
           lastName: data.employeeProfile?.lastName || "",
           middleName: data.employeeProfile?.middleName || "",
@@ -76,8 +76,8 @@ export default function EditUserPage({
                 .toISOString()
                 .split("T")[0]
             : "",
-          position: data.employeeProfile?.position || "",
-          department: data.employeeProfile?.department || "",
+          position: data.employeeProfile?.position?.id || "",
+          department: data.employeeProfile?.department?.id || "",
           hireDate: data.employeeProfile?.hireDate
             ? new Date(data.employeeProfile.hireDate)
                 .toISOString()
@@ -89,7 +89,7 @@ export default function EditUserPage({
             data.employeeProfile?.emergencyContactNumber || "",
           emergencyContactRelation:
             data.employeeProfile?.emergencyContactRelation || "",
-          status: data.employeeProfile?.status || "active",
+          status: data.employeeProfile?.status?.id || "",
         };
 
         setUserData(formData);

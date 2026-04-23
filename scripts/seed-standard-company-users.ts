@@ -33,9 +33,9 @@ async function createUserForCompany(company: Company, role: Role) {
       username,
       passwordHash,
       salt,
-      roleId: role.id,
       employeeProfile: {
         create: {
+          roleId: role.id,
           firstName,
           lastName,
           hireDate: faker.date.past({ years: 5 }),

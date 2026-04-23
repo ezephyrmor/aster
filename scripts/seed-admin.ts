@@ -46,6 +46,13 @@ async function createOrUpdateUser(
       data: {
         passwordHash,
         salt,
+      },
+    });
+
+    // Update role on employee profile
+    await prisma.employeeProfile.update({
+      where: { userId: existingUser.id },
+      data: {
         roleId,
       },
     });
@@ -83,11 +90,11 @@ async function createOrUpdateUser(
         username,
         passwordHash,
         salt,
-        roleId,
         employeeProfile: {
           create: {
             firstName: profile.firstName,
             lastName: profile.lastName,
+            roleId,
             positionId: profile.positionId,
             departmentId: profile.departmentId,
             statusId: profile.statusId,
