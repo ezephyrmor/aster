@@ -68,7 +68,17 @@ export async function PUT(
     const { id: idStr } = await params;
     const id = parseInt(idStr);
     const body = await request.json();
-    const { offenseId, typeId, date, details, comment } = body;
+    const {
+      userId,
+      offenseId,
+      typeId,
+      date,
+      details,
+      comment,
+      reportedById,
+      status,
+      severity,
+    } = body;
 
     // Check if infraction exists
     const existing = await prisma.infraction.findUnique({
@@ -104,6 +114,11 @@ export async function PUT(
     if (date !== undefined) updateData.date = new Date(date);
     if (details !== undefined) updateData.details = details;
     if (comment !== undefined) updateData.comment = comment;
+    if (userId !== undefined) updateData.userId = parseInt(userId);
+    if (reportedById !== undefined)
+      updateData.reportedById = parseInt(reportedById);
+    if (status !== undefined) updateData.status = status;
+    if (severity !== undefined) updateData.severity = severity;
 
     const infraction = await prisma.infraction.update({
       where: { id },

@@ -29,6 +29,17 @@ export const InfractionSchema = z.object({
     .max(2000, "Comment cannot exceed 2000 characters")
     .trim()
     .optional(),
+
+  reportedById: z
+    .number()
+    .int("Must be a valid user ID")
+    .positive("Reporter ID must be positive"),
+
+  status: z
+    .enum(["pending", "investigating", "resolved", "dismissed"])
+    .default("pending"),
+
+  severity: z.enum(["low", "medium", "high", "critical"]).default("medium"),
 });
 
 export const CreateInfractionSchema = InfractionSchema;
