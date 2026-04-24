@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import CaptchaModal from "./CaptchaModal";
+import CaptchaModal from "../modals/CaptchaModal";
 
 interface LoginFormProps {
   onSubmit: (

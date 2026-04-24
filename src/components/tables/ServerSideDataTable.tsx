@@ -187,8 +187,15 @@ export function ServerSideDataTable<TData, TValue>({
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
                 <option value="">All {filter.label}s</option>
-                {filter.options?.map((option) => (
-                  <option key={option.value} value={option.value}>
+                {filter.options?.map((option, index) => (
+                  <option
+                    key={`${typeof option.value === "object" ? JSON.stringify(option.value) : String(option.value)}-${index}`}
+                    value={
+                      typeof option.value === "object"
+                        ? JSON.stringify(option.value)
+                        : option.value
+                    }
+                  >
                     {option.label}
                   </option>
                 ))}

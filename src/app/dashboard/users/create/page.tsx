@@ -2,8 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import UserForm from "@/components/UserForm";
-import DashboardLayout from "@/components/DashboardLayout";
+import UserForm from "@/components/forms/UserForm";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 
 interface UserFormData {
   username?: string;
@@ -76,8 +76,8 @@ export default function CreateUserPage() {
 
   return (
     <DashboardLayout
-      title="Add New User"
-      subtitle="Create a new employee account"
+      title="Create Employee Profile"
+      subtitle="Add a new employee to the system"
       icon={
         <svg
           className="w-6 h-6 text-white"

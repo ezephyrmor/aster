@@ -67,21 +67,21 @@ export async function GET(request: NextRequest) {
     });
 
     // Debug logging
-    console.log("GET Clock-in debug:", {
-      userId: parseInt(userId),
-      dayOfWeek,
-      today: today.toISOString(),
-      scheduleFound: !!schedule,
-      attendanceFound: !!attendance,
-      attendanceClockIn: attendance?.clockIn,
-      attendance: attendance
-        ? {
-            id: attendance.id,
-            clockIn: attendance.clockIn,
-            clockOut: attendance.clockOut,
-          }
-        : null,
-    });
+    // console.log("GET Clock-in debug:", {
+    //   userId: parseInt(userId),
+    //   dayOfWeek,
+    //   today: today.toISOString(),
+    //   scheduleFound: !!schedule,
+    //   attendanceFound: !!attendance,
+    //   attendanceClockIn: attendance?.clockIn,
+    //   attendance: attendance
+    //     ? {
+    //         id: attendance.id,
+    //         clockIn: attendance.clockIn,
+    //         clockOut: attendance.clockOut,
+    //       }
+    //     : null,
+    // });
 
     return NextResponse.json({
       attendance,

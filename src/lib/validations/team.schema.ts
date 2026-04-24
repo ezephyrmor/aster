@@ -17,6 +17,10 @@ export const TeamSchema = z.object({
     .number()
     .int("Must select a valid brand")
     .positive("Brand ID must be positive"),
+
+  managerId: z.number().int("Must be a valid user ID").optional(),
+
+  status: z.enum(["active", "inactive", "archived"]).default("active"),
 });
 
 export const CreateTeamSchema = TeamSchema;

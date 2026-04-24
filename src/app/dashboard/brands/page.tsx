@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import BrandList from "@/components/BrandList";
-import DashboardLayout from "@/components/DashboardLayout";
+import BrandList from "@/components/tables/lists/BrandList";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 
 export default function BrandsPage() {
   const router = useRouter();

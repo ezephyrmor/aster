@@ -64,7 +64,8 @@ export async function PUT(
       return NextResponse.json({ error: "Invalid brand ID" }, { status: 400 });
     }
 
-    const { name, description, logo, website, industry, status } = body;
+    const { name, description, logo, website, industryId, managerId, status } =
+      body;
 
     // Check if brand exists
     const existingBrand = await prisma.brand.findUnique({
@@ -96,7 +97,8 @@ export async function PUT(
         description,
         logo,
         website,
-        industry: industry ? { connect: { id: industry.id } } : undefined,
+        industryId,
+        managerId,
         status,
       },
     });

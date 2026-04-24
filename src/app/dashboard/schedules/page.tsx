@@ -1,16 +1,16 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import DashboardLayout from "@/components/DashboardLayout";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 import {
   ServerSideDataTable,
   FilterConfig,
-} from "@/components/ServerSideDataTable";
+} from "@/components/tables/ServerSideDataTable";
 import {
   useScheduleColumns,
   WorkSchedule,
   ScheduleAction,
-} from "@/components/ScheduleColumns";
+} from "@/components/tables/columns/ScheduleColumns";
 import { PaginationState, SortingState } from "@tanstack/react-table";
 
 interface Employee {
@@ -19,8 +19,8 @@ interface Employee {
   employeeProfile: {
     firstName: string;
     lastName: string;
-    department?: string | null;
-    position?: string | null;
+    department?: { name: string } | null;
+    position?: { name: string } | null;
   } | null;
   teams?: { name: string }[];
 }
@@ -182,6 +182,8 @@ export default function SchedulesPage() {
       params.set("page", pagination.page.toString());
       params.set("limit", pagination.limit.toString());
       if (debouncedSearch) params.set("search", debouncedSearch);
+      if (departmentFilter) params.set("department", departmentFilter);
+      if (teamFilter) params.set("team", teamFilter);
 
       // Add sorting parameters
       if (sorting.length > 0) {
@@ -204,7 +206,14 @@ export default function SchedulesPage() {
     } finally {
       setLoading(false);
     }
-  }, [pagination.page, pagination.limit, debouncedSearch, sorting]);
+  }, [
+    pagination.page,
+    pagination.limit,
+    debouncedSearch,
+    departmentFilter,
+    teamFilter,
+    sorting,
+  ]);
 
   const fetchEmployees = useCallback(async () => {
     try {
@@ -233,11 +242,15 @@ export default function SchedulesPage() {
     setTablePagination((prev) => ({ ...prev, pageIndex: 0 }));
   }, [debouncedSearch, departmentFilter, teamFilter]);
 
+  useEffect(() => {
+    fetchSchedules();
+  }, [departmentFilter, teamFilter]);
+
   // Get unique departments from employees
   const departments = Array.from(
     new Set(
       employees
-        .map((emp) => emp.employeeProfile?.department)
+        .map((emp) => emp.employeeProfile?.department?.name)
         .filter((d): d is string => !!d),
     ),
   ).sort();

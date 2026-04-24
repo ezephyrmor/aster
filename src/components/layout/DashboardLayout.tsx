@@ -4,10 +4,10 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useAuth } from "@/lib/auth";
-import Sidebar from "@/components/Sidebar";
-import ClockInButton from "@/components/ClockInButton";
-import Modal from "@/components/Modal";
-import SessionTimer from "@/components/SessionTimer";
+import Sidebar from "@/components/layout/Sidebar";
+import ClockInButton from "@/components/widgets/ClockInButton";
+import Modal from "@/components/modals/Modal";
+import SessionTimer from "@/components/widgets/SessionTimer";
 import { SESSION_CONFIG } from "@/config";
 
 interface DashboardLayoutProps {

@@ -14,7 +14,11 @@ export async function GET() {
     const dbUser = await prisma.user.findUnique({
       where: { id: parseInt(session.user.id, 10) },
       include: {
-        role: true,
+        employeeProfile: {
+          include: {
+            role: true,
+          },
+        },
       },
     });
 
@@ -26,8 +30,8 @@ export async function GET() {
       user: {
         id: dbUser.id,
         username: dbUser.username,
-        roleId: dbUser.roleId,
-        role: dbUser.role,
+        roleId: dbUser.employeeProfile?.roleId,
+        role: dbUser.employeeProfile?.role,
       },
     });
   } catch (error) {

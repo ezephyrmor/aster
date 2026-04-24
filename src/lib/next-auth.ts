@@ -64,13 +64,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             username: true,
             passwordHash: true,
             salt: true,
-            roleId: true,
             companyId: true,
-            role: {
+            employeeProfile: {
               select: {
-                id: true,
-                name: true,
-                description: true,
+                roleId: true,
+                role: {
+                  select: {
+                    id: true,
+                    name: true,
+                    description: true,
+                  },
+                },
               },
             },
             company: {
@@ -100,10 +104,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         return {
           id: user.id.toString(),
           username: user.username,
-          roleId: user.roleId,
+          roleId: user.employeeProfile.roleId,
           companyId: user.companyId,
           companyName: user.company?.name,
-          role: user.role,
+          role: user.employeeProfile.role,
           ip: getClientIp(req),
           fingerprint: await generateFingerprint(req),
           userAgent: req.headers.get("user-agent") || "",

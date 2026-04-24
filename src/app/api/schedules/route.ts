@@ -16,6 +16,8 @@ export const GET = withAuth(
       const sortBy = searchParams.get("sortBy") || "effectiveFrom";
       const sortOrder = searchParams.get("sortOrder") || "desc";
       const search = searchParams.get("search"); // Search by employee name
+      const department = searchParams.get("department");
+      const team = searchParams.get("team");
       const companyId = auth.user.companyId;
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -46,20 +48,41 @@ export const GET = withAuth(
 
       // Search by employee name
       if (search) {
-        whereClause.user = {
-          OR: [
-            { username: { contains: search } },
-            {
-              employeeProfile: {
-                firstName: { contains: search },
-              },
+        whereClause.user = whereClause.user || {};
+        whereClause.user.OR = [
+          { username: { contains: search } },
+          {
+            employeeProfile: {
+              firstName: { contains: search },
             },
-            {
-              employeeProfile: {
-                lastName: { contains: search },
-              },
+          },
+          {
+            employeeProfile: {
+              lastName: { contains: search },
             },
-          ],
+          },
+        ];
+      }
+
+      // Filter by department
+      if (department) {
+        whereClause.user = whereClause.user || {};
+        whereClause.user.employeeProfile =
+          whereClause.user.employeeProfile || {};
+        whereClause.user.employeeProfile.department = {
+          name: { equals: department },
+        };
+      }
+
+      // Filter by team
+      if (team) {
+        whereClause.user = whereClause.user || {};
+        whereClause.user.teamMembers = {
+          some: {
+            team: {
+              name: { equals: team },
+            },
+          },
         };
       }
 

@@ -25,7 +25,11 @@ async function main() {
   try {
     // Get the admin user
     const adminUser = await prisma.user.findFirst({
-      where: { role: { name: "admin" } },
+      where: {
+        employeeProfile: {
+          role: { name: "admin" },
+        },
+      },
     });
 
     if (!adminUser) {
@@ -40,7 +44,9 @@ async function main() {
     // Get all users (excluding admin)
     const users = await prisma.user.findMany({
       where: {
-        roleId: { not: 1 }, // Exclude admin role
+        employeeProfile: {
+          roleId: { not: 1 }, // Exclude admin role
+        },
       },
       include: {
         teamMembers: true,

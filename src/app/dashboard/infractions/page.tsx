@@ -1,16 +1,16 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import DashboardLayout from "@/components/DashboardLayout";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 import {
   ServerSideDataTable,
   FilterConfig,
-} from "@/components/ServerSideDataTable";
+} from "@/components/tables/ServerSideDataTable";
 import {
   useInfractionColumns,
   Infraction,
   InfractionAction,
-} from "@/components/InfractionColumns";
+} from "@/components/tables/columns/InfractionColumns";
 import { PaginationState, SortingState } from "@tanstack/react-table";
 import Link from "next/link";
 

@@ -4,7 +4,7 @@ import { validationRules } from "./validation.utils";
 const BaseUserSchema = z.object({
   username: z.string().optional(),
   password: z.string().optional(),
-  role: z.enum(["admin", "hr", "manager", "employee"]),
+  role: z.coerce.number().int().min(1),
   firstName: validationRules.name,
   lastName: validationRules.name,
   middleName: z.string().optional(),
@@ -15,8 +15,8 @@ const BaseUserSchema = z.object({
     .date()
     .optional()
     .or(z.string().transform((v) => (v ? new Date(v) : undefined))),
-  position: z.string().optional(),
-  department: z.string().optional(),
+  position: z.coerce.number().int().optional(),
+  department: z.coerce.number().int().optional(),
   hireDate: z.coerce
     .date()
     .optional()
@@ -24,20 +24,7 @@ const BaseUserSchema = z.object({
   emergencyContactName: z.string().optional(),
   emergencyContactNumber: validationRules.phone.optional().or(z.literal("")),
   emergencyContactRelation: z.string().optional(),
-  status: z
-    .enum([
-      "active",
-      "probation",
-      "contract",
-      "on_leave",
-      "suspended",
-      "inactive",
-      "resigned",
-      "terminated",
-      "retired",
-      "deceased",
-    ])
-    .default("active"),
+  status: z.coerce.number().int().min(1).default(1),
 });
 
 /**
