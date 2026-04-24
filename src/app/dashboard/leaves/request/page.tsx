@@ -16,7 +16,7 @@ import {
 
 const LeaveRequestSchema = z
   .object({
-    leaveTypeId: z.string().min(1, "Please select a leave type"),
+    leaveTypeId: z.coerce.number().int().min(1, "Please select a leave type"),
     startDate: z.string().min(1, "Start date is required"),
     endDate: z.string().min(1, "End date is required"),
     reason: z.string().optional(),
@@ -133,7 +133,7 @@ export default function LeaveRequestPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId: user?.id,
-          leaveTypeId: parseInt(values.leaveTypeId),
+          leaveTypeId: values.leaveTypeId,
           startDate: values.startDate,
           endDate: values.endDate,
           reason: values.reason,
@@ -253,7 +253,7 @@ export default function LeaveRequestPage() {
             <Form<LeaveRequestFormData>
               schema={LeaveRequestSchema}
               defaultValues={{
-                leaveTypeId: "",
+                leaveTypeId: 0,
                 startDate: "",
                 endDate: "",
                 reason: "",

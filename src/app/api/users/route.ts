@@ -223,84 +223,105 @@ export const POST = withAuth(
 
       // Get role ID
       const companyId = auth.user.companyId;
-      const roleRecord = await prisma.role.findUnique({
-        where: {
-          companyId_name: {
-            companyId,
-            name: role || "employee",
-          },
-        },
-      });
 
-      if (!roleRecord) {
-        return NextResponse.json(
-          { error: "Invalid role specified" },
-          { status: 400 },
-        );
+      // Role is now passed as numeric ID directly from AsyncSelect
+      let roleId = role;
+
+      // Fallback for backward compatibility if string name is still passed
+      if (typeof role === "string") {
+        const roleRecord = await prisma.role.findUnique({
+          where: {
+            companyId_name: {
+              companyId,
+              name: role || "employee",
+            },
+          },
+        });
+
+        if (!roleRecord) {
+          return NextResponse.json(
+            { error: "Invalid role specified" },
+            { status: 400 },
+          );
+        }
+        roleId = roleRecord.id;
       }
 
       // Get position ID if provided
       let positionId: number | null = null;
       if (position) {
-        // Try to find by name first (company scoped)
-        let positionRecord = await prisma.position.findUnique({
-          where: {
-            companyId_name: {
-              companyId,
-              name: position,
+        // Position is now passed as numeric ID directly from AsyncSelect
+        if (typeof position === "number") {
+          positionId = position;
+        } else {
+          // Fallback for backward compatibility if string name is still passed
+          let positionRecord = await prisma.position.findUnique({
+            where: {
+              companyId_name: {
+                companyId,
+                name: position,
+              },
             },
-          },
-        });
-
-        // If not found and position is a number, try by ID
-        if (!positionRecord && !isNaN(parseInt(position))) {
-          positionRecord = await prisma.position.findUnique({
-            where: { id: parseInt(position) },
           });
-        }
 
-        positionId = positionRecord?.id || null;
+          // If not found and position is a number, try by ID
+          if (!positionRecord && !isNaN(parseInt(position))) {
+            positionRecord = await prisma.position.findUnique({
+              where: { id: parseInt(position) },
+            });
+          }
+        }
       }
 
       // Get department ID if provided
       let departmentId: number | null = null;
       if (department) {
-        // Try to find by name first (company scoped)
-        let departmentRecord = await prisma.department.findUnique({
-          where: {
-            companyId_name: {
-              companyId,
-              name: department,
+        // Department is now passed as numeric ID directly from AsyncSelect
+        if (typeof department === "number") {
+          departmentId = department;
+        } else {
+          // Fallback for backward compatibility if string name is still passed
+          let departmentRecord = await prisma.department.findUnique({
+            where: {
+              companyId_name: {
+                companyId,
+                name: department,
+              },
             },
-          },
-        });
-
-        // If not found and department is a number, try by ID
-        if (!departmentRecord && !isNaN(parseInt(department))) {
-          departmentRecord = await prisma.department.findUnique({
-            where: { id: parseInt(department) },
           });
-        }
 
-        departmentId = departmentRecord?.id || null;
+          // If not found and department is a number, try by ID
+          if (!departmentRecord && !isNaN(parseInt(department))) {
+            departmentRecord = await prisma.department.findUnique({
+              where: { id: parseInt(department) },
+            });
+          }
+
+          departmentId = departmentRecord?.id || null;
+        }
       }
 
       // Get status ID if provided
       let statusId: number | null = null;
       if (status) {
-        // Try to find by name first
-        let statusRecord = await prisma.employeeStatusModel.findUnique({
-          where: { name: status },
-        });
-
-        // If not found and status is a number, try by ID
-        if (!statusRecord && !isNaN(parseInt(status))) {
-          statusRecord = await prisma.employeeStatusModel.findUnique({
-            where: { id: parseInt(status) },
+        // Status is now passed as numeric ID directly from AsyncSelect
+        if (typeof status === "number") {
+          statusId = status;
+        } else {
+          // Fallback for backward compatibility if string name is still passed
+          let statusRecord = await prisma.employeeStatusModel.findUnique({
+            where: { name: status },
           });
-        }
 
-        statusId = statusRecord?.id || null;
+          // If not found and status is a number, try by ID
+          if (!statusRecord && !isNaN(parseInt(status))) {
+            statusRecord = await prisma.employeeStatusModel.findUnique({
+              where: { id: parseInt(status) },
+            });
+          }
+
+          statusId = statusRecord?.id || null;
+        }
       }
 
       // Create user and employee profile in a transaction
@@ -312,7 +333,7 @@ export const POST = withAuth(
             salt,
             employeeProfile: {
               create: {
-                roleId: roleRecord.id,
+                roleId: roleId,
                 firstName,
                 lastName,
                 middleName,
