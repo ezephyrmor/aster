@@ -182,6 +182,8 @@ export default function SchedulesPage() {
       params.set("page", pagination.page.toString());
       params.set("limit", pagination.limit.toString());
       if (debouncedSearch) params.set("search", debouncedSearch);
+      if (departmentFilter) params.set("department", departmentFilter);
+      if (teamFilter) params.set("team", teamFilter);
 
       // Add sorting parameters
       if (sorting.length > 0) {
@@ -204,7 +206,14 @@ export default function SchedulesPage() {
     } finally {
       setLoading(false);
     }
-  }, [pagination.page, pagination.limit, debouncedSearch, sorting]);
+  }, [
+    pagination.page,
+    pagination.limit,
+    debouncedSearch,
+    departmentFilter,
+    teamFilter,
+    sorting,
+  ]);
 
   const fetchEmployees = useCallback(async () => {
     try {
@@ -232,6 +241,10 @@ export default function SchedulesPage() {
   useEffect(() => {
     setTablePagination((prev) => ({ ...prev, pageIndex: 0 }));
   }, [debouncedSearch, departmentFilter, teamFilter]);
+
+  useEffect(() => {
+    fetchSchedules();
+  }, [departmentFilter, teamFilter]);
 
   // Get unique departments from employees
   const departments = Array.from(

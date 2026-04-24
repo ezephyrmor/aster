@@ -123,6 +123,15 @@ export const GET = withAuth(
               role: true,
             },
           },
+          teamMembers: {
+            include: {
+              team: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
           company: true,
         },
         skip,
@@ -137,6 +146,7 @@ export const GET = withAuth(
         createdAt: user.createdAt,
         company: user.company || null,
         employeeProfile: user.employeeProfile,
+        teams: user.teamMembers?.map((tm: any) => tm.team) || [],
       }));
 
       return NextResponse.json({
