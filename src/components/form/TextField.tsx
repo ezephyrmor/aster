@@ -12,6 +12,8 @@ interface TextFieldProps extends FieldProps {
   className?: string;
   min?: string;
   max?: string;
+  autoComplete?: string;
+  leftIcon?: React.ReactNode;
 }
 
 export function TextField({
@@ -25,6 +27,8 @@ export function TextField({
   className,
   min,
   max,
+  autoComplete,
+  leftIcon,
 }: TextFieldProps) {
   const id = useId();
   const errorId = `${id}-error`;
@@ -50,17 +54,27 @@ export function TextField({
         </label>
       )}
 
-      <Input
-        id={id}
-        type={type}
-        placeholder={placeholder}
-        disabled={disabled}
-        min={min}
-        max={max}
-        aria-invalid={hasError}
-        aria-describedby={hasError ? errorId : undefined}
-        {...register(name as any, rules)}
-      />
+      <div className="relative">
+        {leftIcon && (
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            {leftIcon}
+          </div>
+        )}
+
+        <Input
+          id={id}
+          type={type}
+          placeholder={placeholder}
+          disabled={disabled}
+          min={min}
+          max={max}
+          autoComplete={autoComplete}
+          aria-invalid={hasError}
+          aria-describedby={hasError ? errorId : undefined}
+          className={cn(leftIcon && "pl-10")}
+          {...register(name as any, rules)}
+        />
+      </div>
 
       {hasError && (
         <p

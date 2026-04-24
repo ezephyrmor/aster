@@ -1,7 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
+import { Form } from "@/components/form/Form";
+import { TextField } from "@/components/form/TextField";
 import CaptchaModal from "../modals/CaptchaModal";
+import { LoginSchema, type LoginData } from "@/lib/validations/user.schema";
 
 interface LoginFormProps {
   onSubmit: (
@@ -13,8 +16,6 @@ interface LoginFormProps {
 }
 
 export default function LoginForm({ onSubmit, onError }: LoginFormProps) {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showCaptcha, setShowCaptcha] = useState(false);
@@ -23,12 +24,11 @@ export default function LoginForm({ onSubmit, onError }: LoginFormProps) {
     password: string;
   } | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleFormSubmit = async (values: LoginData) => {
     setError(null);
 
     // Store credentials and show CAPTCHA first
-    setPendingCredentials({ username, password });
+    setPendingCredentials(values);
     setShowCaptcha(true);
   };
 
@@ -65,65 +65,28 @@ export default function LoginForm({ onSubmit, onError }: LoginFormProps) {
     <>
       <CaptchaModal isOpen={showCaptcha} onSuccess={handleCaptchaSuccess} />
 
-      <form onSubmit={handleSubmit} className="w-full space-y-6">
+      <Form
+        schema={LoginSchema}
+        onSubmit={handleFormSubmit}
+        disabled={isLoading}
+        resetOnSubmit={false}
+      >
         <div className="space-y-4">
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg
-                className="h-5 w-5 text-zinc-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                />
-              </svg>
-            </div>
-            <input
-              id="username"
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-              disabled={isLoading}
-              className="w-full pl-10 pr-4 py-3 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-all duration-200 hover:border-zinc-400 dark:hover:border-zinc-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              placeholder="Enter your username"
-              autoComplete="username"
-            />
-          </div>
+          <TextField
+            name="username"
+            type="text"
+            placeholder="Enter your username"
+            autoComplete="username"
+            required
+          />
 
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg
-                className="h-5 w-5 text-zinc-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                />
-              </svg>
-            </div>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              disabled={isLoading}
-              className="w-full pl-10 pr-4 py-3 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-all duration-200 hover:border-zinc-400 dark:hover:border-zinc-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              placeholder="Enter your password"
-              autoComplete="current-password"
-            />
-          </div>
+          <TextField
+            name="password"
+            type="password"
+            placeholder="Enter your password"
+            autoComplete="current-password"
+            required
+          />
         </div>
 
         {error && (
@@ -193,7 +156,7 @@ export default function LoginForm({ onSubmit, onError }: LoginFormProps) {
             </>
           )}
         </button>
-      </form>
+      </Form>
     </>
   );
 }
