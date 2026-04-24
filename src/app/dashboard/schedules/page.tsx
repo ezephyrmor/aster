@@ -19,8 +19,8 @@ interface Employee {
   employeeProfile: {
     firstName: string;
     lastName: string;
-    department?: string | null;
-    position?: string | null;
+    department?: { name: string } | null;
+    position?: { name: string } | null;
   } | null;
   teams?: { name: string }[];
 }
@@ -237,7 +237,7 @@ export default function SchedulesPage() {
   const departments = Array.from(
     new Set(
       employees
-        .map((emp) => emp.employeeProfile?.department)
+        .map((emp) => emp.employeeProfile?.department?.name)
         .filter((d): d is string => !!d),
     ),
   ).sort();
