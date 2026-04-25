@@ -1,14 +1,15 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import LoginForm from "@/components/forms/LoginForm";
 
-// Mock CaptchaModal to avoid testing it together with LoginForm
+let captchaOnSuccess: ((token: string) => void) | null = null;
+
+// Mock CaptchaModal properly with no global leaks
 vi.mock("@/components/modals/CaptchaModal", () => ({
   default: vi.fn(({ isOpen, onSuccess }) => {
-    // Expose onSuccess to test cases
-    if (isOpen) {
-      (globalThis as any).captchaOnSuccess = onSuccess;
+    if (isOpen && onSuccess) {
+      captchaOnSuccess = onSuccess;
     }
     return isOpen ? <div data-testid="captcha-modal" /> : null;
   }),
@@ -20,9 +21,15 @@ describe("LoginForm", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    captchaOnSuccess = null;
+    mockOnSubmit.mockResolvedValue({ success: true });
   });
 
-  it("should render the login form correctly", () => {
+  afterEach(() => {
+    captchaOnSuccess = null;
+  });
+
+  it("should render the login form with all required elements", () => {
     render(<LoginForm onSubmit={mockOnSubmit} />);
 
     expect(
@@ -31,12 +38,13 @@ describe("LoginForm", () => {
     expect(
       screen.getByPlaceholderText("Enter your password"),
     ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /sign in/i }),
-    ).toBeInTheDocument();
+
+    const submitButton = screen.getByRole("button", { name: /sign in/i });
+    expect(submitButton).toBeInTheDocument();
+    expect(submitButton).not.toBeDisabled();
   });
 
-  it("should update username and password fields on input", async () => {
+  it("should update username and password fields on user input", async () => {
     const user = userEvent.setup();
     render(<LoginForm onSubmit={mockOnSubmit} />);
 
@@ -44,13 +52,13 @@ describe("LoginForm", () => {
     const passwordInput = screen.getByPlaceholderText("Enter your password");
 
     await user.type(usernameInput, "test@example.com");
-    await user.type(passwordInput, "password123");
+    await user.type(passwordInput, "password123!@#");
 
     expect(usernameInput).toHaveValue("test@example.com");
-    expect(passwordInput).toHaveValue("password123");
+    expect(passwordInput).toHaveValue("password123!@#");
   });
 
-  it("should show CAPTCHA modal when form is submitted", async () => {
+  it("should show CAPTCHA modal when valid form is submitted", async () => {
     const user = userEvent.setup();
     render(<LoginForm onSubmit={mockOnSubmit} />);
 
@@ -65,14 +73,13 @@ describe("LoginForm", () => {
 
     await user.click(screen.getByRole("button", { name: /sign in/i }));
 
-    expect(screen.getByTestId("captcha-modal")).toBeInTheDocument();
+    expect(await screen.findByTestId("captcha-modal")).toBeInTheDocument();
     expect(mockOnSubmit).not.toHaveBeenCalled();
+    expect(captchaOnSuccess).toBeDefined();
   });
 
-  it("should call onSubmit with credentials when CAPTCHA is successful", async () => {
+  it("should call onSubmit with credentials and captcha token when CAPTCHA succeeds", async () => {
     const user = userEvent.setup();
-
-    mockOnSubmit.mockResolvedValue({ success: true });
 
     render(<LoginForm onSubmit={mockOnSubmit} />);
 
@@ -82,24 +89,26 @@ describe("LoginForm", () => {
     );
     await user.type(
       screen.getByPlaceholderText("Enter your password"),
-      "password123",
+      "securePassword123!",
     );
 
     await user.click(screen.getByRole("button", { name: /sign in/i }));
+    await screen.findByTestId("captcha-modal");
 
-    // Simulate CAPTCHA success by calling the exposed onSuccess
-    (globalThis as any).captchaOnSuccess("valid-captcha-token");
+    expect(captchaOnSuccess).toBeInstanceOf(Function);
+
+    captchaOnSuccess!("valid-captcha-token-12345");
 
     await waitFor(() => {
-      expect(mockOnSubmit).toHaveBeenCalledWith(
+      expect(mockOnSubmit).toHaveBeenCalledExactlyOnceWith(
         "test@example.com",
-        "password123",
-        "valid-captcha-token",
+        "securePassword123!",
+        "valid-captcha-token-12345",
       );
     });
   });
 
-  it("should display error message when login fails", async () => {
+  it("should display error message when login returns failure", async () => {
     const user = userEvent.setup();
 
     mockOnSubmit.mockResolvedValue({
@@ -119,15 +128,11 @@ describe("LoginForm", () => {
     );
 
     await user.click(screen.getByRole("button", { name: /sign in/i }));
+    captchaOnSuccess!("valid-token");
 
-    // Simulate CAPTCHA success
-    (globalThis as any).captchaOnSuccess("valid-captcha-token");
-
-    await waitFor(() => {
-      expect(
-        screen.getByText("Invalid username or password"),
-      ).toBeInTheDocument();
-    });
+    expect(
+      await screen.findByText("Invalid username or password"),
+    ).toBeInTheDocument();
   });
 
   it("should call onError callback when login fails", async () => {
@@ -135,7 +140,7 @@ describe("LoginForm", () => {
 
     mockOnSubmit.mockResolvedValue({
       success: false,
-      error: "Invalid username or password",
+      error: "Account is locked",
     });
 
     render(<LoginForm onSubmit={mockOnSubmit} onError={mockOnError} />);
@@ -146,27 +151,25 @@ describe("LoginForm", () => {
     );
     await user.type(
       screen.getByPlaceholderText("Enter your password"),
-      "wrong-password",
+      "password123",
     );
 
     await user.click(screen.getByRole("button", { name: /sign in/i }));
-
-    // Simulate CAPTCHA success
-    (globalThis as any).captchaOnSuccess("valid-captcha-token");
+    captchaOnSuccess!("valid-token");
 
     await waitFor(() => {
-      expect(mockOnError).toHaveBeenCalledWith("Invalid username or password");
+      expect(mockOnError).toHaveBeenCalledWith("Account is locked");
     });
   });
 
-  it("should show loading state while submitting", async () => {
+  it("should show loading state and disable inputs while submitting", async () => {
     const user = userEvent.setup();
+    let resolveSubmit: (value: { success: boolean }) => void;
 
-    // Make onSubmit take time to resolve
     mockOnSubmit.mockImplementation(
       () =>
         new Promise((resolve) => {
-          setTimeout(() => resolve({ success: true }), 100);
+          resolveSubmit = resolve;
         }),
     );
 
@@ -182,23 +185,42 @@ describe("LoginForm", () => {
     );
 
     await user.click(screen.getByRole("button", { name: /sign in/i }));
+    captchaOnSuccess!("valid-token");
 
-    // Simulate CAPTCHA success
-    (globalThis as any).captchaOnSuccess("valid-captcha-token");
-
+    // Verify loading state
     await waitFor(() => {
       expect(
         screen.getByRole("button", { name: /signing in/i }),
       ).toBeInTheDocument();
-      expect(screen.getByPlaceholderText("Enter your username")).toBeDisabled();
-      expect(screen.getByPlaceholderText("Enter your password")).toBeDisabled();
     });
+
+    const usernameInput = screen.getByPlaceholderText("Enter your username");
+    const passwordInput = screen.getByPlaceholderText("Enter your password");
+
+    expect(usernameInput).toBeDisabled();
+    expect(passwordInput).toBeDisabled();
+    expect(screen.getByRole("button", { name: /signing in/i })).toBeDisabled();
+
+    // Complete the submission
+    resolveSubmit!({ success: true });
+
+    // Verify loading state is cleared
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /sign in/i }),
+      ).toBeInTheDocument();
+    });
+
+    expect(usernameInput).not.toBeDisabled();
+    expect(passwordInput).not.toBeDisabled();
   });
 
-  it("should handle unexpected errors gracefully", async () => {
+  it("should handle unexpected network errors gracefully", async () => {
     const user = userEvent.setup();
 
-    mockOnSubmit.mockRejectedValue(new Error("Network error"));
+    mockOnSubmit.mockRejectedValue(
+      new Error("Connection failed: network timeout"),
+    );
 
     render(<LoginForm onSubmit={mockOnSubmit} onError={mockOnError} />);
 
@@ -212,26 +234,50 @@ describe("LoginForm", () => {
     );
 
     await user.click(screen.getByRole("button", { name: /sign in/i }));
+    captchaOnSuccess!("valid-token");
 
-    // Simulate CAPTCHA success
-    (globalThis as any).captchaOnSuccess("valid-captcha-token");
-
-    await waitFor(() => {
-      expect(screen.getByText("Network error")).toBeInTheDocument();
-      expect(mockOnError).toHaveBeenCalledWith("Network error");
-    });
+    expect(
+      await screen.findByText("Connection failed: network timeout"),
+    ).toBeInTheDocument();
+    expect(mockOnError).toHaveBeenCalledWith(
+      "Connection failed: network timeout",
+    );
   });
 
-  it("should require both username and password fields", async () => {
+  it("should prevent submission with empty required fields", async () => {
     const user = userEvent.setup();
     render(<LoginForm onSubmit={mockOnSubmit} />);
 
-    const submitButton = screen.getByRole("button", { name: /sign in/i });
+    await user.click(screen.getByRole("button", { name: /sign in/i }));
 
-    // Try to submit without entering anything
-    await user.click(submitButton);
-
-    // Form validation should prevent submission
+    // Form validation should block submission
     expect(mockOnSubmit).not.toHaveBeenCalled();
+    expect(screen.queryByTestId("captcha-modal")).not.toBeInTheDocument();
+  });
+
+  it("should reset pending credentials after submission completes", async () => {
+    const user = userEvent.setup();
+    render(<LoginForm onSubmit={mockOnSubmit} />);
+
+    await user.type(
+      screen.getByPlaceholderText("Enter your username"),
+      "test@example.com",
+    );
+    await user.type(
+      screen.getByPlaceholderText("Enter your password"),
+      "password123",
+    );
+
+    await user.click(screen.getByRole("button", { name: /sign in/i }));
+    captchaOnSuccess!("valid-token");
+
+    await waitFor(() => {
+      expect(mockOnSubmit).toHaveBeenCalled();
+    });
+
+    // Submit again - should require new captcha
+    await user.click(screen.getByRole("button", { name: /sign in/i }));
+
+    expect(await screen.findByTestId("captcha-modal")).toBeInTheDocument();
   });
 });
