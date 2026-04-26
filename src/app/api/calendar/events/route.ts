@@ -3,18 +3,18 @@ import prisma from "@/lib/db";
 import { auth } from "@/lib/next-auth";
 
 interface LeaveRequestWithRelations {
-  id: number;
-  userId: number;
-  leaveTypeId: number;
-  statusId: number;
+  id: string;
+  userId: string;
+  leaveTypeId: string;
+  statusId: string;
   startDate: Date;
   endDate: Date;
   reason: string | null;
-  reviewedBy: number | null;
+  reviewedBy: string | null;
   reviewedAt: Date | null;
   createdAt: Date;
   user: {
-    id: number;
+    id: string;
     username: string;
     employeeProfile: {
       firstName: string | null;
@@ -22,13 +22,13 @@ interface LeaveRequestWithRelations {
     } | null;
   };
   leaveType: {
-    id: number;
+    id: string;
     name: string;
     description: string | null;
     color: string;
   };
   status: {
-    id: number;
+    id: string;
     name: string;
     color: string;
   };
@@ -54,8 +54,8 @@ export async function GET(request: NextRequest) {
 
     const dateWhere: {
       startDate?: { gte?: Date; lte?: Date };
-      createdBy?: number;
-      companyId: number;
+      createdBy?: string;
+      companyId: string;
     } = {
       companyId,
     };
@@ -94,8 +94,8 @@ export async function GET(request: NextRequest) {
     // Otherwise show all leaves (for managers/admins)
     const leaveWhere: {
       startDate?: { gte?: Date; lte?: Date };
-      userId?: number;
-      companyId: number;
+      userId?: string;
+      companyId: string;
     } = {
       companyId,
     };
@@ -112,7 +112,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (userId) {
-      leaveWhere.userId = parseInt(userId);
+      leaveWhere.userId = userId;
     }
 
     // Only fetch leave requests if includeLeaves is true
@@ -158,7 +158,7 @@ export async function GET(request: NextRequest) {
 
     // Transform leave requests for the frontend
     const formattedLeaves = leaveRequests.map((leave) => {
-      const isOwnLeave = !userId || leave.userId === parseInt(userId);
+      const isOwnLeave = !userId || leave.userId === userId;
       return {
         id: leave.id,
         title: isOwnLeave

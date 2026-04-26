@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
 
     // Get all leave credits for the user
     const credits = await prisma.leaveCredit.findMany({
-      where: { userId: parseInt(userId) },
+      where: { userId: userId },
       orderBy: { earnedDate: "desc" },
       include: {
         leaveUsage: {
@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
     );
 
     return NextResponse.json({
-      userId: parseInt(userId),
+      userId: userId,
       totalCredits: credits.length,
       availableCredits,
       usedCredits,

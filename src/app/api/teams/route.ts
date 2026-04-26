@@ -33,10 +33,7 @@ export const GET = withAuth(
 
       // Brand filter
       if (brandId) {
-        const brandIdNum = parseInt(brandId);
-        if (!isNaN(brandIdNum)) {
-          whereClauses.push({ brandId: brandIdNum });
-        }
+        whereClauses.push({ brandId: brandId });
       }
 
       // Search filter (team name)
@@ -171,7 +168,7 @@ export async function POST(request: NextRequest) {
         data: {
           teamId: team.id,
           action: "joined",
-          performedBy: performedBy || 1, // Default to admin if not provided
+          performedBy: performedBy || "1", // Default to admin if not provided
           metadata: {
             userId: leaderId,
             isLeader: true,
@@ -185,7 +182,7 @@ export async function POST(request: NextRequest) {
       data: {
         teamId: team.id,
         action: "created",
-        performedBy: performedBy || 1,
+        performedBy: performedBy || "1",
       },
     });
 

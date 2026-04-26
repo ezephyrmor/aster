@@ -48,7 +48,7 @@ export const GET = withAuth(
       }
 
       if (userId) {
-        whereClause.userId = parseInt(userId);
+        whereClause.userId = userId;
       }
 
       if (statusId) {
@@ -58,7 +58,7 @@ export const GET = withAuth(
       // If teamId is provided, get all team members and filter by their requests
       if (teamId) {
         const teamMembers = await prisma.teamMember.findMany({
-          where: { teamId: parseInt(teamId), status: "active" },
+          where: { teamId: teamId, status: "active" },
           select: { userId: true },
         });
         whereClause.userId = { in: teamMembers.map((m) => m.userId) };
@@ -185,7 +185,7 @@ export async function POST(request: NextRequest) {
     if (isPaid !== false) {
       const userCredits = await prisma.leaveCredit.findMany({
         where: {
-          userId: parseInt(userId),
+          userId: userId,
           usedDate: null, // Only unused credits
         },
       });
@@ -205,7 +205,7 @@ export async function POST(request: NextRequest) {
     // Check for overlapping approved leaves
     const overlappingApprovedLeaves = await prisma.leaveRequest.findFirst({
       where: {
-        userId: parseInt(userId),
+        userId: userId,
         statusId: 2, // Approved status
         OR: [
           {
@@ -230,7 +230,7 @@ export async function POST(request: NextRequest) {
 
     const overlappingPendingLeaves = await prisma.leaveRequest.findFirst({
       where: {
-        userId: parseInt(userId),
+        userId: userId,
         statusId: pendingStatus?.id || 1,
         OR: [
           {
@@ -253,8 +253,8 @@ export async function POST(request: NextRequest) {
     // Check for exact duplicate (same dates and same leave type)
     const duplicateRequest = await prisma.leaveRequest.findFirst({
       where: {
-        userId: parseInt(userId),
-        leaveTypeId: parseInt(leaveTypeId),
+        userId: userId,
+        leaveTypeId: leaveTypeId,
         startDate: start,
         endDate: end,
         statusId: {
@@ -279,9 +279,9 @@ export async function POST(request: NextRequest) {
     // Create the leave request
     const leaveRequest = await prisma.leaveRequest.create({
       data: {
-        userId: parseInt(userId),
+        userId: userId,
         companyId: session?.user?.companyId,
-        leaveTypeId: parseInt(leaveTypeId),
+        leaveTypeId: leaveTypeId,
         statusId: pendingStatus?.id || 1,
         startDate: start,
         endDate: end,
