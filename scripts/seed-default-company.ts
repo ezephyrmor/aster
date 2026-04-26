@@ -8,7 +8,6 @@ async function main() {
 
   const companies = [
     {
-      id: 1,
       name: "Aster HR System",
       status: "active",
       timezone: "Asia/Manila",
@@ -20,7 +19,6 @@ async function main() {
       },
     },
     {
-      id: 2,
       name: "Acme Corporation",
       status: "active",
       timezone: "America/New_York",
@@ -32,7 +30,6 @@ async function main() {
       },
     },
     {
-      id: 3,
       name: "Global Tech Solutions",
       status: "active",
       timezone: "Europe/London",
@@ -44,7 +41,6 @@ async function main() {
       },
     },
     {
-      id: 4,
       name: "Pacific Retail Group",
       status: "active",
       timezone: "Australia/Sydney",
@@ -56,7 +52,6 @@ async function main() {
       },
     },
     {
-      id: 5,
       name: "Metro Healthcare Services",
       status: "active",
       timezone: "Asia/Tokyo",
@@ -73,7 +68,7 @@ async function main() {
     const { profile, ...company } = companyData;
 
     const createdCompany = await prisma.company.upsert({
-      where: { id: company.id },
+      where: { name: company.name },
       update: {},
       create: {
         ...company,
@@ -89,9 +84,15 @@ async function main() {
   }
 
   // Backfill all existing records with default company id
-  await prisma.$executeRaw`UPDATE users SET company_id = 1 WHERE company_id IS NULL`;
-  await prisma.$executeRaw`UPDATE brands SET company_id = 1 WHERE company_id IS NULL`;
-  await prisma.$executeRaw`UPDATE teams SET company_id = 1 WHERE company_id IS NULL`;
+  const defaultCompany = await prisma.company.findFirst({
+    where: { name: "Aster HR System" },
+  });
+
+  if (defaultCompany) {
+    await prisma.$executeRaw`UPDATE users SET company_id = ${defaultCompany.id} WHERE company_id IS NULL`;
+    await prisma.$executeRaw`UPDATE brands SET company_id = ${defaultCompany.id} WHERE company_id IS NULL`;
+    await prisma.$executeRaw`UPDATE teams SET company_id = ${defaultCompany.id} WHERE company_id IS NULL`;
+  }
 
   console.log("✅ All existing records backfilled with default company");
   console.log("\n✅ All companies seeded successfully!");

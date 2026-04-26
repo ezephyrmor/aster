@@ -8,7 +8,7 @@ export async function PUT(
 ) {
   try {
     const { id: idStr } = await params;
-    const id = parseInt(idStr);
+    const id = idStr;
     const body = await request.json();
     const { acknowledgedBy, comment } = body;
 
@@ -49,7 +49,7 @@ export async function PUT(
     const infraction = await prisma.infraction.update({
       where: { id },
       data: {
-        acknowledgedBy: parseInt(acknowledgedBy),
+        acknowledgedBy: acknowledgedBy,
         acknowledgedAt: new Date(),
         comment: comment || existing.comment,
       },

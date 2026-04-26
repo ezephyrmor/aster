@@ -51,7 +51,7 @@ describe("GET /api/attendance/clock", () => {
     vi.setSystemTime(mockDate);
 
     const mockAttendance = {
-      id: 1,
+      id: "00000000-0000-0000-0000-000000000001",
       userId: 1,
       date: new Date("2026-04-25T00:00:00.000Z"),
       clockIn: new Date("2026-04-25T01:00:00.000Z"),

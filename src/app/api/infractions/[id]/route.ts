@@ -7,8 +7,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { id: idStr } = await params;
-    const id = parseInt(idStr);
+    const { id } = await params;
 
     const infraction = await prisma.infraction.findUnique({
       where: { id },
@@ -65,8 +64,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { id: idStr } = await params;
-    const id = parseInt(idStr);
+    const { id } = await params;
     const body = await request.json();
     const {
       userId,
@@ -109,14 +107,13 @@ export async function PUT(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updateData: any = {};
 
-    if (offenseId !== undefined) updateData.offenseId = parseInt(offenseId);
-    if (typeId !== undefined) updateData.typeId = parseInt(typeId);
+    if (offenseId !== undefined) updateData.offenseId = offenseId;
+    if (typeId !== undefined) updateData.typeId = typeId;
     if (date !== undefined) updateData.date = new Date(date);
     if (details !== undefined) updateData.details = details;
     if (comment !== undefined) updateData.comment = comment;
-    if (userId !== undefined) updateData.userId = parseInt(userId);
-    if (reportedById !== undefined)
-      updateData.reportedById = parseInt(reportedById);
+    if (userId !== undefined) updateData.userId = userId;
+    if (reportedById !== undefined) updateData.reportedById = reportedById;
     if (status !== undefined) updateData.status = status;
     if (severity !== undefined) updateData.severity = severity;
 
@@ -159,8 +156,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { id: idStr } = await params;
-    const id = parseInt(idStr);
+    const { id } = await params;
 
     // Check if infraction exists
     const existing = await prisma.infraction.findUnique({

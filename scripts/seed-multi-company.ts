@@ -34,8 +34,7 @@ const companyTemplates = [
 // Generate companies array based on configuration
 const companies = companyTemplates
   .slice(0, CONFIG.companyCount)
-  .map((template, index) => ({
-    id: index + 1,
+  .map((template, _index) => ({
     name: template.name,
     timezone: template.timezone,
     adminEmail: `admin@${template.name.toLowerCase().replace(/\s+/g, "")}.local`,
@@ -56,9 +55,8 @@ const basePositions = [
   "Office Administrator",
 ];
 
-const companyDepartments: Record<number, string[]> = {
-  1: [
-    // Aster HR System (SaaS)
+const companyDepartments: Record<string, string[]> = {
+  "Aster HR System": [
     "Engineering",
     "Product",
     "Human Resources",
@@ -68,8 +66,7 @@ const companyDepartments: Record<number, string[]> = {
     "Customer Support",
     "Operations",
   ],
-  2: [
-    // Acme Corporation (Manufacturing)
+  "Acme Corporation": [
     "Production",
     "Quality Control",
     "Logistics",
@@ -79,8 +76,7 @@ const companyDepartments: Record<number, string[]> = {
     "Finance",
     "Safety",
   ],
-  3: [
-    // Global Tech Solutions (Software)
+  "Global Tech Solutions": [
     "Engineering",
     "DevOps",
     "Product",
@@ -90,8 +86,7 @@ const companyDepartments: Record<number, string[]> = {
     "Finance",
     "Sales",
   ],
-  4: [
-    // Pacific Retail Group (Retail)
+  "Pacific Retail Group": [
     "Store Operations",
     "Merchandising",
     "Loss Prevention",
@@ -101,8 +96,7 @@ const companyDepartments: Record<number, string[]> = {
     "Finance",
     "Marketing",
   ],
-  5: [
-    // Metro Healthcare Services (Healthcare)
+  "Metro Healthcare Services": [
     "Clinical Services",
     "Nursing",
     "Pharmacy",
@@ -130,10 +124,10 @@ const baseLeaveTypes = [
 ];
 
 const companyBrands: Record<
-  number,
+  string,
   Array<{ name: string; description: string }>
 > = {
-  1: [
+  "Aster HR System": [
     { name: "Aster HR Cloud", description: "Core HR management platform" },
     {
       name: "Aster Payroll",
@@ -148,7 +142,7 @@ const companyBrands: Record<
       description: "Recruitment and talent management module",
     },
   ],
-  2: [
+  "Acme Corporation": [
     {
       name: "Acme Industrial Parts",
       description: "Heavy machinery components division",
@@ -163,7 +157,7 @@ const companyBrands: Record<
       description: "On-site equipment maintenance",
     },
   ],
-  3: [
+  "Global Tech Solutions": [
     {
       name: "GlobalTech Enterprise",
       description: "Enterprise software development",
@@ -178,7 +172,7 @@ const companyBrands: Record<
       description: "Business intelligence and analytics",
     },
   ],
-  4: [
+  "Pacific Retail Group": [
     {
       name: "Pacific Retail Stores",
       description: "Physical retail store operations",
@@ -196,7 +190,7 @@ const companyBrands: Record<
       description: "Customer support and services",
     },
   ],
-  5: [
+  "Metro Healthcare Services": [
     {
       name: "Metro General Hospital",
       description: "Primary healthcare facility",
@@ -217,10 +211,10 @@ const companyBrands: Record<
 };
 
 const companyTeams: Record<
-  number,
+  string,
   Array<{ name: string; description: string }>
 > = {
-  1: [
+  "Aster HR System": [
     {
       name: "Backend Engineering",
       description: "Server-side development team",
@@ -246,7 +240,7 @@ const companyTeams: Record<
       description: "Testing and quality control team",
     },
   ],
-  2: [
+  "Acme Corporation": [
     { name: "Production Line", description: "Manufacturing operations team" },
     { name: "Quality Control", description: "Product inspection team" },
     { name: "Maintenance Crew", description: "Equipment maintenance team" },
@@ -257,7 +251,7 @@ const companyTeams: Record<
       description: "Workplace safety compliance team",
     },
   ],
-  3: [
+  "Global Tech Solutions": [
     {
       name: "Software Development",
       description: "Application development team",
@@ -277,7 +271,7 @@ const companyTeams: Record<
       description: "Technical customer support team",
     },
   ],
-  4: [
+  "Pacific Retail Group": [
     { name: "Store Operations", description: "Retail store management team" },
     {
       name: "Merchandising Team",
@@ -291,7 +285,7 @@ const companyTeams: Record<
     { name: "Supply Chain Team", description: "Inventory and logistics team" },
     { name: "Marketing Team", description: "Promotions and advertising team" },
   ],
-  5: [
+  "Metro Healthcare Services": [
     { name: "Clinical Staff", description: "Medical practitioners team" },
     { name: "Nursing Staff", description: "Patient care nursing team" },
     { name: "Laboratory Team", description: "Diagnostic testing team" },
@@ -301,33 +295,26 @@ const companyTeams: Record<
   ],
 };
 
-async function seedCompany(companyId: number, companyData: any) {
-  console.log(`\n🌱 Seeding company: ${companyData.name} (ID: ${companyId})`);
+async function seedCompany(companyId: string, companyName: string) {
+  console.log(`\n🌱 Seeding company: ${companyName} (ID: ${companyId})`);
 
-  // Create positions for this company
-  const positions = [];
-  for (const name of basePositions) {
-    const position = await prisma.position.create({
-      data: {
-        name,
-        companyId,
-        description: `${name} position for ${companyData.name}`,
-      },
-    });
-    positions.push(position);
-  }
-  console.log(`   ✅ Created ${positions.length} positions`);
+  // Get existing positions created by seed-lookup-tables.ts
+  const positions = await prisma.position.findMany({
+    where: { companyId },
+  });
+  console.log(`   ✅ Using existing ${positions.length} positions`);
 
   // Create departments for this company
   const departments = [];
-  const departmentList = companyDepartments[companyId] || companyDepartments[1];
+  const departmentList =
+    companyDepartments[companyName] || companyDepartments["Aster HR System"];
 
   for (const name of departmentList) {
     const department = await prisma.department.create({
       data: {
         name,
         companyId,
-        description: `${name} department for ${companyData.name}`,
+        description: `${name} department for ${companyName}`,
       },
     });
     departments.push(department);
@@ -365,8 +352,13 @@ async function seedCompany(companyId: number, companyData: any) {
   const managerRole = roles.find((r) => r.name === "manager");
   const employeeRole = roles.find((r) => r.name === "employee");
 
+  // Get active status id
+  const activeStatus = await prisma.employeeStatusModel.findFirst({
+    where: { name: "active" },
+  });
+  if (!activeStatus) throw new Error("Active employee status not found");
+
   // Create admin user for all companies
-  // For company 1, this will be overwritten by seed-admin.ts later with the correct known password
   const adminUser = await createUser(
     companyId,
     "System",
@@ -374,12 +366,14 @@ async function seedCompany(companyId: number, companyData: any) {
     adminRole!.id,
     positions[0].id,
     departments[0].id,
+    activeStatus.id,
   );
   console.log(`   ✅ Created admin user: ${adminUser.username}`);
 
   // Create brands for this company
   const brands = [];
-  const brandList = companyBrands[companyId] || companyBrands[1];
+  const brandList =
+    companyBrands[companyName] || companyBrands["Aster HR System"];
 
   for (const brandData of brandList) {
     const brand = await prisma.brand.create({
@@ -397,7 +391,7 @@ async function seedCompany(companyId: number, companyData: any) {
 
   // Create teams for this company (assigned to first brand)
   const teams = [];
-  const teamList = companyTeams[companyId] || companyTeams[1];
+  const teamList = companyTeams[companyName] || companyTeams["Aster HR System"];
   const primaryBrand = brands[0];
 
   for (const teamData of teamList) {
@@ -422,6 +416,7 @@ async function seedCompany(companyId: number, companyData: any) {
       hrRole!.id,
       positions[4].id,
       departments[2].id,
+      activeStatus.id,
     );
     console.log(`   ✅ Created HR user: ${hrUser.username}`);
   }
@@ -435,6 +430,7 @@ async function seedCompany(companyId: number, companyData: any) {
       managerRole!.id,
       positions[3].id,
       departments[i % departments.length].id,
+      activeStatus.id,
     );
     console.log(`   ✅ Created manager user: ${managerUser.username}`);
   }
@@ -449,6 +445,7 @@ async function seedCompany(companyId: number, companyData: any) {
       employeeRole!.id,
       positions[i % positions.length].id,
       departments[i % departments.length].id,
+      activeStatus.id,
     );
     if (i % 10 === 0) {
       console.log(
@@ -458,16 +455,17 @@ async function seedCompany(companyId: number, companyData: any) {
   }
   console.log(`   ✅ Created ${employeeCountPerCompany} employees`);
 
-  console.log(`✅ Company ${companyData.name} seeding complete!`);
+  console.log(`✅ Company ${companyName} seeding complete!`);
 }
 
 async function createUser(
-  companyId: number,
+  companyId: string,
   firstName: string,
   lastName: string,
-  roleId: number,
-  positionId: number,
-  departmentId: number,
+  roleId: string,
+  positionId: string,
+  departmentId: string,
+  statusId: string,
 ) {
   const username = generateUsername(firstName, lastName);
   const password = generatePassword();
@@ -497,7 +495,7 @@ async function createUser(
           ),
           positionId,
           departmentId,
-          statusId: 1,
+          statusId,
         },
       },
     },
@@ -516,7 +514,6 @@ async function main() {
     await prisma.brand.deleteMany({});
     await prisma.employeeProfile.deleteMany({});
     await prisma.user.deleteMany({});
-    await prisma.position.deleteMany({});
     await prisma.department.deleteMany({});
     await prisma.role.deleteMany({});
     await prisma.leaveType.deleteMany({});
@@ -524,26 +521,43 @@ async function main() {
     await prisma.infractionType.deleteMany({});
     await prisma.calendarEvent.deleteMany({});
 
+    // Get existing companies from database
+    const existingCompanies = await prisma.company.findMany({
+      select: { id: true, name: true },
+    });
+
     // Seed each company
     for (const companyData of companies) {
-      await seedCompany(companyData.id, companyData);
+      const existingCompany = existingCompanies.find(
+        (c) => c.name === companyData.name,
+      );
+
+      if (existingCompany) {
+        await seedCompany(existingCompany.id, existingCompany.name);
+      } else {
+        console.warn(
+          `⚠️ Skipping company not found in database: ${companyData.name}`,
+        );
+      }
     }
 
     console.log("\n🎉 Multi-company seeding completed successfully!");
     console.log("\n📊 Summary:");
-    console.log(`   - Companies: ${companies.length}`);
+    console.log(`   - Companies: ${existingCompanies.length}`);
     const employeeCountPerCompany = CONFIG.employeeCountPerCompany;
     console.log(
-      `   - Total users: ${companies.length * (employeeCountPerCompany + 8)}`,
+      `   - Total users: ${existingCompanies.length * (employeeCountPerCompany + 8)}`,
     );
-    console.log(`   - Positions: ${companies.length * basePositions.length}`);
-    console.log(`   - Departments: ${companies.length * 8}`);
-    console.log(`   - Roles: ${companies.length * baseRoles.length}`);
     console.log(
-      `   - Leave Types: ${companies.length * baseLeaveTypes.length}`,
+      `   - Positions: ${existingCompanies.length * basePositions.length}`,
     );
-    console.log(`   - Brands: ${companies.length * 4}`);
-    console.log(`   - Teams: ${companies.length * 6}`);
+    console.log(`   - Departments: ${existingCompanies.length * 8}`);
+    console.log(`   - Roles: ${existingCompanies.length * baseRoles.length}`);
+    console.log(
+      `   - Leave Types: ${existingCompanies.length * baseLeaveTypes.length}`,
+    );
+    console.log(`   - Brands: ${existingCompanies.length * 4}`);
+    console.log(`   - Teams: ${existingCompanies.length * 6}`);
 
     console.log(
       "\n✅ System is now fully populated with multiple isolated companies!",

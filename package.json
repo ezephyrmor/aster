@@ -22,7 +22,7 @@
     "db:seed:calendar": "tsx scripts/seed-calendar-events.ts",
     "db:seed:schedules": "tsx scripts/seed-schedules.ts",
     "db:seed:multi-company": "tsx scripts/seed-multi-company.ts",
-    "db:seed:all": "npm run db:seed:lookup && npm run db:seed:company && npm run db:seed:multi-company && npm run db:seed:admin && npm run db:seed:infractions && npm run db:seed:leaves && npm run db:seed:all-data && npm run db:seed:members && npm run db:seed:calendar && npm run db:seed:schedules",
+    "db:seed:all": "npm run db:seed:company && npm run db:seed:lookup && npm run db:seed:multi-company && npm run db:seed:infractions && npm run db:seed:leaves && npm run db:seed:admin && npm run db:seed:all-data && npm run db:seed:members && npm run db:seed:calendar && npm run db:seed:schedules",
     "db:reset": "prisma migrate reset --force && npm run db:seed:all",
     "db:reset+": "prisma migrate dev && prisma migrate reset --force && npm run db:seed:all",
     "db:studio": "prisma studio",

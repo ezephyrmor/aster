@@ -95,8 +95,8 @@ export async function GET(
         // Return mock attendance status
         const userId = request.nextUrl.searchParams.get("userId");
         if (userId) {
-          const attendance = demoStore.getAttendanceByUserId(parseInt(userId));
-          const schedule = demoStore.getScheduleByUserId(parseInt(userId));
+          const attendance = demoStore.getAttendanceByUserId(userId);
+          const schedule = demoStore.getScheduleByUserId(userId);
           return NextResponse.json({
             attendance: attendance[0] || null,
             schedule: schedule,
@@ -260,7 +260,7 @@ export async function GET(
         // Handle single resource requests (e.g., users/1)
         if (pathParts.length === 2) {
           const [resource, id] = pathParts;
-          const resourceId = parseInt(id);
+          const resourceId = id;
 
           switch (resource) {
             case "users":
@@ -445,7 +445,7 @@ export async function POST(
           message: `Clocked ${type === "in" ? "in" : "out"} successfully`,
           attendance: {
             id: Date.now(),
-            userId: parseInt(userId),
+            userId,
             date: new Date().toISOString().split("T")[0],
             clockIn: type === "in" ? new Date().toISOString() : undefined,
             clockOut: type === "out" ? new Date().toISOString() : undefined,

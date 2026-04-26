@@ -1,20 +1,12 @@
 import { z } from "zod";
+import { validationRules } from "./validation.utils";
 
 export const InfractionSchema = z.object({
-  userId: z
-    .number()
-    .int("Must select a valid user")
-    .positive("User ID must be positive"),
+  userId: validationRules.uuid,
 
-  offenseId: z
-    .number()
-    .int("Must select a valid offense")
-    .positive("Offense ID must be positive"),
+  offenseId: validationRules.uuid,
 
-  typeId: z
-    .number()
-    .int("Must select a valid infraction type")
-    .positive("Type ID must be positive"),
+  typeId: validationRules.uuid,
 
   date: z.preprocess((val) => new Date(val as string), z.date()),
 
@@ -30,10 +22,7 @@ export const InfractionSchema = z.object({
     .trim()
     .optional(),
 
-  reportedById: z
-    .number()
-    .int("Must be a valid user ID")
-    .positive("Reporter ID must be positive"),
+  reportedById: validationRules.uuid,
 
   status: z
     .enum(["pending", "investigating", "resolved", "dismissed"])

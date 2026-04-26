@@ -4,16 +4,16 @@ import React, { createContext, useContext, type ReactNode } from "react";
 import { SessionProvider, useSession, signIn, signOut } from "next-auth/react";
 
 interface Role {
-  id: number;
+  id: string;
   name: string;
   description: string | null;
 }
 
 interface User {
-  id: number;
+  id: string;
   username: string;
-  roleId: number;
-  companyId: number;
+  roleId: string;
+  companyId: string;
   companyName?: string;
   role: Role;
 }
@@ -38,7 +38,7 @@ function AuthContextProvider({ children }: { children: ReactNode }) {
   const user = session?.user
     ? ({
         ...session.user,
-        id: parseInt(session.user.id, 10),
+        id: session.user.id,
       } as User)
     : null;
 

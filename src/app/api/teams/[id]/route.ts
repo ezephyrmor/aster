@@ -8,11 +8,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const teamId = parseInt(id);
-
-    if (isNaN(teamId)) {
-      return NextResponse.json({ error: "Invalid team ID" }, { status: 400 });
-    }
+    const teamId = id;
 
     const team = await prisma.team.findUnique({
       where: { id: teamId },
@@ -73,13 +69,9 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
-    const teamId = parseInt(id);
+    const teamId = id;
     const body = await request.json();
     const { name, description, brandId, managerId, status, performedBy } = body;
-
-    if (isNaN(teamId)) {
-      return NextResponse.json({ error: "Invalid team ID" }, { status: 400 });
-    }
 
     // Check if team exists
     const existingTeam = await prisma.team.findUnique({
@@ -121,9 +113,9 @@ export async function PUT(
       };
     }
 
-    if (brandId !== undefined && parseInt(brandId) !== existingTeam.brandId) {
+    if (brandId !== undefined && brandId !== existingTeam.brandId) {
       changes.push("brand");
-      metadata.brandId = { old: existingTeam.brandId, new: parseInt(brandId) };
+      metadata.brandId = { old: existingTeam.brandId, new: brandId };
     }
 
     // Update team
@@ -133,8 +125,7 @@ export async function PUT(
         name: name || existingTeam.name,
         description:
           description !== undefined ? description : existingTeam.description,
-        brandId:
-          brandId !== undefined ? parseInt(brandId) : existingTeam.brandId,
+        brandId: brandId !== undefined ? brandId : existingTeam.brandId,
         managerId,
         status,
       },
@@ -170,11 +161,7 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    const teamId = parseInt(id);
-
-    if (isNaN(teamId)) {
-      return NextResponse.json({ error: "Invalid team ID" }, { status: 400 });
-    }
+    const teamId = id;
 
     // Check if team exists
     const existingTeam = await prisma.team.findUnique({

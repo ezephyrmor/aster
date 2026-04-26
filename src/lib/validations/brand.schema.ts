@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { validationRules } from "./validation.utils";
 
 export const BrandSchema = z.object({
   name: z
@@ -35,9 +36,9 @@ export const BrandSchema = z.object({
 
   status: z.enum(["active", "inactive", "archived"]).default("active"),
 
-  industryId: z.number().int("Must be a valid industry ID").optional(),
+  industryId: validationRules.optionalUuid,
 
-  managerId: z.number().int("Must be a valid user ID").optional(),
+  managerId: validationRules.optionalUuid,
 });
 
 export const CreateBrandSchema = BrandSchema.extend({

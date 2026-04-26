@@ -5,6 +5,10 @@ const prisma = new PrismaClient();
 async function main() {
   console.log("🌱 Seeding leave types and statuses...");
 
+  // Get all existing companies
+  const companies = await prisma.company.findMany();
+  console.log(`   Found ${companies.length} companies`);
+
   // Seed Leave Types
   const leaveTypes = [
     {
@@ -51,24 +55,6 @@ async function main() {
     },
   ];
 
-  for (const leaveType of leaveTypes) {
-    await prisma.leaveType.upsert({
-      where: {
-        companyId_name: {
-          companyId: 1,
-          name: leaveType.name,
-        },
-      },
-      update: leaveType,
-      create: {
-        ...leaveType,
-        companyId: 1,
-      },
-    });
-  }
-
-  console.log(`✅ Seeded ${leaveTypes.length} leave types`);
-
   // Seed Leave Statuses
   const leaveStatuses = [
     {
@@ -97,23 +83,48 @@ async function main() {
     },
   ];
 
-  for (const status of leaveStatuses) {
-    await prisma.leaveStatus.upsert({
-      where: {
-        companyId_name: {
-          companyId: 1,
-          name: status.name,
+  // Seed for each company
+  for (const company of companies) {
+    console.log(`\n🌱 Seeding leaves for ${company.name}...`);
+
+    // Create leave types for this company
+    for (const leaveType of leaveTypes) {
+      await prisma.leaveType.upsert({
+        where: {
+          companyId_name: {
+            companyId: company.id,
+            name: leaveType.name,
+          },
         },
-      },
-      update: status,
-      create: {
-        ...status,
-        companyId: 1,
-      },
-    });
+        update: leaveType,
+        create: {
+          ...leaveType,
+          companyId: company.id,
+        },
+      });
+    }
+    console.log(`   ✅ Seeded ${leaveTypes.length} leave types`);
+
+    // Create leave statuses for this company
+    for (const status of leaveStatuses) {
+      await prisma.leaveStatus.upsert({
+        where: {
+          companyId_name: {
+            companyId: company.id,
+            name: status.name,
+          },
+        },
+        update: status,
+        create: {
+          ...status,
+          companyId: company.id,
+        },
+      });
+    }
+    console.log(`   ✅ Seeded ${leaveStatuses.length} leave statuses`);
   }
 
-  console.log(`✅ Seeded ${leaveStatuses.length} leave statuses`);
+  console.log("\n✅ All companies seeded!");
 
   // Seed Leave Credits for existing employees
   console.log("\n📅 Generating leave credits for existing employees...");

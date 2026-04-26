@@ -47,19 +47,19 @@ describe("GET /api/auth/me", () => {
     expect(response.status).toBe(404);
     expect(data.error).toBe("User not found");
     expect(prisma.user.findUnique).toHaveBeenCalledWith({
-      where: { id: 999 },
+      where: { id: "999" },
       include: expect.anything(),
     });
   });
 
   it("returns user data with role when authenticated and user exists", async () => {
     const mockUser = {
-      id: 1,
+      id: "1",
       username: "testuser",
       employeeProfile: {
-        roleId: 2,
+        roleId: "2",
         role: {
-          id: 2,
+          id: "2",
           name: "Admin",
         },
       },
@@ -76,11 +76,11 @@ describe("GET /api/auth/me", () => {
 
     expect(response.status).toBe(200);
     expect(data.user).toEqual({
-      id: 1,
+      id: "1",
       username: "testuser",
-      roleId: 2,
+      roleId: "2",
       role: {
-        id: 2,
+        id: "2",
         name: "Admin",
       },
     });
@@ -88,7 +88,7 @@ describe("GET /api/auth/me", () => {
 
   it("returns user data without role when employee profile does not exist", async () => {
     const mockUser = {
-      id: 1,
+      id: "1",
       username: "testuser",
       employeeProfile: null,
     };

@@ -58,6 +58,12 @@ export const validationRules = {
   optionalString: z.string().optional(),
   date: z.coerce.date().optional(),
   positiveNumber: z.number().positive("Must be a positive number"),
+  uuid: z.string().uuid("Please enter a valid UUID"),
+  optionalUuid: z
+    .string()
+    .uuid("Please enter a valid UUID")
+    .optional()
+    .or(z.literal("")),
 };
 
 /**

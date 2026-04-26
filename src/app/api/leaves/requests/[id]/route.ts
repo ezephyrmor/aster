@@ -20,7 +20,7 @@ export async function PATCH(
 
     // Get the leave request
     const leaveRequest = await prisma.leaveRequest.findUnique({
-      where: { id: parseInt(id) },
+      where: { id },
       include: {
         user: true,
         leaveType: true,
@@ -54,10 +54,10 @@ export async function PATCH(
 
     // Update the leave request
     const updatedLeaveRequest = await prisma.leaveRequest.update({
-      where: { id: parseInt(id) },
+      where: { id },
       data: {
         statusId,
-        reviewedBy: reviewedBy ? parseInt(reviewedBy) : null,
+        reviewedBy: reviewedBy,
         reviewedAt: new Date(),
         reviewComment: reviewComment || null,
       },
@@ -149,7 +149,7 @@ export async function GET(
     const { id } = await params;
 
     const leaveRequest = await prisma.leaveRequest.findUnique({
-      where: { id: parseInt(id) },
+      where: { id },
       include: {
         user: {
           include: {

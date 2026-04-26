@@ -9,14 +9,9 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const userId = parseInt(id);
-
-    if (isNaN(userId)) {
-      return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
-    }
 
     const user = await prisma.user.findUnique({
-      where: { id: userId },
+      where: { id },
       include: {
         employeeProfile: {
           include: {
@@ -60,12 +55,8 @@ export const PUT = withAuth(
   ) => {
     try {
       const { id } = await params;
-      const userId = parseInt(id);
+      const userId = id;
       const companyId = auth.user.companyId;
-
-      if (isNaN(userId)) {
-        return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
-      }
 
       const body = await request.json();
       const {
@@ -99,7 +90,7 @@ export const PUT = withAuth(
       }
 
       // Get role ID if role is provided
-      let roleId: number | undefined;
+      let roleId: string | undefined;
       if (role) {
         const roleRecord = await prisma.role.findUnique({
           where: {
@@ -172,9 +163,9 @@ export const PUT = withAuth(
                 },
               },
             });
-            if (!positionRecord && !isNaN(parseInt(position))) {
+            if (!positionRecord) {
               positionRecord = await prisma.position.findUnique({
-                where: { id: parseInt(position) },
+                where: { id: position },
               });
             }
             updateProfileData.positionId = positionRecord?.id || null;
@@ -194,9 +185,9 @@ export const PUT = withAuth(
                 },
               },
             });
-            if (!departmentRecord && !isNaN(parseInt(department))) {
+            if (!departmentRecord) {
               departmentRecord = await prisma.department.findUnique({
-                where: { id: parseInt(department) },
+                where: { id: department },
               });
             }
             updateProfileData.departmentId = departmentRecord?.id || null;
@@ -205,7 +196,7 @@ export const PUT = withAuth(
 
         // Handle status (can be name or ID)
         let statusChanged = false;
-        let newStatusId: number | null = null;
+        let newStatusId: string | null = null;
 
         if (status !== undefined) {
           let statusRecord = null;
@@ -225,9 +216,9 @@ export const PUT = withAuth(
           }
 
           // Try by ID
-          if (!statusRecord && !isNaN(parseInt(status))) {
+          if (!statusRecord) {
             statusRecord = await prisma.employeeStatusModel.findUnique({
-              where: { id: parseInt(status) },
+              where: { id: status },
             });
           }
 
@@ -264,7 +255,7 @@ export const PUT = withAuth(
               effectiveDate: new Date(),
               reason: "Status updated via profile edit",
               notes: "Changed through user profile edit page",
-              performedBy: parseInt(auth.user.id),
+              performedBy: auth.user.id,
               ipAddress,
               userAgent,
             },
@@ -318,11 +309,7 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    const userId = parseInt(id);
-
-    if (isNaN(userId)) {
-      return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
-    }
+    const userId = id;
 
     // Check if user exists
     const existingUser = await prisma.user.findUnique({

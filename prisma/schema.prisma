@@ -8,8 +8,8 @@ datasource db {
 }
 
 model Position {
-  id               Int               @id @default(autoincrement())
-  companyId        Int               @default(1) @map("company_id")
+  id               String            @id @default(uuid())
+  companyId        String               @default("1") @map("company_id")
   name             String            @db.VarChar(100)
   description      String?           @db.Text
   createdAt        DateTime          @default(now()) @map("created_at")
@@ -22,8 +22,8 @@ model Position {
 }
 
 model Department {
-  id               Int               @id @default(autoincrement())
-  companyId        Int               @default(1) @map("company_id")
+  id               String            @id @default(uuid())
+  companyId        String               @default("1") @map("company_id")
   name             String            @db.VarChar(100)
   description      String?           @db.Text
   createdAt        DateTime          @default(now()) @map("created_at")
@@ -36,8 +36,8 @@ model Department {
 }
 
 model Role {
-  id                 Int              @id @default(autoincrement())
-  companyId          Int              @default(1) @map("company_id")
+  id                 String           @id @default(uuid())
+  companyId          String              @default("1") @map("company_id")
   name               String           @db.VarChar(50)
   description        String?          @db.Text
   createdAt          DateTime         @default(now()) @map("created_at")
@@ -50,7 +50,7 @@ model Role {
 }
 
 model EmployeeStatusModel {
-  id               Int               @id @default(autoincrement())
+  id               String            @id @default(uuid())
   name             String            @unique @db.VarChar(50)
   description      String?           @db.Text
   color            String            @default("gray") @db.VarChar(20)
@@ -64,7 +64,7 @@ model EmployeeStatusModel {
 }
 
 model Industry {
-  id          Int      @id @default(autoincrement())
+  id          String   @id @default(uuid())
   name        String   @unique @db.VarChar(100)
   description String?  @db.Text
   createdAt   DateTime @default(now()) @map("created_at")
@@ -81,7 +81,7 @@ enum CompanyStatus {
 }
 
 model Company {
-  id        Int           @id @default(autoincrement())
+  id        String        @id @default(uuid())
   name      String        @unique @db.VarChar(150)
   status    CompanyStatus @default(active)
   timezone  String        @default("Asia/Manila") @db.VarChar(50)
@@ -108,8 +108,8 @@ model Company {
 }
 
 model CompanyProfile {
-  id          Int       @id @default(autoincrement())
-  companyId   Int       @unique @map("company_id")
+  id          String    @id @default(uuid())
+  companyId   String       @unique @map("company_id")
   legalName   String?   @map("legal_name") @db.VarChar(200)
   taxId       String?   @map("tax_id") @db.VarChar(50)
   email       String?   @db.VarChar(200)
@@ -127,8 +127,8 @@ model CompanyProfile {
 }
 
 model User {
-  id              Int              @id @default(autoincrement())
-  companyId       Int              @map("company_id") @default(1)
+  id              String           @id @default(uuid())
+  companyId       String              @map("company_id") @default("1")
   username        String           @unique @db.VarChar(50)
   passwordHash    String           @map("password_hash") @db.VarChar(255)
   salt            String           @db.VarChar(255)
@@ -155,8 +155,8 @@ model User {
 }
 
 model EmployeeProfile {
-  id            Int                 @id @default(autoincrement())
-  userId        Int                 @unique @map("user_id")
+  id            String              @id @default(uuid())
+  userId        String                 @unique @map("user_id")
   firstName     String              @map("first_name") @db.VarChar(100)
   lastName      String              @map("last_name") @db.VarChar(100)
   middleName    String?             @map("middle_name") @db.VarChar(100)
@@ -170,10 +170,10 @@ model EmployeeProfile {
   emergencyContactRelation String?  @map("emergency_contact_relation") @db.VarChar(100)
   createdAt     DateTime            @default(now()) @map("created_at")
   updatedAt     DateTime            @updatedAt @map("updated_at")
-  departmentId  Int?                @map("department_id")
-  positionId    Int?                @map("position_id")
-  statusId      Int                 @default(1) @map("status_id")
-  roleId        Int                 @default(3) @map("role_id")
+  departmentId  String?                @map("department_id")
+  positionId    String?                @map("position_id")
+  statusId      String                 @default("1") @map("status_id")
+  roleId        String                 @default("3") @map("role_id")
   department    Department?         @relation(fields: [departmentId], references: [id])
   position      Position?           @relation(fields: [positionId], references: [id])
   status        EmployeeStatusModel @relation(fields: [statusId], references: [id])
@@ -189,15 +189,15 @@ model EmployeeProfile {
 }
 
 model EmployeeStatusHistory {
-  id              Int                 @id @default(autoincrement())
-  userId          Int                 @map("user_id")
+  id              String              @id @default(uuid())
+  userId          String                 @map("user_id")
   employeeProfile EmployeeProfile     @relation(fields: [userId], references: [userId], onDelete: Cascade)
-  statusId        Int                 @map("status_id")
+  statusId        String                 @map("status_id")
   status          EmployeeStatusModel @relation(fields: [statusId], references: [id])
   effectiveDate   DateTime            @default(now()) @map("effective_date")
   reason          String?             @db.Text
   notes           String?             @db.Text
-  performedBy     Int                 @map("performed_by")
+  performedBy     String                 @map("performed_by")
   performedByUser User                @relation("EmployeeStatusHistoryPerformedBy", fields: [performedBy], references: [id])
   createdAt       DateTime            @default(now()) @map("created_at")
   ipAddress       String?             @map("ip_address") @db.VarChar(45)
@@ -211,8 +211,8 @@ model EmployeeStatusHistory {
 }
 
 model Brand {
-  id          Int         @id @default(autoincrement())
-  companyId   Int         @map("company_id") @default(1)
+  id          String      @id @default(uuid())
+  companyId   String         @map("company_id") @default("1")
   name        String      @unique @db.VarChar(100)
   description String?     @db.Text
   logo        String?     @db.VarChar(500)
@@ -220,11 +220,11 @@ model Brand {
   status      BrandStatus @default(active)
   createdAt   DateTime    @default(now()) @map("created_at")
   updatedAt   DateTime    @updatedAt @map("updated_at")
-  createdBy   Int         @map("created_by")
-  managerId   Int?        @map("manager_id")
+  createdBy   String         @map("created_by")
+  managerId   String?        @map("manager_id")
   company     Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
   manager     User?       @relation("BrandManagers", fields: [managerId], references: [id])
-  industryId  Int?        @map("industry_id")
+  industryId  String?        @map("industry_id")
   industry    Industry?   @relation(fields: [industryId], references: [id])
   teams       Team[]
   managerHistory BrandManagerHistory[]
@@ -241,16 +241,16 @@ enum BrandManagerAction {
 }
 
 model BrandManagerHistory {
-  id              Int                 @id @default(autoincrement())
-  brandId         Int
+  id              String              @id @default(uuid())
+  brandId         String
   brand           Brand               @relation(fields: [brandId], references: [id])
-  userId          Int?                @map("user_id")
+  userId          String?                @map("user_id")
   user            User?               @relation("BrandManagerHistoryUsers", fields: [userId], references: [id])
   action          BrandManagerAction
-  performedBy     Int                 @map("performed_by")
+  performedBy     String                 @map("performed_by")
   performedByUser User                @relation("BrandManagerHistoryPerformedBy", fields: [performedBy], references: [id])
   timestamp       DateTime            @default(now())
-  previousManagerId Int?              @map("previous_manager_id")
+  previousManagerId String?              @map("previous_manager_id")
   reason          String?             @db.Text
   ipAddress       String?             @map("ip_address") @db.VarChar(45)
   userAgent       String?             @map("user_agent") @db.Text
@@ -263,13 +263,13 @@ model BrandManagerHistory {
 }
 
 model Team {
-  id          Int           @id @default(autoincrement())
-  companyId   Int           @map("company_id") @default(1)
+  id          String      @id @default(uuid())
+  companyId   String           @map("company_id") @default("1")
   name        String        @unique @db.VarChar(100)
   description String?       @db.Text
   createdAt   DateTime      @default(now()) @map("created_at")
   updatedAt   DateTime      @updatedAt @map("updated_at")
-  brandId     Int           @map("brand_id")
+  brandId     String           @map("brand_id")
   company     Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
   history     TeamHistory[]
   members     TeamMember[]
@@ -281,9 +281,9 @@ model Team {
 }
 
 model TeamMember {
-  id       Int              @id @default(autoincrement())
-  teamId   Int              @map("team_id")
-  userId   Int              @map("user_id")
+  id       String           @id @default(uuid())
+  teamId   String              @map("team_id")
+  userId   String              @map("user_id")
   isLeader Boolean          @default(false) @map("is_leader")
   status   TeamMemberStatus @default(active)
   joinedAt DateTime         @default(now()) @map("joined_at")
@@ -298,11 +298,11 @@ model TeamMember {
 }
 
 model TeamHistory {
-  id           Int               @id @default(autoincrement())
-  teamId       Int               @map("team_id")
-  teamMemberId Int?              @map("team_member_id")
+  id          String      @id @default(uuid())
+  teamId       String               @map("team_id")
+  teamMemberId String?              @map("team_member_id")
   action       TeamHistoryAction
-  performedBy  Int               @map("performed_by")
+  performedBy  String               @map("performed_by")
   reason       String?           @db.Text
   metadata     Json?
   createdAt    DateTime          @default(now()) @map("created_at")
@@ -336,14 +336,14 @@ enum TeamHistoryAction {
 }
 
 model CalendarEvent {
-  id          Int      @id @default(autoincrement())
-  companyId   Int      @default(1) @map("company_id")
+  id          String   @id @default(uuid())
+  companyId   String      @default("1") @map("company_id")
   title       String   @db.VarChar(200)
   description String?  @db.Text
   startDate   DateTime @map("start_date")
   endDate     DateTime @map("end_date")
   color       String   @default("blue") @db.VarChar(20)
-  createdBy   Int      @map("created_by")
+  createdBy   String      @map("created_by")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
   user        User     @relation(fields: [createdBy], references: [id])
@@ -356,8 +356,8 @@ model CalendarEvent {
 }
 
 model LeaveType {
-  id               Int           @id @default(autoincrement())
-  companyId        Int           @default(1) @map("company_id")
+  id          String      @id @default(uuid())
+  companyId        String           @default("1") @map("company_id")
   name             String        @db.VarChar(50)
   description      String?       @db.Text
   defaultDaysLimit Int?          @map("default_days_limit")
@@ -373,8 +373,8 @@ model LeaveType {
 }
 
 model LeaveStatus {
-  id            Int           @id @default(autoincrement())
-  companyId     Int           @default(1) @map("company_id")
+  id          String      @id @default(uuid())
+  companyId     String           @default("1") @map("company_id")
   name          String        @db.VarChar(50)
   description   String?       @db.Text
   color         String        @default("gray") @db.VarChar(20)
@@ -389,8 +389,8 @@ model LeaveStatus {
 }
 
 model LeaveCredit {
-  id         Int           @id @default(autoincrement())
-  userId     Int           @map("user_id")
+  id          String      @id @default(uuid())
+  userId     String           @map("user_id")
   earnedDate DateTime      @map("earned_date")
   usedDate   DateTime?     @map("used_date")
   createdAt  DateTime      @default(now()) @map("created_at")
@@ -403,16 +403,16 @@ model LeaveCredit {
 }
 
 model LeaveRequest {
-  id            Int       @id @default(autoincrement())
-  companyId     Int       @default(1) @map("company_id")
-  userId        Int       @map("user_id")
-  leaveTypeId   Int       @map("leave_type_id")
-  statusId      Int       @default(1) @map("status_id")
+  id          String      @id @default(uuid())
+  companyId     String       @default("1") @map("company_id")
+  userId        String       @map("user_id")
+  leaveTypeId   String       @map("leave_type_id")
+  statusId      String       @default("1") @map("status_id")
   startDate     DateTime  @map("start_date")
   endDate       DateTime  @map("end_date")
   reason        String?   @db.Text
   isPaid        Boolean   @default(true) @map("is_paid")
-  reviewedBy    Int?      @map("reviewed_by")
+  reviewedBy    String?      @map("reviewed_by")
   reviewedAt    DateTime? @map("reviewed_at")
   reviewComment String?   @map("review_comment") @db.Text
   createdAt     DateTime  @default(now()) @map("created_at")
@@ -434,9 +434,9 @@ model LeaveRequest {
 }
 
 model LeaveUsage {
-  id             Int          @id @default(autoincrement())
-  leaveRequestId Int          @map("leave_request_id")
-  leaveCreditId  Int          @map("leave_credit_id")
+  id          String      @id @default(uuid())
+  leaveRequestId String          @map("leave_request_id")
+  leaveCreditId  String          @map("leave_credit_id")
   createdAt      DateTime     @default(now()) @map("created_at")
 
   leaveRequest   LeaveRequest @relation(fields: [leaveRequestId], references: [id], onDelete: Cascade)
@@ -449,9 +449,9 @@ model LeaveUsage {
 }
 
 model WorkSchedule {
-  id           Int          @id @default(autoincrement())
-  userId       Int          @map("user_id")
-  companyId    Int          @default(1) @map("company_id")
+  id          String      @id @default(uuid())
+  userId       String          @map("user_id")
+  companyId    String          @default("1") @map("company_id")
   dayOfWeek    Int          @map("day_of_week") // 0=Sunday, 1=Monday, ..., 6=Saturday
   startTime    String       @map("start_time") // Format: "HH:MM" (24-hour)
   endTime      String       @map("end_time") // Format: "HH:MM" (24-hour)
@@ -471,9 +471,9 @@ model WorkSchedule {
 }
 
 model Attendance {
-  id            Int          @id @default(autoincrement())
-  userId        Int          @map("user_id")
-  scheduleId    Int?         @map("schedule_id")
+  id          String      @id @default(uuid())
+  userId        String          @map("user_id")
+  scheduleId    String?         @map("schedule_id")
   date          DateTime     @db.Date
   clockIn       DateTime?    @map("clock_in")
   clockOut      DateTime?    @map("clock_out")
@@ -504,8 +504,8 @@ enum AttendanceStatus {
 }
 
 model InfractionType {
-  id          Int                @id @default(autoincrement())
-  companyId   Int                @default(1) @map("company_id")
+  id          String      @id @default(uuid())
+  companyId   String                @default("1") @map("company_id")
   name        String             @db.VarChar(100)
   description String?            @db.Text
   color       String             @default("red") @db.VarChar(20)
@@ -521,12 +521,12 @@ model InfractionType {
 }
 
 model InfractionOffense {
-  id            Int                @id @default(autoincrement())
-  companyId     Int                @default(1) @map("company_id")
+  id          String      @id @default(uuid())
+  companyId     String                @default("1") @map("company_id")
   name          String             @db.VarChar(100)
   description   String?            @db.Text
   severityLevel Int                @map("severity_level") // 1=Minor, 2=Major, 3=Severe
-  typeId        Int                @map("type_id")
+  typeId        String                @map("type_id")
   type          InfractionType     @relation(fields: [typeId], references: [id])
   isActive      Boolean            @default(true) @map("is_active")
   createdAt     DateTime           @default(now()) @map("created_at")
@@ -540,17 +540,17 @@ model InfractionOffense {
 }
 
 model Infraction {
-  id             Int                @id @default(autoincrement())
-  userId         Int                @map("user_id")
-  companyId      Int                @default(1) @map("company_id")
-  offenseId      Int                @map("offense_id")
-  typeId         Int                @map("type_id")
+  id          String      @id @default(uuid())
+  userId         String                @map("user_id")
+  companyId      String                @default("1") @map("company_id")
+  offenseId      String                @map("offense_id")
+  typeId         String                @map("type_id")
   date           DateTime           @db.Date
   details        String?            @db.Text
   comment        String?            @db.Text
-  acknowledgedBy Int?               @map("acknowledged_by")
+  acknowledgedBy String?               @map("acknowledged_by")
   acknowledgedAt DateTime?          @map("acknowledged_at")
-  createdBy      Int                @map("created_by")
+  createdBy      String                @map("created_by")
   createdAt      DateTime           @default(now()) @map("created_at")
   updatedAt      DateTime           @updatedAt @map("updated_at")
 

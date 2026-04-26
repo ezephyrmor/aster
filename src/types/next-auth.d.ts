@@ -4,11 +4,11 @@ declare module "next-auth" {
   interface User {
     id: string;
     username: string;
-    roleId: number;
-    companyId: number;
+    roleId: string;
+    companyId: string;
     companyName?: string;
     role: {
-      id: number;
+      id: string;
       name: string;
       description: string | null;
     };
@@ -31,11 +31,11 @@ declare module "next-auth/jwt" {
   interface JWT {
     id: string;
     username: string;
-    roleId: number;
-    companyId: number;
+    roleId: string;
+    companyId: string;
     companyName?: string;
     role: {
-      id: number;
+      id: string;
       name: string;
       description: string | null;
     };

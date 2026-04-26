@@ -20,10 +20,7 @@ export async function PUT(
     const body = await request.json();
     const { title, description, startDate, endDate, color } = body;
 
-    const eventId = parseInt(id);
-    if (isNaN(eventId)) {
-      return NextResponse.json({ error: "Invalid event ID" }, { status: 400 });
-    }
+    const eventId = id;
 
     // Check if event exists and belongs to current company
     const existingEvent = await prisma.calendarEvent.findUnique({
@@ -109,11 +106,7 @@ export async function DELETE(
     const companyId = session.user.companyId;
 
     const { id } = await params;
-    const eventId = parseInt(id);
-
-    if (isNaN(eventId)) {
-      return NextResponse.json({ error: "Invalid event ID" }, { status: 400 });
-    }
+    const eventId = id;
 
     // Check if event exists and belongs to current company
     const existingEvent = await prisma.calendarEvent.findUnique({

@@ -16,16 +16,17 @@ const prisma = new PrismaClient();
 interface UserProfile {
   firstName: string;
   lastName: string;
-  positionId: number;
-  departmentId: number;
-  statusId: number;
+  positionId: string;
+  departmentId: string;
+  statusId: string;
 }
 
 async function createOrUpdateUser(
   username: string,
   password: string,
-  roleId: number,
+  roleId: string,
   profile: UserProfile,
+  companyId: string,
 ) {
   // Generate explicit salt for demonstration
   const salt = generateSalt();
@@ -75,6 +76,7 @@ async function createOrUpdateUser(
           userId: existingUser.id,
           firstName: profile.firstName,
           lastName: profile.lastName,
+          roleId,
           positionId: profile.positionId,
           departmentId: profile.departmentId,
           statusId: profile.statusId,
@@ -90,6 +92,7 @@ async function createOrUpdateUser(
         username,
         passwordHash,
         salt,
+        companyId,
         employeeProfile: {
           create: {
             firstName: profile.firstName,
@@ -112,10 +115,19 @@ async function main() {
   console.log("🔐 Using salt + pepper + bcrypt for secure password hashing\n");
 
   try {
+    // Get default company
+    const defaultCompany = await prisma.company.findFirstOrThrow();
+
     // Get lookup table IDs
-    const roles = await prisma.role.findMany();
-    const positions = await prisma.position.findMany();
-    const departments = await prisma.department.findMany();
+    const roles = await prisma.role.findMany({
+      where: { companyId: defaultCompany.id },
+    });
+    const positions = await prisma.position.findMany({
+      where: { companyId: defaultCompany.id },
+    });
+    const departments = await prisma.department.findMany({
+      where: { companyId: defaultCompany.id },
+    });
     const statuses = await prisma.employeeStatusModel.findMany();
 
     const adminRole = roles.find((r) => r.name === "admin");
@@ -146,6 +158,7 @@ async function main() {
           departments[0].id,
         statusId: activeStatus.id,
       },
+      defaultCompany.id,
     );
     console.log(
       `✅ Admin user ${adminResult.updated ? "updated" : "created"} successfully`,
@@ -153,17 +166,23 @@ async function main() {
 
     // Create HR user
     console.log("\n📋 Creating HR User...");
-    const hrResult = await createOrUpdateUser("hr", "password123", hrRole.id, {
-      firstName: "Human",
-      lastName: "Resources",
-      positionId:
-        positions.find((p) => p.name === "Engineering Manager")?.id ||
-        positions[0].id,
-      departmentId:
-        departments.find((d) => d.name === "Human Resources")?.id ||
-        departments[0].id,
-      statusId: activeStatus.id,
-    });
+    const hrResult = await createOrUpdateUser(
+      "hr",
+      "password123",
+      hrRole.id,
+      {
+        firstName: "Human",
+        lastName: "Resources",
+        positionId:
+          positions.find((p) => p.name === "Engineering Manager")?.id ||
+          positions[0].id,
+        departmentId:
+          departments.find((d) => d.name === "Human Resources")?.id ||
+          departments[0].id,
+        statusId: activeStatus.id,
+      },
+      defaultCompany.id,
+    );
     console.log(
       `✅ HR user ${hrResult.updated ? "updated" : "created"} successfully`,
     );

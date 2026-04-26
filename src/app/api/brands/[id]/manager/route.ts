@@ -17,13 +17,9 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
-    const brandId = parseInt(id);
+    const brandId = id;
     const body = await request.json();
     const { ipAddress, userAgent } = getClientInfo(request);
-
-    if (isNaN(brandId)) {
-      return NextResponse.json({ error: "Invalid brand ID" }, { status: 400 });
-    }
 
     const { managerId, reason, performedBy } = body;
 
@@ -133,13 +129,9 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    const brandId = parseInt(id);
+    const brandId = id;
     const body = await request.json().catch(() => ({}));
     const { ipAddress, userAgent } = getClientInfo(request);
-
-    if (isNaN(brandId)) {
-      return NextResponse.json({ error: "Invalid brand ID" }, { status: 400 });
-    }
 
     const { reason, performedBy } = body;
 

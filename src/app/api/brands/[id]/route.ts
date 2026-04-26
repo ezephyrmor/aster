@@ -8,11 +8,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const brandId = parseInt(id);
-
-    if (isNaN(brandId)) {
-      return NextResponse.json({ error: "Invalid brand ID" }, { status: 400 });
-    }
+    const brandId = id;
 
     const brand = await prisma.brand.findUnique({
       where: { id: brandId },
@@ -57,12 +53,8 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
-    const brandId = parseInt(id);
+    const brandId = id;
     const body = await request.json();
-
-    if (isNaN(brandId)) {
-      return NextResponse.json({ error: "Invalid brand ID" }, { status: 400 });
-    }
 
     const { name, description, logo, website, industryId, managerId, status } =
       body;
@@ -120,11 +112,7 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    const brandId = parseInt(id);
-
-    if (isNaN(brandId)) {
-      return NextResponse.json({ error: "Invalid brand ID" }, { status: 400 });
-    }
+    const brandId = id;
 
     // Check if brand exists
     const existingBrand = await prisma.brand.findUnique({
