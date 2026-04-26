@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useForm, FormProvider } from "react-hook-form";
+import { useForm, FormProvider, FieldValues } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormContext } from "./FormContext";
 import type { FormProps } from "./types";
 import { cn } from "@/lib/utils";
 
-export function Form<T extends Record<string, any>>({
+export function Form<T extends FieldValues>({
   schema,
   defaultValues,
   values,
@@ -28,8 +28,10 @@ export function Form<T extends Record<string, any>>({
   });
 
   useEffect(() => {
-    console.log("Form values updated:", values);
-    console.log("Current form state:", form.getValues());
+    // Update form when external values prop changes
+    if (values) {
+      form.reset(values);
+    }
   }, [values, form]);
 
   const handleSubmit = form.handleSubmit(async (values) => {
