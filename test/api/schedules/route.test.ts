@@ -30,7 +30,7 @@ describe("GET /api/schedules", () => {
     const mockSchedules = [
       {
         id: 1,
-        userId: 1,
+        userId: "1",
         dayOfWeek: 1,
         startTime: "09:00",
         endTime: "18:00",
@@ -42,14 +42,14 @@ describe("GET /api/schedules", () => {
     (prisma.workSchedule.findMany as vi.Mock).mockResolvedValue(mockSchedules);
 
     const request = new Request("http://localhost:3000/api/schedules");
-    const response = await GET(request, {}, { user: { companyId: 1 } });
+    const response = await GET(request, {}, { user: { companyId: "1" } });
     const data = await response.json();
 
     expect(response.status).toBe(200);
     expect(data.schedules).toHaveLength(1);
     expect(prisma.workSchedule.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({ companyId: 1 }),
+        where: expect.objectContaining({ companyId: "1" }),
       }),
     );
   });
@@ -62,7 +62,7 @@ describe("GET /api/schedules", () => {
     const request = new Request(
       "http://localhost:3000/api/schedules?date=2026-05-06",
     );
-    await GET(request, {}, { user: { companyId: 1 } });
+    await GET(request, {}, { user: { companyId: "1" } });
 
     expect(prisma.workSchedule.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -85,7 +85,7 @@ describe("GET /api/schedules", () => {
     const request = new Request(
       "http://localhost:3000/api/schedules?search=john",
     );
-    await GET(request, {}, { user: { companyId: 1 } });
+    await GET(request, {}, { user: { companyId: "1" } });
 
     expect(prisma.workSchedule.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -107,7 +107,7 @@ describe("GET /api/schedules", () => {
     const request = new Request(
       "http://localhost:3000/api/schedules?team=Engineering",
     );
-    await GET(request, {}, { user: { companyId: 1 } });
+    await GET(request, {}, { user: { companyId: "1" } });
 
     expect(prisma.workSchedule.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -149,7 +149,7 @@ describe("POST /api/schedules", () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        userId: 1,
+        userId: "1",
         dayOfWeek: 7, // Invalid value
         startTime: "09:00",
         endTime: "18:00",
@@ -169,7 +169,7 @@ describe("POST /api/schedules", () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        userId: 1,
+        userId: "1",
         dayOfWeek: 1,
         startTime: "9:00", // Invalid format
         endTime: "6:00 PM", // Invalid format
@@ -189,7 +189,7 @@ describe("POST /api/schedules", () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        userId: 1,
+        userId: "1",
         dayOfWeek: 1,
         startTime: "09:00",
         endTime: "18:00",
@@ -214,7 +214,7 @@ describe("POST /api/schedules", () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        userId: 1,
+        userId: "1",
         dayOfWeek: 1,
         startTime: "09:00",
         endTime: "18:00",
@@ -229,7 +229,7 @@ describe("POST /api/schedules", () => {
   it("creates schedule successfully with valid data", async () => {
     const mockSchedule = {
       id: 1,
-      userId: 1,
+      userId: "1",
       dayOfWeek: 1,
       startTime: "09:00",
       endTime: "18:00",
@@ -243,7 +243,7 @@ describe("POST /api/schedules", () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        userId: 1,
+        userId: "1",
         dayOfWeek: 1,
         startTime: "09:00",
         endTime: "18:00",

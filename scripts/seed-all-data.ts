@@ -611,8 +611,8 @@ function generateAddress(): string {
   return `${number} ${street}, ${location.city}, ${location.state} ${zip}`;
 }
 
-function getRandomStatus(statuses: { id: number; name: string }[]): {
-  id: number;
+function getRandomStatus(statuses: { id: string; name: string }[]): {
+  id: string;
   name: string;
 } {
   const weights = [
@@ -661,8 +661,8 @@ function logProgress(current: number, total: number, prefix: string = "") {
 
 // Types
 interface CreatedUser {
-  id: number;
-  companyId: number;
+  id: string;
+  companyId: string;
   username: string;
   password: string;
   hireDate: Date;
@@ -670,12 +670,12 @@ interface CreatedUser {
 }
 
 interface CreatedBrand {
-  id: number;
+  id: string;
   name: string;
 }
 
 interface CreatedTeam {
-  id: number;
+  id: string;
   name: string;
 }
 
@@ -739,7 +739,7 @@ async function main() {
               roleId: adminRole.id,
               positionId: positions[0]?.id,
               departmentId: departments[0]?.id,
-              statusId: statuses.find((s) => s.name === "active")?.id || 1,
+              statusId: statuses.find((s) => s.name === "active")?.id as string,
             },
           },
         },
@@ -751,6 +751,9 @@ async function main() {
     logStep(`Creating ${CONFIG.employeeCount} employees...`);
     const createdUsers: CreatedUser[] = [];
     const usedUsernames = new Set<string>();
+
+    // Get default company
+    const defaultCompany = await prisma.company.findFirstOrThrow();
 
     for (let i = 0; i < CONFIG.employeeCount; i++) {
       const firstName = firstNames[i % firstNames.length];
@@ -783,6 +786,7 @@ async function main() {
             username,
             passwordHash,
             salt,
+            companyId: defaultCompany.id,
             employeeProfile: {
               create: {
                 firstName,
@@ -1008,16 +1012,7 @@ async function main() {
         if (!schedule) continue;
 
         try {
-          const attendanceData: {
-            user: { connect: { id: number } };
-            schedule: { connect: { id: number } };
-            date: Date;
-            status: "present" | "late" | "absent" | "undertime" | "on_leave";
-            clockIn?: Date;
-            clockOut?: Date;
-            lateMinutes?: number;
-            undertimeMinutes?: number;
-          } = {
+          const attendanceData: any = {
             user: { connect: { id: employee.id } },
             schedule: { connect: { id: schedule.id } },
             date: new Date(d),
@@ -1114,6 +1109,7 @@ async function main() {
         const brand = await prisma.brand.create({
           data: {
             name: brandName,
+            companyId: defaultCompany.id,
             description: `${brandName} - A leading company in the ${industry.name} industry.`,
             logo: `https://via.placeholder.com/150/${getRandomInt(0, 0xffffff).toString(16).padStart(6, "0")}/FFFFFF?text=${brandName.substring(0, 3).toUpperCase()}`,
             website: `https://${brandName.toLowerCase().replace(/\s+/g, "")}.com`,

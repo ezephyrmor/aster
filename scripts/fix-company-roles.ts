@@ -80,7 +80,7 @@ async function assignRolesToCompanyUsers(company: Company, roles: Role[]) {
   // Calculate role distribution
   const totalUsers = shuffledUserIds.length;
 
-  const assignments: { userId: number; roleId: number }[] = [];
+  const assignments: { userId: string; roleId: string }[] = [];
   let index = 0;
 
   // 1 Admin always

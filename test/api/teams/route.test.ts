@@ -28,7 +28,7 @@ vi.mock("@/lib/db", () => ({
 vi.mock("@/lib/api-auth", () => ({
   withAuth: vi.fn((handler) => {
     return (request: Request) =>
-      handler(request, {}, { user: { companyId: 1, id: 1 } });
+      handler(request, {}, { user: { companyId: "1", id: 1 } });
   }),
 }));
 
@@ -43,8 +43,8 @@ describe("GET /api/teams", () => {
       {
         id: 1,
         name: "Engineering Team",
-        companyId: 1,
-        brandId: 1,
+        companyId: "1",
+        brandId: "1",
         brand: { id: 1, name: "Test Brand" },
         members: [],
         _count: { members: 3 },
@@ -67,7 +67,7 @@ describe("GET /api/teams", () => {
     expect(data.brands).toHaveLength(1);
     expect(prisma.team.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { companyId: 1 },
+        where: { companyId: "1" },
       }),
     );
   });
@@ -83,7 +83,7 @@ describe("GET /api/teams", () => {
     expect(prisma.team.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {
-          AND: [{ companyId: 1 }, { brandId: 5 }],
+          AND: [{ companyId: "1" }, { brandId: "5" }],
         },
       }),
     );
@@ -100,7 +100,7 @@ describe("GET /api/teams", () => {
     expect(prisma.team.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {
-          AND: [{ companyId: 1 }, { name: { contains: "dev" } }],
+          AND: [{ companyId: "1" }, { name: { contains: "dev" } }],
         },
       }),
     );
@@ -130,13 +130,13 @@ describe("POST /api/teams", () => {
     const teamData = {
       name: "New Team",
       description: "Team description",
-      brandId: 1,
+      brandId: "1",
     };
 
     const createdTeam = {
-      id: 1,
+      id: "1",
       ...teamData,
-      companyId: 1,
+      companyId: "1",
     };
 
     (prisma.brand.findUnique as vi.Mock).mockResolvedValue({
@@ -165,7 +165,7 @@ describe("POST /api/teams", () => {
   it("returns 400 when team name is missing", async () => {
     const teamData = {
       description: "Team description",
-      brandId: 1,
+      brandId: "1",
     };
 
     const request = new Request("http://localhost:3000/api/teams", {
@@ -206,7 +206,7 @@ describe("POST /api/teams", () => {
     const teamData = {
       name: "New Team",
       description: "Team description",
-      brandId: 999,
+      brandId: "999",
     };
 
     (prisma.brand.findUnique as vi.Mock).mockResolvedValue(null);
@@ -229,7 +229,7 @@ describe("POST /api/teams", () => {
     const teamData = {
       name: "Existing Team",
       description: "Team description",
-      brandId: 1,
+      brandId: "1",
     };
 
     (prisma.brand.findUnique as vi.Mock).mockResolvedValue({
@@ -259,15 +259,15 @@ describe("POST /api/teams", () => {
     const teamData = {
       name: "New Team",
       description: "Team description",
-      brandId: 1,
-      leaderId: 5,
+      brandId: "1",
+      leaderId: "5",
       performedBy: 2,
     };
 
     const createdTeam = {
-      id: 1,
+      id: "1",
       ...teamData,
-      companyId: 1,
+      companyId: "1",
     };
 
     (prisma.brand.findUnique as vi.Mock).mockResolvedValue({
@@ -291,8 +291,8 @@ describe("POST /api/teams", () => {
     expect(prisma.teamMember.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: {
-          teamId: 1,
-          userId: 5,
+          teamId: "1",
+          userId: "5",
           isLeader: true,
         },
       }),

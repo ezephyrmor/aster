@@ -19,10 +19,10 @@ export async function GET(request: NextRequest) {
 
     // Build where clause
     const where: {
-      userId: number;
-      acknowledgedBy?: number | null | { not: null };
+      userId: string;
+      acknowledgedBy?: string | null | { not: null };
     } = {
-      userId: Number(authResult.userId),
+      userId: authResult.userId,
     };
 
     // Filter by status if provided

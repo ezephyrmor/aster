@@ -64,7 +64,7 @@ vi.mock("@/lib/userGenerator", () => ({
 vi.mock("@/lib/api-auth", () => ({
   withAuth: vi.fn((handler) => {
     return (request: Request, context: any) =>
-      handler(request, context, { user: { companyId: 1, id: 1 } });
+      handler(request, context, { user: { companyId: "1", id: 1 } });
   }),
 }));
 
@@ -74,7 +74,7 @@ vi.mock("@/lib/validations", () => ({
       request
         .json()
         .then((data) =>
-          handler(data, request, {}, { user: { companyId: 1, id: 1 } }),
+          handler(data, request, {}, { user: { companyId: "1", id: 1 } }),
         ),
   ),
   CreateUserSchema: {},
@@ -91,7 +91,7 @@ describe("GET /api/users", () => {
       {
         id: 1,
         username: "john.doe",
-        companyId: 1,
+        companyId: "1",
         employeeProfile: {
           firstName: "John",
           lastName: "Doe",
@@ -115,7 +115,7 @@ describe("GET /api/users", () => {
     expect(data.pagination.total).toBe(1);
     expect(prisma.user.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { companyId: 1 },
+        where: { companyId: "1" },
       }),
     );
   });
@@ -130,7 +130,7 @@ describe("GET /api/users", () => {
     expect(prisma.user.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {
-          companyId: 1,
+          companyId: "1",
           AND: {
             OR: [
               { employeeProfile: { firstName: { contains: "john" } } },
@@ -152,7 +152,7 @@ describe("GET /api/users", () => {
     expect(prisma.user.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {
-          companyId: 1,
+          companyId: "1",
           AND: { employeeProfile: { role: { name: "Admin" } } },
         },
       }),

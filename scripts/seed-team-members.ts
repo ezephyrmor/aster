@@ -41,11 +41,16 @@ async function main() {
     const brands = await prisma.brand.findMany();
     console.log(`✅ Found ${brands.length} brands`);
 
+    // Get admin role
+    const adminRole = await prisma.role.findFirst({
+      where: { name: "admin" },
+    });
+
     // Get all users (excluding admin)
     const users = await prisma.user.findMany({
       where: {
         employeeProfile: {
-          roleId: { not: 1 }, // Exclude admin role
+          roleId: { not: adminRole?.id }, // Exclude admin role
         },
       },
       include: {
@@ -94,6 +99,7 @@ async function main() {
             name: teamName,
             description: config.description,
             brandId: brand.id,
+            companyId: brand.companyId,
           },
         });
 

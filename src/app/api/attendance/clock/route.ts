@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
     const attendance = await prisma.attendance.findUnique({
       where: {
         userId_date: {
-          userId: parseInt(userId),
+          userId,
           date: today,
         },
       },
@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
     const dayOfWeek = today.getDay();
     const schedule = await prisma.workSchedule.findFirst({
       where: {
-        userId: parseInt(userId),
+        userId,
         dayOfWeek: dayOfWeek,
         effectiveFrom: { lte: today },
         OR: [{ effectiveTo: null }, { effectiveTo: { gte: today } }],
@@ -158,7 +158,7 @@ export async function POST(request: NextRequest) {
     const dayOfWeek = today.getDay();
     const schedule = await prisma.workSchedule.findFirst({
       where: {
-        userId: parseInt(userId),
+        userId,
         dayOfWeek: dayOfWeek,
         effectiveFrom: { lte: today },
         OR: [{ effectiveTo: null }, { effectiveTo: { gte: today } }],
@@ -232,12 +232,12 @@ export async function POST(request: NextRequest) {
         attendance = await prisma.attendance.upsert({
           where: {
             userId_date: {
-              userId: parseInt(userId),
+              userId,
               date: today,
             },
           },
           create: {
-            userId: parseInt(userId),
+            userId,
             scheduleId: schedule?.id || null,
             date: today,
             clockIn: now,
@@ -290,7 +290,7 @@ export async function POST(request: NextRequest) {
       const attendance = await prisma.attendance.findUnique({
         where: {
           userId_date: {
-            userId: parseInt(userId),
+            userId,
             date: today,
           },
         },

@@ -45,7 +45,7 @@ describe("GET /api/leaves/requests", () => {
     const mockRequests = [
       {
         id: 1,
-        userId: 1,
+        userId: "1",
         startDate: new Date(),
         endDate: new Date(),
         user: { employeeProfile: { firstName: "John", lastName: "Doe" } },
@@ -56,14 +56,14 @@ describe("GET /api/leaves/requests", () => {
     (prisma.leaveRequest.findMany as vi.Mock).mockResolvedValue(mockRequests);
 
     const request = new Request("http://localhost:3000/api/leaves/requests");
-    const response = await GET(request, {}, { user: { companyId: 1 } });
+    const response = await GET(request, {}, { user: { companyId: "1" } });
     const data = await response.json();
 
     expect(response.status).toBe(200);
     expect(data.requests).toHaveLength(1);
     expect(prisma.leaveRequest.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({ companyId: 1 }),
+        where: expect.objectContaining({ companyId: "1" }),
       }),
     );
   });
@@ -75,7 +75,7 @@ describe("GET /api/leaves/requests", () => {
     const request = new Request(
       "http://localhost:3000/api/leaves/requests?search=john",
     );
-    await GET(request, {}, { user: { companyId: 1 } });
+    await GET(request, {}, { user: { companyId: "1" } });
 
     expect(prisma.leaveRequest.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -91,7 +91,7 @@ describe("GET /api/leaves/requests", () => {
   });
 
   it("filters by team members when teamId is provided", async () => {
-    const mockTeamMembers = [{ userId: 1 }, { userId: 2 }, { userId: 3 }];
+    const mockTeamMembers = [{ userId: "1" }, { userId: "2" }, { userId: "3" }];
 
     (prisma.teamMember.findMany as vi.Mock).mockResolvedValue(mockTeamMembers);
     (prisma.leaveRequest.count as vi.Mock).mockResolvedValue(0);
@@ -100,13 +100,13 @@ describe("GET /api/leaves/requests", () => {
     const request = new Request(
       "http://localhost:3000/api/leaves/requests?teamId=5",
     );
-    await GET(request, {}, { user: { companyId: 1 } });
+    await GET(request, {}, { user: { companyId: "1" } });
 
     expect(prisma.teamMember.findMany).toHaveBeenCalled();
     expect(prisma.leaveRequest.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
-          userId: { in: [1, 2, 3] },
+          userId: { in: ["1", "2", "3"] },
         }),
       }),
     );
@@ -119,7 +119,7 @@ describe("GET /api/leaves/requests", () => {
     const request = new Request(
       "http://localhost:3000/api/leaves/requests?sortBy=invalid_field",
     );
-    await GET(request, {}, { user: { companyId: 1 } });
+    await GET(request, {}, { user: { companyId: "1" } });
 
     expect(prisma.leaveRequest.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -132,7 +132,7 @@ describe("GET /api/leaves/requests", () => {
 describe("POST /api/leaves/requests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (auth as vi.Mock).mockResolvedValue({ user: { companyId: 1 } });
+    (auth as vi.Mock).mockResolvedValue({ user: { companyId: "1" } });
     (prisma.leaveStatus.findFirst as vi.Mock).mockResolvedValue({
       id: 1,
       name: "Pending",
@@ -156,8 +156,8 @@ describe("POST /api/leaves/requests", () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        userId: 1,
-        leaveTypeId: 2,
+        userId: "1",
+        leaveTypeId: "2",
         startDate: "2026-05-10",
         endDate: "2026-05-05",
       }),
@@ -178,8 +178,8 @@ describe("POST /api/leaves/requests", () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        userId: 1,
-        leaveTypeId: 2,
+        userId: "1",
+        leaveTypeId: "2",
         startDate: "2026-05-05",
         endDate: "2026-05-07",
         isPaid: true,
@@ -202,8 +202,8 @@ describe("POST /api/leaves/requests", () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        userId: 1,
-        leaveTypeId: 2,
+        userId: "1",
+        leaveTypeId: "2",
         startDate: "2026-05-10",
         endDate: "2026-05-12",
       }),
@@ -223,8 +223,8 @@ describe("POST /api/leaves/requests", () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        userId: 1,
-        leaveTypeId: 2,
+        userId: "1",
+        leaveTypeId: "2",
         startDate: "2026-05-10",
         endDate: "2026-05-12",
       }),
@@ -237,11 +237,11 @@ describe("POST /api/leaves/requests", () => {
   it("creates leave request successfully with valid data", async () => {
     const mockLeaveData = {
       id: 1,
-      userId: 1,
-      leaveTypeId: 2,
+      userId: "1",
+      leaveTypeId: "2",
       startDate: new Date("2026-05-10"),
       endDate: new Date("2026-05-12"),
-      statusId: 1,
+      statusId: "1",
     };
 
     (prisma.leaveRequest.create as vi.Mock).mockResolvedValue(mockLeaveData);
@@ -263,8 +263,8 @@ describe("POST /api/leaves/requests", () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        userId: 1,
-        leaveTypeId: 2,
+        userId: "1",
+        leaveTypeId: "2",
         startDate: "2026-05-10",
         endDate: "2026-05-12",
         reason: "Vacation leave",

@@ -6,7 +6,7 @@ import { z } from "zod";
 export const runtime = "nodejs";
 
 const statusChangeSchema = z.object({
-  statusId: z.number().int().positive(),
+  statusId: z.string().uuid(),
   effectiveDate: z.coerce.date().optional(),
   reason: z.string().optional(),
   notes: z.string().optional(),
@@ -24,12 +24,8 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userId = parseInt(id);
-    const currentUserId = parseInt(session.user.id);
-
-    if (isNaN(userId)) {
-      return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
-    }
+    const userId = id;
+    const currentUserId = session.user.id;
 
     const body = await request.json();
     const validation = statusChangeSchema.safeParse(body);
@@ -127,11 +123,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userId = parseInt(id);
-
-    if (isNaN(userId)) {
-      return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
-    }
+    const userId = id;
 
     const statusHistory = await prisma.employeeStatusHistory.findMany({
       where: { userId },

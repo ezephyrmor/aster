@@ -258,80 +258,67 @@ export const POST = withAuth(
       }
 
       // Get position ID if provided
-      let positionId: number | null = null;
+      let positionId: string | null = null;
       if (position) {
-        // Position is now passed as numeric ID directly from AsyncSelect
-        if (typeof position === "number") {
-          positionId = position;
-        } else {
-          // Fallback for backward compatibility if string name is still passed
-          let positionRecord = await prisma.position.findUnique({
-            where: {
-              companyId_name: {
-                companyId,
-                name: position,
-              },
+        // Try by name first
+        let positionRecord = await prisma.position.findUnique({
+          where: {
+            companyId_name: {
+              companyId,
+              name: position,
             },
-          });
+          },
+        });
 
-          // If not found and position is a number, try by ID
-          if (!positionRecord && !isNaN(parseInt(position))) {
-            positionRecord = await prisma.position.findUnique({
-              where: { id: parseInt(position) },
-            });
-          }
+        // If not found, try by ID
+        if (!positionRecord) {
+          positionRecord = await prisma.position.findUnique({
+            where: { id: position },
+          });
         }
+
+        positionId = positionRecord?.id || null;
       }
 
       // Get department ID if provided
-      let departmentId: number | null = null;
+      let departmentId: string | null = null;
       if (department) {
-        // Department is now passed as numeric ID directly from AsyncSelect
-        if (typeof department === "number") {
-          departmentId = department;
-        } else {
-          // Fallback for backward compatibility if string name is still passed
-          let departmentRecord = await prisma.department.findUnique({
-            where: {
-              companyId_name: {
-                companyId,
-                name: department,
-              },
+        // Try by name first
+        let departmentRecord = await prisma.department.findUnique({
+          where: {
+            companyId_name: {
+              companyId,
+              name: department,
             },
+          },
+        });
+
+        // If not found, try by ID
+        if (!departmentRecord) {
+          departmentRecord = await prisma.department.findUnique({
+            where: { id: department },
           });
-
-          // If not found and department is a number, try by ID
-          if (!departmentRecord && !isNaN(parseInt(department))) {
-            departmentRecord = await prisma.department.findUnique({
-              where: { id: parseInt(department) },
-            });
-          }
-
-          departmentId = departmentRecord?.id || null;
         }
+
+        departmentId = departmentRecord?.id || null;
       }
 
       // Get status ID if provided
-      let statusId: number | null = null;
+      let statusId: string | null = null;
       if (status) {
-        // Status is now passed as numeric ID directly from AsyncSelect
-        if (typeof status === "number") {
-          statusId = status;
-        } else {
-          // Fallback for backward compatibility if string name is still passed
-          let statusRecord = await prisma.employeeStatusModel.findUnique({
-            where: { name: status },
+        // Try by name first
+        let statusRecord = await prisma.employeeStatusModel.findUnique({
+          where: { name: status },
+        });
+
+        // If not found, try by ID
+        if (!statusRecord) {
+          statusRecord = await prisma.employeeStatusModel.findUnique({
+            where: { id: status },
           });
-
-          // If not found and status is a number, try by ID
-          if (!statusRecord && !isNaN(parseInt(status))) {
-            statusRecord = await prisma.employeeStatusModel.findUnique({
-              where: { id: parseInt(status) },
-            });
-          }
-
-          statusId = statusRecord?.id || null;
         }
+
+        statusId = statusRecord?.id || null;
       }
 
       // Create user and employee profile in a transaction
@@ -381,7 +368,7 @@ export const POST = withAuth(
             effectiveDate: newUser.employeeProfile?.hireDate || new Date(),
             reason: "Employee account created",
             notes: "System generated record on account creation",
-            performedBy: parseInt(auth.user.id),
+            performedBy: auth.user.id,
             ipAddress:
               request.headers.get("x-forwarded-for") ||
               (request as any).ip ||

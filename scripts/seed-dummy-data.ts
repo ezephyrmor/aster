@@ -583,8 +583,8 @@ function generateAddress(): string {
 // Generate 1000 user profiles using database positions and departments
 function generateDummyUsers(
   count: number,
-  dbPositions: { id: number; name: string }[],
-  dbDepartments: { id: number; name: string }[],
+  dbPositions: { id: string; name: string }[],
+  dbDepartments: { id: string; name: string }[],
 ) {
   const users = [];
   const usedUsernames = new Set();
@@ -790,7 +790,7 @@ async function main() {
     const createdUsers: {
       username: string;
       plainPassword: string;
-      id: number;
+      id: string;
     }[] = [];
 
     for (const userData of dummyUsers) {

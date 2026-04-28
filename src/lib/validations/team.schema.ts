@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { validationRules } from "./validation.utils";
 
 export const TeamSchema = z.object({
   name: z
@@ -13,12 +14,9 @@ export const TeamSchema = z.object({
     .trim()
     .optional(),
 
-  brandId: z
-    .number()
-    .int("Must select a valid brand")
-    .positive("Brand ID must be positive"),
+  brandId: validationRules.uuid,
 
-  managerId: z.number().int("Must be a valid user ID").optional(),
+  managerId: validationRules.optionalUuid,
 
   status: z.enum(["active", "inactive", "archived"]).default("active"),
 });

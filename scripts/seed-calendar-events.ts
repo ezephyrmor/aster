@@ -310,7 +310,7 @@ async function main() {
   console.log(`Found ${companies.length} companies`);
 
   // Group users by company
-  const usersByCompany: Record<number, any[]> = {};
+  const usersByCompany: Record<string, any[]> = {};
 
   for (const company of companies) {
     const users = await prisma.user.findMany({
@@ -365,9 +365,7 @@ async function main() {
         );
 
         // Pick random company for this event
-        const randomCompanyId = getRandomItem(
-          Object.keys(usersByCompany).map(Number),
-        );
+        const randomCompanyId = getRandomItem(Object.keys(usersByCompany));
         const companyUsers = usersByCompany[randomCompanyId];
         const randomUser = getRandomItem(companyUsers);
 

@@ -29,7 +29,7 @@ export const GET = withAuth(
       }
 
       if (userId) {
-        where.userId = parseInt(userId);
+        where.userId = userId;
       }
 
       if (typeId) {
@@ -161,13 +161,13 @@ export async function POST(request: NextRequest) {
 
     const infraction = await prisma.infraction.create({
       data: {
-        userId: parseInt(userId),
-        offenseId: parseInt(offenseId),
-        typeId: parseInt(typeId),
+        userId: userId,
+        offenseId: offenseId,
+        typeId: typeId,
         date: new Date(date),
         details,
         comment,
-        createdBy: parseInt(createdBy),
+        createdBy: createdBy,
       },
       include: {
         user: {

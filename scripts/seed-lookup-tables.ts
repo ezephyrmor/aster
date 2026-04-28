@@ -13,10 +13,9 @@ async function main() {
   // Create default company first
   console.log("🏢 Creating default company...");
   await prisma.company.upsert({
-    where: { id: 1 },
+    where: { name: "Aster HR System" },
     update: {},
     create: {
-      id: 1,
       name: "Aster HR System",
       status: "active",
       timezone: "Asia/Manila",
@@ -62,7 +61,6 @@ async function main() {
   console.log("\n📋 Seeding employee statuses...");
   const statuses = [
     {
-      id: 1,
       name: "active",
       description: "Currently active employee",
       color: "green",
@@ -70,7 +68,6 @@ async function main() {
       isActive: true,
     },
     {
-      id: 2,
       name: "probation",
       description: "Probationary employee",
       color: "amber",
@@ -78,7 +75,6 @@ async function main() {
       isActive: true,
     },
     {
-      id: 3,
       name: "contract",
       description: "Contract / temporary worker",
       color: "blue",
@@ -86,7 +82,6 @@ async function main() {
       isActive: true,
     },
     {
-      id: 4,
       name: "on_leave",
       description: "On approved leave",
       color: "indigo",
@@ -94,7 +89,6 @@ async function main() {
       isActive: true,
     },
     {
-      id: 5,
       name: "suspended",
       description: "Suspended pending investigation",
       color: "orange",
@@ -102,7 +96,6 @@ async function main() {
       isActive: true,
     },
     {
-      id: 6,
       name: "inactive",
       description: "Temporarily inactive",
       color: "slate",
@@ -110,7 +103,6 @@ async function main() {
       isActive: true,
     },
     {
-      id: 7,
       name: "resigned",
       description: "Employee resigned",
       color: "violet",
@@ -118,7 +110,6 @@ async function main() {
       isActive: true,
     },
     {
-      id: 8,
       name: "terminated",
       description: "Employment terminated",
       color: "red",
@@ -126,7 +117,6 @@ async function main() {
       isActive: true,
     },
     {
-      id: 9,
       name: "retired",
       description: "Retired employee",
       color: "emerald",
@@ -134,7 +124,6 @@ async function main() {
       isActive: true,
     },
     {
-      id: 10,
       name: "deceased",
       description: "Deceased",
       color: "rose",
@@ -144,7 +133,6 @@ async function main() {
   ];
 
   for (const status of statuses) {
-    const { id, ...statusWithoutId } = status;
     await prisma.employeeStatusModel.upsert({
       where: { name: status.name },
       update: {
@@ -153,7 +141,7 @@ async function main() {
         sortOrder: status.sortOrder,
         isActive: status.isActive,
       },
-      create: statusWithoutId,
+      create: status,
     });
   }
   console.log(`   ✅ Created ${statuses.length} employee statuses`);
@@ -197,22 +185,29 @@ async function main() {
     { name: "Intern", description: "Entry-level training position" },
   ];
 
-  for (const position of positions) {
-    await prisma.position.upsert({
-      where: {
-        companyId_name: {
-          companyId: 1,
-          name: position.name,
+  // Seed positions for ALL companies
+  let positionCount = 0;
+  for (const company of companies) {
+    for (const position of positions) {
+      await prisma.position.upsert({
+        where: {
+          companyId_name: {
+            companyId: company.id,
+            name: position.name,
+          },
         },
-      },
-      update: {},
-      create: {
-        ...position,
-        companyId: 1,
-      },
-    });
+        update: {},
+        create: {
+          ...position,
+          companyId: company.id,
+        },
+      });
+      positionCount++;
+    }
   }
-  console.log(`   ✅ Created ${positions.length} positions`);
+  console.log(
+    `   ✅ Created ${positionCount} positions for ${companies.length} companies`,
+  );
 
   // NOTE: Departments are now created by seed-multi-company.ts with company-specific appropriate departments
   // No generic departments are seeded here anymore

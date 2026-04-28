@@ -8,13 +8,9 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
-    const teamId = parseInt(id);
+    const teamId = id;
     const body = await request.json();
     const { userId, isLeader, reason, performedBy, transferFromTeamId } = body;
-
-    if (isNaN(teamId)) {
-      return NextResponse.json({ error: "Invalid team ID" }, { status: 400 });
-    }
 
     if (!userId) {
       return NextResponse.json(
@@ -72,34 +68,33 @@ export async function POST(
 
     // If this is a transfer, optionally remove from previous team first
     if (isTransfer && transferFromTeamId) {
-      const prevTeamId = parseInt(transferFromTeamId);
-      if (!isNaN(prevTeamId)) {
-        // Log history for leaving previous team
-        await prisma.teamHistory.create({
-          data: {
-            teamId: prevTeamId,
-            teamMemberId: existingActiveMembership.id,
-            action: "left",
-            performedBy: performedBy || 1,
-            reason: reason || "Transferred to another team",
-            metadata: {
-              userId,
-              wasLeader: existingActiveMembership.isLeader,
-              transferredToTeamId: teamId,
-              transferredToTeamName: team.name,
-            },
-          },
-        });
+      const prevTeamId = transferFromTeamId;
 
-        // Update the previous membership to mark as left
-        await prisma.teamMember.update({
-          where: { id: existingActiveMembership.id },
-          data: {
-            leftAt: new Date(),
-            status: "inactive" as const,
+      // Log history for leaving previous team
+      await prisma.teamHistory.create({
+        data: {
+          teamId: prevTeamId,
+          teamMemberId: existingActiveMembership.id,
+          action: "left",
+          performedBy: performedBy,
+          reason: reason || "Transferred to another team",
+          metadata: {
+            userId,
+            wasLeader: existingActiveMembership.isLeader,
+            transferredToTeamId: teamId,
+            transferredToTeamName: team.name,
           },
-        });
-      }
+        },
+      });
+
+      // Update the previous membership to mark as left
+      await prisma.teamMember.update({
+        where: { id: existingActiveMembership.id },
+        data: {
+          leftAt: new Date(),
+          status: "inactive",
+        },
+      });
     }
 
     // Add user to new team
@@ -124,7 +119,7 @@ export async function POST(
         teamId,
         teamMemberId: teamMember.id,
         action: "joined",
-        performedBy: performedBy || 1,
+        performedBy: performedBy,
         reason,
         metadata: {
           userId,

@@ -9,7 +9,7 @@ export async function GET(
   try {
     const { id } = await params;
     const schedule = await prisma.workSchedule.findUnique({
-      where: { id: parseInt(id) },
+      where: { id },
       include: {
         user: {
           include: {
@@ -55,7 +55,7 @@ export async function PUT(
 
     // Check if schedule exists
     const existingSchedule = await prisma.workSchedule.findUnique({
-      where: { id: parseInt(id) },
+      where: { id },
     });
 
     if (!existingSchedule) {
@@ -102,7 +102,7 @@ export async function PUT(
     }
 
     const schedule = await prisma.workSchedule.update({
-      where: { id: parseInt(id) },
+      where: { id },
       data: {
         dayOfWeek: dayOfWeek !== undefined ? parseInt(dayOfWeek) : undefined,
         startTime: startTime || undefined,
@@ -141,7 +141,7 @@ export async function DELETE(
 
     // Check if schedule exists
     const existingSchedule = await prisma.workSchedule.findUnique({
-      where: { id: parseInt(id) },
+      where: { id },
     });
 
     if (!existingSchedule) {
@@ -152,7 +152,7 @@ export async function DELETE(
     }
 
     await prisma.workSchedule.delete({
-      where: { id: parseInt(id) },
+      where: { id },
     });
 
     return NextResponse.json({ message: "Schedule deleted successfully" });

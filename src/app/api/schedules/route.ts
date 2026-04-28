@@ -29,7 +29,7 @@ export const GET = withAuth(
       }
 
       if (userId) {
-        whereClause.userId = parseInt(userId);
+        whereClause.userId = userId;
       }
 
       // If date is provided, filter by day of week
@@ -187,7 +187,7 @@ export async function POST(request: NextRequest) {
     // Check for conflicting schedules
     const conflictingSchedule = await prisma.workSchedule.findFirst({
       where: {
-        userId: parseInt(userId),
+        userId: userId,
         dayOfWeek: parseInt(dayOfWeek),
         effectiveTo: null, // Only check active schedules
       },
@@ -202,7 +202,7 @@ export async function POST(request: NextRequest) {
 
     const schedule = await prisma.workSchedule.create({
       data: {
-        userId: parseInt(userId),
+        userId: userId,
         dayOfWeek: parseInt(dayOfWeek),
         startTime,
         endTime,

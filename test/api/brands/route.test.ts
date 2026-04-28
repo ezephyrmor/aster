@@ -22,7 +22,7 @@ vi.mock("@/lib/db", () => ({
 vi.mock("@/lib/api-auth", () => ({
   withAuth: vi.fn((handler) => {
     return (request: Request) =>
-      handler(request, {}, { user: { companyId: 1, id: 1 } });
+      handler(request, {}, { user: { companyId: "1", id: 1 } });
   }),
 }));
 
@@ -45,7 +45,7 @@ describe("GET /api/brands", () => {
       {
         id: 1,
         name: "Test Brand",
-        companyId: 1,
+        companyId: "1",
         industry: { name: "Technology" },
         company: { id: 1, name: "Test Company" },
         manager: null,
@@ -70,7 +70,7 @@ describe("GET /api/brands", () => {
     expect(data.industries).toEqual(["Technology", "Healthcare"]);
     expect(prisma.brand.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { companyId: 1 },
+        where: { companyId: "1" },
       }),
     );
   });
@@ -86,7 +86,7 @@ describe("GET /api/brands", () => {
     expect(prisma.brand.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {
-          AND: [{ companyId: 1 }, { name: { contains: "test" } }],
+          AND: [{ companyId: "1" }, { name: { contains: "test" } }],
         },
       }),
     );
@@ -138,7 +138,7 @@ describe("POST /api/brands", () => {
     const brandData = {
       name: "New Brand",
       description: "Brand description",
-      industryId: 1,
+      industryId: "1",
     };
 
     const createdBrand = {

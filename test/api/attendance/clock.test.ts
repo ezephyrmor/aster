@@ -51,8 +51,8 @@ describe("GET /api/attendance/clock", () => {
     vi.setSystemTime(mockDate);
 
     const mockAttendance = {
-      id: 1,
-      userId: 1,
+      id: "00000000-0000-0000-0000-000000000001",
+      userId: "1",
       date: new Date("2026-04-25T00:00:00.000Z"),
       clockIn: new Date("2026-04-25T01:00:00.000Z"),
       clockOut: null,
@@ -60,7 +60,7 @@ describe("GET /api/attendance/clock", () => {
 
     const mockSchedule = {
       id: 1,
-      userId: 1,
+      userId: "1",
       dayOfWeek: 5,
       startTime: "09:00",
       endTime: "18:00",
@@ -136,7 +136,7 @@ describe("POST /api/attendance/clock", () => {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: 1, type: "invalid" }),
+          body: JSON.stringify({ userId: "1", type: "invalid" }),
         },
       );
 
@@ -157,7 +157,7 @@ describe("POST /api/attendance/clock", () => {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: 1, type: "in" }),
+          body: JSON.stringify({ userId: "1", type: "in" }),
         },
       );
 
@@ -177,7 +177,7 @@ describe("POST /api/attendance/clock", () => {
 
       (prisma.workSchedule.findFirst as vi.Mock).mockResolvedValue({
         id: 1,
-        userId: 1,
+        userId: "1",
         dayOfWeek: 5,
         startTime: "09:00",
         endTime: "18:00",
@@ -188,7 +188,7 @@ describe("POST /api/attendance/clock", () => {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: 1, type: "in" }),
+          body: JSON.stringify({ userId: "1", type: "in" }),
         },
       );
 
@@ -206,7 +206,7 @@ describe("POST /api/attendance/clock", () => {
 
       (prisma.workSchedule.findFirst as vi.Mock).mockResolvedValue({
         id: 1,
-        userId: 1,
+        userId: "1",
         dayOfWeek: 5,
         startTime: "09:00",
         endTime: "18:00",
@@ -223,7 +223,7 @@ describe("POST /api/attendance/clock", () => {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: 1, type: "in" }),
+          body: JSON.stringify({ userId: "1", type: "in" }),
         },
       );
 
@@ -238,7 +238,7 @@ describe("POST /api/attendance/clock", () => {
 
       (prisma.workSchedule.findFirst as vi.Mock).mockResolvedValue({
         id: 1,
-        userId: 1,
+        userId: "1",
         dayOfWeek: 5,
         startTime: "09:00",
         endTime: "18:00",
@@ -256,7 +256,7 @@ describe("POST /api/attendance/clock", () => {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: 1, type: "in" }),
+          body: JSON.stringify({ userId: "1", type: "in" }),
         },
       );
 
@@ -288,7 +288,7 @@ describe("POST /api/attendance/clock", () => {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: 1, type: "in" }),
+          body: JSON.stringify({ userId: "1", type: "in" }),
         },
       );
 
@@ -309,7 +309,7 @@ describe("POST /api/attendance/clock", () => {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: 1, type: "out" }),
+          body: JSON.stringify({ userId: "1", type: "out" }),
         },
       );
 
@@ -323,7 +323,7 @@ describe("POST /api/attendance/clock", () => {
 
       (prisma.attendance.findUnique as vi.Mock).mockResolvedValue({
         id: 1,
-        userId: 1,
+        userId: "1",
         date: new Date(),
         clockIn: new Date("2026-04-25T01:00:00.000Z"),
         clockOut: new Date("2026-04-25T09:00:00.000Z"),
@@ -334,7 +334,7 @@ describe("POST /api/attendance/clock", () => {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: 1, type: "out" }),
+          body: JSON.stringify({ userId: "1", type: "out" }),
         },
       );
 
@@ -363,7 +363,7 @@ describe("POST /api/attendance/clock", () => {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: 1, type: "out" }),
+          body: JSON.stringify({ userId: "1", type: "out" }),
         },
       );
 
@@ -403,7 +403,7 @@ describe("POST /api/attendance/clock", () => {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            userId: 1,
+            userId: "1",
             type: "out",
             reason: "Medical appointment",
           }),
@@ -448,7 +448,7 @@ describe("POST /api/attendance/clock", () => {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            userId: 1,
+            userId: "1",
             type: "out",
             reason: "Personal errand",
           }),

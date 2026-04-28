@@ -1,12 +1,10 @@
 import { z } from "zod";
+import { validationRules } from "./validation.utils";
 
 const TIME_REGEX = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
 
 const ScheduleBaseSchema = z.object({
-  userId: z
-    .number()
-    .int("Must select a valid user")
-    .positive("User ID must be positive"),
+  userId: validationRules.uuid,
 
   dayOfWeek: z
     .number()
