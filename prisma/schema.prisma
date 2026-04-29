@@ -494,6 +494,25 @@ model Attendance {
   @@map("attendance")
 }
 
+enum FeatureKind {
+  page
+  api
+  action
+}
+
+enum ScopeLevel {
+  self
+  team
+  department
+  brand
+  company
+}
+
+enum EffectType {
+  allow
+  deny
+}
+
 enum AttendanceStatus {
   present
   absent
@@ -567,4 +586,79 @@ model Infraction {
   @@index([offenseId], map: "infractions_offense_id_idx")
   @@index([date], map: "infractions_date_idx")
   @@map("infractions")
+}
+
+model Feature {
+  id          String                     @id @default(uuid())
+  code        String                     @db.VarChar(150)
+  kind        FeatureKind
+  httpMethod  String?                    @map("http_method") @db.VarChar(10)
+  path        String                     @db.VarChar(255)
+  name        String                     @db.VarChar(120)
+  description String?                    @db.Text
+  domain      String                     @db.VarChar(50)
+  isActive    Boolean                    @default(true) @map("is_active")
+  createdAt   DateTime                   @default(now()) @map("created_at")
+  updatedAt   DateTime                   @updatedAt @map("updated_at")
+
+  templateItems FeatureAccessTemplateItem[]
+
+  @@unique([code], map: "uq_feature_code")
+  @@unique([path, httpMethod], map: "uq_feature_path_method")
+  @@map("features")
+}
+
+model FeatureAccessTemplate {
+  id          String                     @id @default(uuid())
+  code        String                     @db.VarChar(100)
+  name        String                     @db.VarChar(120)
+  description String?                    @db.Text
+  domain      String?                    @db.VarChar(50)
+  scopeLevel  ScopeLevel                 @map("scope_level")
+  isSystem    Boolean                    @default(false) @map("is_system")
+  isActive    Boolean                    @default(true) @map("is_active")
+  createdAt   DateTime                   @default(now()) @map("created_at")
+  updatedAt   DateTime                   @updatedAt @map("updated_at")
+
+  items    FeatureAccessTemplateItem[]
+  roleAccess RoleAccess[]
+
+  @@unique([code], map: "uq_template_code")
+  @@map("feature_access_templates")
+}
+
+model FeatureAccessTemplateItem {
+  id             String                 @id @default(uuid())
+  templateId     String                 @map("template_id")
+  featureId      String                 @map("feature_id")
+  action         String                 @db.VarChar(30)
+  effect         EffectType
+  scopeLevel     ScopeLevel?            @map("scope_level")
+  scopeOverride  Boolean                @default(false) @map("scope_override")
+  createdAt      DateTime               @default(now()) @map("created_at")
+
+  template FeatureAccessTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  feature  Feature               @relation(fields: [featureId], references: [id], onDelete: Cascade)
+
+  @@unique([templateId, featureId, action], map: "uq_template_feature_action")
+  @@index([templateId], map: "item_template_id_fkey")
+  @@index([featureId], map: "item_feature_id_fkey")
+  @@map("feature_access_template_items")
+}
+
+model RoleAccess {
+  id         String   @id @default(uuid())
+  companyId  String   @map("company_id")
+  roleId     String   @map("role_id")
+  templateId String   @map("template_id")
+  priority   Int      @default(0)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  template FeatureAccessTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, roleId, templateId], map: "uq_role_template")
+  @@index([companyId], map: "role_access_company_id_idx")
+  @@index([roleId], map: "role_access_role_id_idx")
+  @@index([templateId], map: "role_access_template_id_fkey")
+  @@map("role_access")
 }
