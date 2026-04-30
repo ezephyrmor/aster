@@ -8,39 +8,6 @@ async function main() {
 
   const companies = [
     {
-      name: "Aster HR System",
-      status: "active",
-      timezone: "Asia/Manila",
-      profile: {
-        legalName: "Aster HR System Inc.",
-        email: "admin@aster.local",
-        country: "Philippines",
-        city: "Manila",
-      },
-    },
-    {
-      name: "Acme Corporation",
-      status: "active",
-      timezone: "America/New_York",
-      profile: {
-        legalName: "Acme Corporation International",
-        email: "contact@acme-corp.com",
-        country: "United States",
-        city: "New York",
-      },
-    },
-    {
-      name: "Global Tech Solutions",
-      status: "active",
-      timezone: "Europe/London",
-      profile: {
-        legalName: "Global Tech Solutions Ltd.",
-        email: "info@globaltechsolutions.co.uk",
-        country: "United Kingdom",
-        city: "London",
-      },
-    },
-    {
       name: "Pacific Retail Group",
       status: "active",
       timezone: "Australia/Sydney",
