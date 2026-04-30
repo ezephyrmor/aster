@@ -128,14 +128,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.companyName = user.companyName;
         token.role = user.role;
 
-        // Build and attach navigation to token on login
-        if (user.companyId && user.roleId) {
-          token.navigation = await buildUserNavigation(
-            user.companyId,
-            user.roleId,
-          );
-        }
-
         console.log("JWT token generated:", JSON.stringify(token, null, 2));
 
         // Security attributes captured during signIn callback
@@ -163,11 +155,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.companyId = token.companyId as number;
         session.user.companyName = token.companyName as string;
         session.user.role = token.role;
-      }
-
-      // Attach navigation structure to session
-      if (token.navigation) {
-        session.navigation = token.navigation;
       }
 
       console.log("Session object built:", JSON.stringify(session, null, 2));

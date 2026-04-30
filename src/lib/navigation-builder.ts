@@ -3,10 +3,13 @@ import { UserNavigation, NavigationItem } from "../types/navigation";
 
 const prisma = new PrismaClient();
 
-export async function buildUserNavigation(
-  companyId: string,
-  roleId: string,
-): Promise<UserNavigation> {
+export async function buildUserNavigation({
+  companyId,
+  roleId,
+}: {
+  companyId: string;
+  roleId: string;
+}): Promise<UserNavigation> {
   // Get assigned navigation template for this role
   const roleNavigation = await prisma.roleNavigation.findFirst({
     where: {

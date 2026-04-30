@@ -17,7 +17,6 @@ declare module "next-auth" {
 
   interface Session {
     user: User;
-    navigation?: UserNavigation;
     // Debug security attributes (only available in development mode)
     security?: {
       ip?: string;
@@ -41,7 +40,6 @@ declare module "next-auth/jwt" {
       name: string;
       description: string | null;
     };
-    navigation?: UserNavigation;
     // Security attributes
     ip?: string;
     fingerprint?: string;

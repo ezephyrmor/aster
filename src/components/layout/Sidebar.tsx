@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import { formatCompanyDisplayName } from "@/lib/utils";
+import * as Icons from "lucide-react";
+import type { NavigationItem } from "@/types/navigation";
 
 // Admin role ID
 const ADMIN_ROLE_ID = 1;
@@ -18,6 +20,27 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [navigation, setNavigation] = useState({ items: [] });
+  const [isLoadingNavigation, setIsLoadingNavigation] = useState(true);
+
+  // Fetch navigation on mount
+  useEffect(() => {
+    async function fetchNavigation() {
+      if (!user) return;
+
+      try {
+        const res = await fetch("/api/navigation");
+        const data = await res.json();
+        setNavigation(data);
+      } catch (error) {
+        console.error("Failed to fetch navigation:", error);
+      } finally {
+        setIsLoadingNavigation(false);
+      }
+    }
+
+    fetchNavigation();
+  }, [user]);
 
   // Check if any href in a group is active
   const isGroupActive = (hrefs: string[]) => {
@@ -467,229 +490,135 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
         {/* Navigation */}
         <nav className="mt-4 space-y-1 px-2 flex-1 overflow-y-auto">
-          {/* Dashboard */}
-          {topLevelItems
-            .filter((item) => item.name === "Dashboard")
-            .map((item) => (
-              <div
-                key={item.name}
-                className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg cursor-pointer transition-colors ${
-                  pathname === item.href
-                    ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
-                    : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100"
-                }`}
-                onClick={() => {
-                  if (item.href) {
-                    router.push(item.href);
-                  }
-                }}
-              >
-                <span
-                  className={
-                    pathname === item.href
-                      ? "text-blue-600 dark:text-blue-400"
-                      : "text-zinc-500 dark:text-zinc-400"
-                  }
-                >
-                  {item.icon}
-                </span>
-                <span className="flex-1">{item.name}</span>
-              </div>
-            ))}
+          {/* Dynamic Navigation from Database */}
+          {!isLoadingNavigation &&
+            navigation.items?.map((item: NavigationItem) => {
+              const IconComponent =
+                Icons[item.icon as keyof typeof Icons] || Icons.Circle;
 
-          {/* Personal collapsible group */}
-          <div className="mt-2">
-            <div
-              className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg cursor-pointer transition-colors ${
-                isGroupActive(personalItemsHrefs)
-                  ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
-                  : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100"
-              }`}
-              onClick={() => setIsPersonalOpen(!isPersonalOpen)}
-            >
-              <span
-                className={
-                  isGroupActive(personalItemsHrefs)
-                    ? "text-blue-600 dark:text-blue-400"
-                    : "text-zinc-500 dark:text-zinc-400"
-                }
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                  />
-                </svg>
-              </span>
-              <span className="flex-1">Personal</span>
-              <svg
-                className={`w-4 h-4 transition-transform duration-200 ${
-                  shouldPersonalBeOpen ? "rotate-180" : ""
-                } ${isGroupActive(personalItemsHrefs) ? "text-blue-600 dark:text-blue-400" : "text-zinc-500 dark:text-zinc-400"}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </div>
+              if (item.type === "container" && item.children) {
+                const isActive = item.children.some(
+                  (child) => pathname === child.url,
+                );
+                const currentState =
+                  localStorage.getItem(`nav_${item.name}_open`) || "false";
+                const isOpen = currentState === "true";
 
-            {/* Personal sub-items */}
-            {shouldPersonalBeOpen && (
-              <div className="ml-4 pl-4 border-l border-zinc-200 dark:border-zinc-700 space-y-1">
-                {personalItems.map((item) => (
-                  <div
-                    key={item.name}
-                    className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg cursor-pointer transition-colors ${
-                      pathname === item.href
-                        ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
-                        : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100"
-                    }`}
-                    onClick={() => {
-                      if (item.href) {
-                        router.push(item.href);
-                      }
-                    }}
-                  >
-                    <span
-                      className={
-                        pathname === item.href
-                          ? "text-blue-600 dark:text-blue-400"
-                          : "text-zinc-400 dark:text-zinc-500"
-                      }
+                return (
+                  <div key={item.name} className="mt-2">
+                    <div
+                      className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg cursor-pointer transition-colors ${
+                        isActive
+                          ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
+                          : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100"
+                      }`}
+                      onClick={() => {
+                        // Set toggle state for container items
+                        const currentState =
+                          localStorage.getItem(`nav_${item.name}_open`) ||
+                          "false";
+                        localStorage.setItem(
+                          `nav_${item.name}_open`,
+                          currentState === "true" ? "false" : "true",
+                        );
+                        // Force re-render
+                        router.refresh();
+                      }}
                     >
-                      {item.icon}
-                    </span>
-                    <span className="flex-1">{item.name}</span>
+                      <span
+                        className={
+                          isActive
+                            ? "text-blue-600 dark:text-blue-400"
+                            : "text-zinc-500 dark:text-zinc-400"
+                        }
+                      >
+                        {typeof IconComponent === "function" && (
+                          <IconComponent className="w-5 h-5" />
+                        )}
+                      </span>
+                      <span className="flex-1">{item.name}</span>
+                      <Icons.ChevronDown
+                        className={`w-4 h-4 transition-transform duration-200 ${localStorage.getItem(`nav_${item.name}_open`) === "true" ? "rotate-180" : ""}`}
+                        fill="none"
+                        stroke="currentColor"
+                      />
+                    </div>
+
+                    {localStorage.getItem(`nav_${item.name}_open`) ===
+                      "true" && (
+                      <div className="ml-4 pl-4 border-l border-zinc-200 dark:border-zinc-700 space-y-1">
+                        {item.children.map((child) => {
+                          const ChildIconComponent =
+                            Icons[child.icon as keyof typeof Icons] ||
+                            Icons.Circle;
+                          return (
+                            <div
+                              key={child.name}
+                              className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg cursor-pointer transition-colors ${
+                                pathname === child.url
+                                  ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
+                                  : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100"
+                              }`}
+                              onClick={() => {
+                                if (child.url) {
+                                  router.push(child.url);
+                                }
+                              }}
+                            >
+                              <span
+                                className={
+                                  pathname === child.url
+                                    ? "text-blue-600 dark:text-blue-400"
+                                    : "text-zinc-400 dark:text-zinc-500"
+                                }
+                              >
+                                {typeof ChildIconComponent === "function" && (
+                                  <ChildIconComponent className="w-5 h-5" />
+                                )}
+                              </span>
+                              <span className="flex-1">{child.name}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
+                );
+              }
 
-          {/* Manage collapsible group */}
-          <div className="mt-2">
-            <div
-              className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg cursor-pointer transition-colors ${
-                isGroupActive(manageItemsHrefs)
-                  ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
-                  : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100"
-              }`}
-              onClick={() => setIsManageOpen(!isManageOpen)}
-            >
-              <span
-                className={
-                  isGroupActive(manageItemsHrefs)
-                    ? "text-blue-600 dark:text-blue-400"
-                    : "text-zinc-500 dark:text-zinc-400"
-                }
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+              // Page item
+              const IconComponentFinal =
+                Icons[item.icon as keyof typeof Icons] || Icons.Circle;
+
+              return (
+                <div
+                  key={item.name}
+                  className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg cursor-pointer transition-colors ${
+                    pathname === item.url
+                      ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
+                      : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100"
+                  }`}
+                  onClick={() => {
+                    if (item.url) {
+                      router.push(item.url);
+                    }
+                  }}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
-                  />
-                </svg>
-              </span>
-              <span className="flex-1">Manage</span>
-              <svg
-                className={`w-4 h-4 transition-transform duration-200 ${
-                  shouldManageBeOpen ? "rotate-180" : ""
-                } ${isGroupActive(manageItemsHrefs) ? "text-blue-600 dark:text-blue-400" : "text-zinc-500 dark:text-zinc-400"}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </div>
-
-            {/* Manage sub-items */}
-            {shouldManageBeOpen && (
-              <div className="ml-4 pl-4 border-l border-zinc-200 dark:border-zinc-700 space-y-1">
-                {manageItems.map((item) => (
-                  <div
-                    key={item.name}
-                    className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg cursor-pointer transition-colors ${
-                      pathname === item.href
-                        ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
-                        : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100"
-                    }`}
-                    onClick={() => {
-                      if (item.href) {
-                        router.push(item.href);
-                      }
-                    }}
+                  <span
+                    className={
+                      pathname === item.url
+                        ? "text-blue-600 dark:text-blue-400"
+                        : "text-zinc-500 dark:text-zinc-400"
+                    }
                   >
-                    <span
-                      className={
-                        pathname === item.href
-                          ? "text-blue-600 dark:text-blue-400"
-                          : "text-zinc-400 dark:text-zinc-500"
-                      }
-                    >
-                      {item.icon}
-                    </span>
-                    <span className="flex-1">{item.name}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Analytics and Settings */}
-          {topLevelItems
-            .filter((item) => item.name !== "Dashboard")
-            .map((item) => (
-              <div
-                key={item.name}
-                className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg cursor-pointer transition-colors ${
-                  pathname === item.href
-                    ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
-                    : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100"
-                }`}
-                onClick={() => {
-                  if (item.href) {
-                    router.push(item.href);
-                  }
-                }}
-              >
-                <span
-                  className={
-                    pathname === item.href
-                      ? "text-blue-600 dark:text-blue-400"
-                      : "text-zinc-500 dark:text-zinc-400"
-                  }
-                >
-                  {item.icon}
-                </span>
-                <span className="flex-1">{item.name}</span>
-              </div>
-            ))}
+                    {typeof IconComponentFinal === "function" && (
+                      <IconComponentFinal className="w-5 h-5" />
+                    )}
+                  </span>
+                  <span className="flex-1">{item.name}</span>
+                </div>
+              );
+            })}
 
           {/* Coming Soon items */}
           <div className="mt-2">
