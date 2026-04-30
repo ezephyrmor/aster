@@ -1,4 +1,5 @@
 import NextAuth from "next-auth";
+import type { UserNavigation } from "./navigation";
 
 declare module "next-auth" {
   interface User {
@@ -16,6 +17,7 @@ declare module "next-auth" {
 
   interface Session {
     user: User;
+    navigation?: UserNavigation;
     // Debug security attributes (only available in development mode)
     security?: {
       ip?: string;
@@ -39,6 +41,7 @@ declare module "next-auth/jwt" {
       name: string;
       description: string | null;
     };
+    navigation?: UserNavigation;
     // Security attributes
     ip?: string;
     fingerprint?: string;
