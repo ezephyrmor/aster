@@ -9,7 +9,7 @@ datasource db {
 
 model Position {
   id               String            @id @default(uuid())
-  companyId        String               @default("1") @map("company_id")
+  companyId        String            @default("1") @map("company_id")
   name             String            @db.VarChar(100)
   description      String?           @db.Text
   createdAt        DateTime          @default(now()) @map("created_at")
@@ -23,7 +23,7 @@ model Position {
 
 model Department {
   id               String            @id @default(uuid())
-  companyId        String               @default("1") @map("company_id")
+  companyId        String            @default("1") @map("company_id")
   name             String            @db.VarChar(100)
   description      String?           @db.Text
   createdAt        DateTime          @default(now()) @map("created_at")
@@ -36,13 +36,14 @@ model Department {
 }
 
 model Role {
-  id                 String           @id @default(uuid())
-  companyId          String              @default("1") @map("company_id")
-  name               String           @db.VarChar(50)
-  description        String?          @db.Text
-  createdAt          DateTime         @default(now()) @map("created_at")
-  employeeProfiles   EmployeeProfile[]
-  company            Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  id               String            @id @default(uuid())
+  companyId        String            @default("1") @map("company_id")
+  name             String            @db.VarChar(50)
+  description      String?           @db.Text
+  createdAt        DateTime          @default(now()) @map("created_at")
+  employeeProfiles EmployeeProfile[]
+  company          Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  RoleNavigation   RoleNavigation[]
 
   @@unique([companyId, name])
   @@index([companyId])
@@ -50,13 +51,13 @@ model Role {
 }
 
 model EmployeeStatusModel {
-  id               String            @id @default(uuid())
-  name             String            @unique @db.VarChar(50)
-  description      String?           @db.Text
-  color            String            @default("gray") @db.VarChar(20)
-  isActive         Boolean           @default(true) @map("is_active")
-  sortOrder        Int               @default(0) @map("sort_order")
-  createdAt        DateTime          @default(now()) @map("created_at")
+  id               String                  @id @default(uuid())
+  name             String                  @unique @db.VarChar(50)
+  description      String?                 @db.Text
+  color            String                  @default("gray") @db.VarChar(20)
+  isActive         Boolean                 @default(true) @map("is_active")
+  sortOrder        Int                     @default(0) @map("sort_order")
+  createdAt        DateTime                @default(now()) @map("created_at")
   employeeProfiles EmployeeProfile[]
   statusHistory    EmployeeStatusHistory[]
 
@@ -88,98 +89,100 @@ model Company {
   createdAt DateTime      @default(now()) @map("created_at")
   updatedAt DateTime      @updatedAt @map("updated_at")
 
-  profiles         CompanyProfile[]
-  users            User[]
-  brands           Brand[]
-  teams            Team[]
-  positions        Position[]
-  departments      Department[]
-  roles            Role[]
-  calendarEvents   CalendarEvent[]
-  leaveTypes       LeaveType[]
-  leaveStatuses    LeaveStatus[]
-  leaveRequests    LeaveRequest[]
-  infractionTypes  InfractionType[]
-  infractionOffenses InfractionOffense[]
-  infractions Infraction[]
-  workSchedules WorkSchedule[]
+  profiles                  CompanyProfile[]
+  users                     User[]
+  brands                    Brand[]
+  teams                     Team[]
+  positions                 Position[]
+  departments               Department[]
+  roles                     Role[]
+  calendarEvents            CalendarEvent[]
+  leaveTypes                LeaveType[]
+  leaveStatuses             LeaveStatus[]
+  leaveRequests             LeaveRequest[]
+  infractionTypes           InfractionType[]
+  infractionOffenses        InfractionOffense[]
+  infractions               Infraction[]
+  workSchedules             WorkSchedule[]
+  FeatureNavigationTemplate FeatureNavigationTemplate[]
+  RoleNavigation            RoleNavigation[]
 
   @@map("companies")
 }
 
 model CompanyProfile {
-  id          String    @id @default(uuid())
-  companyId   String       @unique @map("company_id")
-  legalName   String?   @map("legal_name") @db.VarChar(200)
-  taxId       String?   @map("tax_id") @db.VarChar(50)
-  email       String?   @db.VarChar(200)
-  phone       String?   @db.VarChar(50)
-  address     String?   @db.Text
-  city        String?   @db.VarChar(100)
-  country     String?   @db.VarChar(100)
-  settings    Json?
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
+  id        String   @id @default(uuid())
+  companyId String   @unique @map("company_id")
+  legalName String?  @map("legal_name") @db.VarChar(200)
+  taxId     String?  @map("tax_id") @db.VarChar(50)
+  email     String?  @db.VarChar(200)
+  phone     String?  @db.VarChar(50)
+  address   String?  @db.Text
+  city      String?  @db.VarChar(100)
+  country   String?  @db.VarChar(100)
+  settings  Json?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  company     Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   @@map("company_profiles")
 }
 
 model User {
-  id              String           @id @default(uuid())
-  companyId       String              @map("company_id") @default("1")
-  username        String           @unique @db.VarChar(50)
-  passwordHash    String           @map("password_hash") @db.VarChar(255)
-  salt            String           @db.VarChar(255)
-  createdAt       DateTime         @default(now()) @map("created_at")
-  employeeProfile EmployeeProfile?
-  teamMembers     TeamMember[]
-  company         Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  calendarEvents  CalendarEvent[]
-  leaveCredits    LeaveCredit[]
-  leaveRequests   LeaveRequest[]
-  reviewedLeaves  LeaveRequest[]   @relation("ReviewedLeaves")
-  workSchedules   WorkSchedule[]
-  attendance      Attendance[]
-  infractions     Infraction[]     @relation("InfractionUsers")
-  createdInfractions Infraction[]  @relation("InfractionCreators")
-  acknowledgedInfractions Infraction[] @relation("InfractionAckUsers")
-  managedBrands   Brand[]          @relation("BrandManagers")
-  brandManagerHistory BrandManagerHistory[] @relation("BrandManagerHistoryPerformedBy")
-  managedBrandsHistory BrandManagerHistory[] @relation("BrandManagerHistoryUsers")
-  performedStatusHistory EmployeeStatusHistory[] @relation("EmployeeStatusHistoryPerformedBy")
+  id                      String                  @id @default(uuid())
+  companyId               String                  @default("1") @map("company_id")
+  username                String                  @unique @db.VarChar(50)
+  passwordHash            String                  @map("password_hash") @db.VarChar(255)
+  salt                    String                  @db.VarChar(255)
+  createdAt               DateTime                @default(now()) @map("created_at")
+  employeeProfile         EmployeeProfile?
+  teamMembers             TeamMember[]
+  company                 Company                 @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  calendarEvents          CalendarEvent[]
+  leaveCredits            LeaveCredit[]
+  leaveRequests           LeaveRequest[]
+  reviewedLeaves          LeaveRequest[]          @relation("ReviewedLeaves")
+  workSchedules           WorkSchedule[]
+  attendance              Attendance[]
+  infractions             Infraction[]            @relation("InfractionUsers")
+  createdInfractions      Infraction[]            @relation("InfractionCreators")
+  acknowledgedInfractions Infraction[]            @relation("InfractionAckUsers")
+  managedBrands           Brand[]                 @relation("BrandManagers")
+  brandManagerHistory     BrandManagerHistory[]   @relation("BrandManagerHistoryPerformedBy")
+  managedBrandsHistory    BrandManagerHistory[]   @relation("BrandManagerHistoryUsers")
+  performedStatusHistory  EmployeeStatusHistory[] @relation("EmployeeStatusHistoryPerformedBy")
 
   @@index([companyId], map: "users_company_id_fkey")
   @@map("users")
 }
 
 model EmployeeProfile {
-  id            String              @id @default(uuid())
-  userId        String                 @unique @map("user_id")
-  firstName     String              @map("first_name") @db.VarChar(100)
-  lastName      String              @map("last_name") @db.VarChar(100)
-  middleName    String?             @map("middle_name") @db.VarChar(100)
-  dateOfBirth   DateTime?           @map("date_of_birth")
-  contactNumber String?             @map("contact_number") @db.VarChar(20)
-  personalEmail String?             @map("personal_email") @db.VarChar(255)
-  address       String?             @db.Text
-  hireDate      DateTime?           @map("hire_date")
-  emergencyContactName     String?  @map("emergency_contact_name") @db.VarChar(200)
-  emergencyContactNumber   String?  @map("emergency_contact_number") @db.VarChar(50)
-  emergencyContactRelation String?  @map("emergency_contact_relation") @db.VarChar(100)
-  createdAt     DateTime            @default(now()) @map("created_at")
-  updatedAt     DateTime            @updatedAt @map("updated_at")
-  departmentId  String?                @map("department_id")
-  positionId    String?                @map("position_id")
-  statusId      String                 @default("1") @map("status_id")
-  roleId        String                 @default("3") @map("role_id")
-  department    Department?         @relation(fields: [departmentId], references: [id])
-  position      Position?           @relation(fields: [positionId], references: [id])
-  status        EmployeeStatusModel @relation(fields: [statusId], references: [id])
-  role          Role                @relation(fields: [roleId], references: [id])
-  user          User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  statusHistory EmployeeStatusHistory[]
+  id                       String                  @id @default(uuid())
+  userId                   String                  @unique @map("user_id")
+  firstName                String                  @map("first_name") @db.VarChar(100)
+  lastName                 String                  @map("last_name") @db.VarChar(100)
+  middleName               String?                 @map("middle_name") @db.VarChar(100)
+  dateOfBirth              DateTime?               @map("date_of_birth")
+  contactNumber            String?                 @map("contact_number") @db.VarChar(20)
+  personalEmail            String?                 @map("personal_email") @db.VarChar(255)
+  address                  String?                 @db.Text
+  hireDate                 DateTime?               @map("hire_date")
+  emergencyContactName     String?                 @map("emergency_contact_name") @db.VarChar(200)
+  emergencyContactNumber   String?                 @map("emergency_contact_number") @db.VarChar(50)
+  emergencyContactRelation String?                 @map("emergency_contact_relation") @db.VarChar(100)
+  createdAt                DateTime                @default(now()) @map("created_at")
+  updatedAt                DateTime                @updatedAt @map("updated_at")
+  departmentId             String?                 @map("department_id")
+  positionId               String?                 @map("position_id")
+  statusId                 String                  @default("1") @map("status_id")
+  roleId                   String                  @default("3") @map("role_id")
+  department               Department?             @relation(fields: [departmentId], references: [id])
+  position                 Position?               @relation(fields: [positionId], references: [id])
+  status                   EmployeeStatusModel     @relation(fields: [statusId], references: [id])
+  role                     Role                    @relation(fields: [roleId], references: [id])
+  user                     User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  statusHistory            EmployeeStatusHistory[]
 
   @@index([departmentId], map: "employee_profiles_department_id_fkey")
   @@index([positionId], map: "employee_profiles_position_id_fkey")
@@ -190,14 +193,14 @@ model EmployeeProfile {
 
 model EmployeeStatusHistory {
   id              String              @id @default(uuid())
-  userId          String                 @map("user_id")
+  userId          String              @map("user_id")
   employeeProfile EmployeeProfile     @relation(fields: [userId], references: [userId], onDelete: Cascade)
-  statusId        String                 @map("status_id")
+  statusId        String              @map("status_id")
   status          EmployeeStatusModel @relation(fields: [statusId], references: [id])
   effectiveDate   DateTime            @default(now()) @map("effective_date")
   reason          String?             @db.Text
   notes           String?             @db.Text
-  performedBy     String                 @map("performed_by")
+  performedBy     String              @map("performed_by")
   performedByUser User                @relation("EmployeeStatusHistoryPerformedBy", fields: [performedBy], references: [id])
   createdAt       DateTime            @default(now()) @map("created_at")
   ipAddress       String?             @map("ip_address") @db.VarChar(45)
@@ -211,22 +214,22 @@ model EmployeeStatusHistory {
 }
 
 model Brand {
-  id          String      @id @default(uuid())
-  companyId   String         @map("company_id") @default("1")
-  name        String      @unique @db.VarChar(100)
-  description String?     @db.Text
-  logo        String?     @db.VarChar(500)
-  website     String?     @db.VarChar(255)
-  status      BrandStatus @default(active)
-  createdAt   DateTime    @default(now()) @map("created_at")
-  updatedAt   DateTime    @updatedAt @map("updated_at")
-  createdBy   String         @map("created_by")
-  managerId   String?        @map("manager_id")
-  company     Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  manager     User?       @relation("BrandManagers", fields: [managerId], references: [id])
-  industryId  String?        @map("industry_id")
-  industry    Industry?   @relation(fields: [industryId], references: [id])
-  teams       Team[]
+  id             String                @id @default(uuid())
+  companyId      String                @default("1") @map("company_id")
+  name           String                @unique @db.VarChar(100)
+  description    String?               @db.Text
+  logo           String?               @db.VarChar(500)
+  website        String?               @db.VarChar(255)
+  status         BrandStatus           @default(active)
+  createdAt      DateTime              @default(now()) @map("created_at")
+  updatedAt      DateTime              @updatedAt @map("updated_at")
+  createdBy      String                @map("created_by")
+  managerId      String?               @map("manager_id")
+  company        Company               @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  manager        User?                 @relation("BrandManagers", fields: [managerId], references: [id])
+  industryId     String?               @map("industry_id")
+  industry       Industry?             @relation(fields: [industryId], references: [id])
+  teams          Team[]
   managerHistory BrandManagerHistory[]
 
   @@index([industryId], map: "brands_industry_id_fkey")
@@ -241,19 +244,19 @@ enum BrandManagerAction {
 }
 
 model BrandManagerHistory {
-  id              String              @id @default(uuid())
-  brandId         String
-  brand           Brand               @relation(fields: [brandId], references: [id])
-  userId          String?                @map("user_id")
-  user            User?               @relation("BrandManagerHistoryUsers", fields: [userId], references: [id])
-  action          BrandManagerAction
-  performedBy     String                 @map("performed_by")
-  performedByUser User                @relation("BrandManagerHistoryPerformedBy", fields: [performedBy], references: [id])
-  timestamp       DateTime            @default(now())
-  previousManagerId String?              @map("previous_manager_id")
-  reason          String?             @db.Text
-  ipAddress       String?             @map("ip_address") @db.VarChar(45)
-  userAgent       String?             @map("user_agent") @db.Text
+  id                String             @id @default(uuid())
+  brandId           String
+  brand             Brand              @relation(fields: [brandId], references: [id])
+  userId            String?            @map("user_id")
+  user              User?              @relation("BrandManagerHistoryUsers", fields: [userId], references: [id])
+  action            BrandManagerAction
+  performedBy       String             @map("performed_by")
+  performedByUser   User               @relation("BrandManagerHistoryPerformedBy", fields: [performedBy], references: [id])
+  timestamp         DateTime           @default(now())
+  previousManagerId String?            @map("previous_manager_id")
+  reason            String?            @db.Text
+  ipAddress         String?            @map("ip_address") @db.VarChar(45)
+  userAgent         String?            @map("user_agent") @db.Text
 
   @@index([brandId], map: "brand_manager_history_brand_id_fkey")
   @@index([userId], map: "brand_manager_history_user_id_fkey")
@@ -263,13 +266,13 @@ model BrandManagerHistory {
 }
 
 model Team {
-  id          String      @id @default(uuid())
-  companyId   String           @map("company_id") @default("1")
+  id          String        @id @default(uuid())
+  companyId   String        @default("1") @map("company_id")
   name        String        @unique @db.VarChar(100)
   description String?       @db.Text
   createdAt   DateTime      @default(now()) @map("created_at")
   updatedAt   DateTime      @updatedAt @map("updated_at")
-  brandId     String           @map("brand_id")
+  brandId     String        @map("brand_id")
   company     Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
   history     TeamHistory[]
   members     TeamMember[]
@@ -282,8 +285,8 @@ model Team {
 
 model TeamMember {
   id       String           @id @default(uuid())
-  teamId   String              @map("team_id")
-  userId   String              @map("user_id")
+  teamId   String           @map("team_id")
+  userId   String           @map("user_id")
   isLeader Boolean          @default(false) @map("is_leader")
   status   TeamMemberStatus @default(active)
   joinedAt DateTime         @default(now()) @map("joined_at")
@@ -298,11 +301,11 @@ model TeamMember {
 }
 
 model TeamHistory {
-  id          String      @id @default(uuid())
-  teamId       String               @map("team_id")
-  teamMemberId String?              @map("team_member_id")
+  id           String            @id @default(uuid())
+  teamId       String            @map("team_id")
+  teamMemberId String?           @map("team_member_id")
   action       TeamHistoryAction
-  performedBy  String               @map("performed_by")
+  performedBy  String            @map("performed_by")
   reason       String?           @db.Text
   metadata     Json?
   createdAt    DateTime          @default(now()) @map("created_at")
@@ -337,13 +340,13 @@ enum TeamHistoryAction {
 
 model CalendarEvent {
   id          String   @id @default(uuid())
-  companyId   String      @default("1") @map("company_id")
+  companyId   String   @default("1") @map("company_id")
   title       String   @db.VarChar(200)
   description String?  @db.Text
   startDate   DateTime @map("start_date")
   endDate     DateTime @map("end_date")
   color       String   @default("blue") @db.VarChar(20)
-  createdBy   String      @map("created_by")
+  createdBy   String   @map("created_by")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
   user        User     @relation(fields: [createdBy], references: [id])
@@ -356,16 +359,16 @@ model CalendarEvent {
 }
 
 model LeaveType {
-  id          String      @id @default(uuid())
-  companyId        String           @default("1") @map("company_id")
-  name             String        @db.VarChar(50)
-  description      String?       @db.Text
-  defaultDaysLimit Int?          @map("default_days_limit")
-  color            String        @default("purple") @db.VarChar(20)
-  isActive         Boolean       @default(true) @map("is_active")
-  createdAt        DateTime      @default(now()) @map("created_at")
+  id               String         @id @default(uuid())
+  companyId        String         @default("1") @map("company_id")
+  name             String         @db.VarChar(50)
+  description      String?        @db.Text
+  defaultDaysLimit Int?           @map("default_days_limit")
+  color            String         @default("purple") @db.VarChar(20)
+  isActive         Boolean        @default(true) @map("is_active")
+  createdAt        DateTime       @default(now()) @map("created_at")
   leaveRequests    LeaveRequest[]
-  company          Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  company          Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   @@unique([companyId, name])
   @@index([companyId])
@@ -373,15 +376,15 @@ model LeaveType {
 }
 
 model LeaveStatus {
-  id          String      @id @default(uuid())
-  companyId     String           @default("1") @map("company_id")
-  name          String        @db.VarChar(50)
-  description   String?       @db.Text
-  color         String        @default("gray") @db.VarChar(20)
-  isFinal       Boolean       @default(false) @map("is_final")
-  createdAt     DateTime      @default(now()) @map("created_at")
+  id            String         @id @default(uuid())
+  companyId     String         @default("1") @map("company_id")
+  name          String         @db.VarChar(50)
+  description   String?        @db.Text
+  color         String         @default("gray") @db.VarChar(20)
+  isFinal       Boolean        @default(false) @map("is_final")
+  createdAt     DateTime       @default(now()) @map("created_at")
   leaveRequests LeaveRequest[]
-  company       Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  company       Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   @@unique([companyId, name])
   @@index([companyId])
@@ -389,12 +392,12 @@ model LeaveStatus {
 }
 
 model LeaveCredit {
-  id          String      @id @default(uuid())
-  userId     String           @map("user_id")
-  earnedDate DateTime      @map("earned_date")
-  usedDate   DateTime?     @map("used_date")
-  createdAt  DateTime      @default(now()) @map("created_at")
-  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id         String       @id @default(uuid())
+  userId     String       @map("user_id")
+  earnedDate DateTime     @map("earned_date")
+  usedDate   DateTime?    @map("used_date")
+  createdAt  DateTime     @default(now()) @map("created_at")
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   leaveUsage LeaveUsage[]
 
   @@index([userId], map: "leave_credits_user_id_idx")
@@ -403,27 +406,27 @@ model LeaveCredit {
 }
 
 model LeaveRequest {
-  id          String      @id @default(uuid())
-  companyId     String       @default("1") @map("company_id")
-  userId        String       @map("user_id")
-  leaveTypeId   String       @map("leave_type_id")
-  statusId      String       @default("1") @map("status_id")
+  id            String    @id @default(uuid())
+  companyId     String    @default("1") @map("company_id")
+  userId        String    @map("user_id")
+  leaveTypeId   String    @map("leave_type_id")
+  statusId      String    @default("1") @map("status_id")
   startDate     DateTime  @map("start_date")
   endDate       DateTime  @map("end_date")
   reason        String?   @db.Text
   isPaid        Boolean   @default(true) @map("is_paid")
-  reviewedBy    String?      @map("reviewed_by")
+  reviewedBy    String?   @map("reviewed_by")
   reviewedAt    DateTime? @map("reviewed_at")
   reviewComment String?   @map("review_comment") @db.Text
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
 
-  user          User         @relation(fields: [userId], references: [id])
-  leaveType     LeaveType    @relation(fields: [leaveTypeId], references: [id])
-  status        LeaveStatus  @relation(fields: [statusId], references: [id])
-  reviewer      User?        @relation("ReviewedLeaves", fields: [reviewedBy], references: [id])
-  company       Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  leaveUsage    LeaveUsage[]
+  user       User         @relation(fields: [userId], references: [id])
+  leaveType  LeaveType    @relation(fields: [leaveTypeId], references: [id])
+  status     LeaveStatus  @relation(fields: [statusId], references: [id])
+  reviewer   User?        @relation("ReviewedLeaves", fields: [reviewedBy], references: [id])
+  company    Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  leaveUsage LeaveUsage[]
 
   @@index([companyId])
   @@index([userId], map: "leave_requests_user_id_idx")
@@ -434,13 +437,13 @@ model LeaveRequest {
 }
 
 model LeaveUsage {
-  id          String      @id @default(uuid())
-  leaveRequestId String          @map("leave_request_id")
-  leaveCreditId  String          @map("leave_credit_id")
-  createdAt      DateTime     @default(now()) @map("created_at")
+  id             String   @id @default(uuid())
+  leaveRequestId String   @map("leave_request_id")
+  leaveCreditId  String   @map("leave_credit_id")
+  createdAt      DateTime @default(now()) @map("created_at")
 
-  leaveRequest   LeaveRequest @relation(fields: [leaveRequestId], references: [id], onDelete: Cascade)
-  leaveCredit    LeaveCredit  @relation(fields: [leaveCreditId], references: [id], onDelete: Cascade)
+  leaveRequest LeaveRequest @relation(fields: [leaveRequestId], references: [id], onDelete: Cascade)
+  leaveCredit  LeaveCredit  @relation(fields: [leaveCreditId], references: [id], onDelete: Cascade)
 
   @@unique([leaveRequestId, leaveCreditId])
   @@index([leaveRequestId], map: "leave_usage_leave_request_id_idx")
@@ -449,20 +452,20 @@ model LeaveUsage {
 }
 
 model WorkSchedule {
-  id          String      @id @default(uuid())
-  userId       String          @map("user_id")
-  companyId    String          @default("1") @map("company_id")
-  dayOfWeek    Int          @map("day_of_week") // 0=Sunday, 1=Monday, ..., 6=Saturday
-  startTime    String       @map("start_time") // Format: "HH:MM" (24-hour)
-  endTime      String       @map("end_time") // Format: "HH:MM" (24-hour)
-  breakMinutes Int          @default(60) @map("break_minutes")
-  effectiveFrom DateTime    @map("effective_from")
-  effectiveTo  DateTime?    @map("effective_to") // NULL = indefinitely
-  createdAt    DateTime     @default(now()) @map("created_at")
-  updatedAt    DateTime     @updatedAt @map("updated_at")
-  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  company      Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  attendance   Attendance[]
+  id            String       @id @default(uuid())
+  userId        String       @map("user_id")
+  companyId     String       @default("1") @map("company_id")
+  dayOfWeek     Int          @map("day_of_week") // 0=Sunday, 1=Monday, ..., 6=Saturday
+  startTime     String       @map("start_time") // Format: "HH:MM" (24-hour)
+  endTime       String       @map("end_time") // Format: "HH:MM" (24-hour)
+  breakMinutes  Int          @default(60) @map("break_minutes")
+  effectiveFrom DateTime     @map("effective_from")
+  effectiveTo   DateTime?    @map("effective_to") // NULL = indefinitely
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company       Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  attendance    Attendance[]
 
   @@index([companyId])
   @@index([userId], map: "work_schedules_user_id_idx")
@@ -471,21 +474,21 @@ model WorkSchedule {
 }
 
 model Attendance {
-  id          String      @id @default(uuid())
-  userId        String          @map("user_id")
-  scheduleId    String?         @map("schedule_id")
-  date          DateTime     @db.Date
-  clockIn       DateTime?    @map("clock_in")
-  clockOut      DateTime?    @map("clock_out")
-  status        AttendanceStatus @default(present)
-  lateMinutes   Int          @default(0) @map("late_minutes")
-  undertimeMinutes Int       @default(0) @map("undertime_minutes")
-  earlyClockOutReason String? @map("early_clock_out_reason") @db.Text
-  notes         String?      @db.Text
-  createdAt     DateTime     @default(now()) @map("created_at")
-  updatedAt     DateTime     @updatedAt @map("updated_at")
-  user          User         @relation(fields: [userId], references: [id])
-  schedule      WorkSchedule? @relation(fields: [scheduleId], references: [id])
+  id                  String           @id @default(uuid())
+  userId              String           @map("user_id")
+  scheduleId          String?          @map("schedule_id")
+  date                DateTime         @db.Date
+  clockIn             DateTime?        @map("clock_in")
+  clockOut            DateTime?        @map("clock_out")
+  status              AttendanceStatus @default(present)
+  lateMinutes         Int              @default(0) @map("late_minutes")
+  undertimeMinutes    Int              @default(0) @map("undertime_minutes")
+  earlyClockOutReason String?          @map("early_clock_out_reason") @db.Text
+  notes               String?          @db.Text
+  createdAt           DateTime         @default(now()) @map("created_at")
+  updatedAt           DateTime         @updatedAt @map("updated_at")
+  user                User             @relation(fields: [userId], references: [id])
+  schedule            WorkSchedule?    @relation(fields: [scheduleId], references: [id])
 
   @@unique([userId, date])
   @@index([userId], map: "attendance_user_id_idx")
@@ -523,16 +526,16 @@ enum AttendanceStatus {
 }
 
 model InfractionType {
-  id          String      @id @default(uuid())
-  companyId   String                @default("1") @map("company_id")
-  name        String             @db.VarChar(100)
-  description String?            @db.Text
-  color       String             @default("red") @db.VarChar(20)
-  isActive    Boolean            @default(true) @map("is_active")
-  createdAt   DateTime           @default(now()) @map("created_at")
+  id          String              @id @default(uuid())
+  companyId   String              @default("1") @map("company_id")
+  name        String              @db.VarChar(100)
+  description String?             @db.Text
+  color       String              @default("red") @db.VarChar(20)
+  isActive    Boolean             @default(true) @map("is_active")
+  createdAt   DateTime            @default(now()) @map("created_at")
   offenses    InfractionOffense[]
   infractions Infraction[]
-  company     Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  company     Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   @@unique([companyId, name])
   @@index([companyId])
@@ -540,17 +543,17 @@ model InfractionType {
 }
 
 model InfractionOffense {
-  id          String      @id @default(uuid())
-  companyId     String                @default("1") @map("company_id")
-  name          String             @db.VarChar(100)
-  description   String?            @db.Text
-  severityLevel Int                @map("severity_level") // 1=Minor, 2=Major, 3=Severe
-  typeId        String                @map("type_id")
-  type          InfractionType     @relation(fields: [typeId], references: [id])
-  isActive      Boolean            @default(true) @map("is_active")
-  createdAt     DateTime           @default(now()) @map("created_at")
+  id            String         @id @default(uuid())
+  companyId     String         @default("1") @map("company_id")
+  name          String         @db.VarChar(100)
+  description   String?        @db.Text
+  severityLevel Int            @map("severity_level") // 1=Minor, 2=Major, 3=Severe
+  typeId        String         @map("type_id")
+  type          InfractionType @relation(fields: [typeId], references: [id])
+  isActive      Boolean        @default(true) @map("is_active")
+  createdAt     DateTime       @default(now()) @map("created_at")
   infractions   Infraction[]
-  company       Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  company       Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   @@unique([companyId, name])
   @@index([companyId])
@@ -559,26 +562,26 @@ model InfractionOffense {
 }
 
 model Infraction {
-  id          String      @id @default(uuid())
-  userId         String                @map("user_id")
-  companyId      String                @default("1") @map("company_id")
-  offenseId      String                @map("offense_id")
-  typeId         String                @map("type_id")
-  date           DateTime           @db.Date
-  details        String?            @db.Text
-  comment        String?            @db.Text
-  acknowledgedBy String?               @map("acknowledged_by")
-  acknowledgedAt DateTime?          @map("acknowledged_at")
-  createdBy      String                @map("created_by")
-  createdAt      DateTime           @default(now()) @map("created_at")
-  updatedAt      DateTime           @updatedAt @map("updated_at")
+  id             String    @id @default(uuid())
+  userId         String    @map("user_id")
+  companyId      String    @default("1") @map("company_id")
+  offenseId      String    @map("offense_id")
+  typeId         String    @map("type_id")
+  date           DateTime  @db.Date
+  details        String?   @db.Text
+  comment        String?   @db.Text
+  acknowledgedBy String?   @map("acknowledged_by")
+  acknowledgedAt DateTime? @map("acknowledged_at")
+  createdBy      String    @map("created_by")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
 
-  user           User               @relation("InfractionUsers", fields: [userId], references: [id])
-  company        Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  offense        InfractionOffense  @relation(fields: [offenseId], references: [id])
-  type           InfractionType     @relation(fields: [typeId], references: [id])
-  creator        User               @relation("InfractionCreators", fields: [createdBy], references: [id])
-  ackUser        User?              @relation("InfractionAckUsers", fields: [acknowledgedBy], references: [id])
+  user    User              @relation("InfractionUsers", fields: [userId], references: [id])
+  company Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  offense InfractionOffense @relation(fields: [offenseId], references: [id])
+  type    InfractionType    @relation(fields: [typeId], references: [id])
+  creator User              @relation("InfractionCreators", fields: [createdBy], references: [id])
+  ackUser User?             @relation("InfractionAckUsers", fields: [acknowledgedBy], references: [id])
 
   @@index([companyId])
   @@index([userId], map: "infractions_user_id_idx")
@@ -589,19 +592,20 @@ model Infraction {
 }
 
 model Feature {
-  id          String                     @id @default(uuid())
-  code        String                     @db.VarChar(150)
+  id          String      @id @default(uuid())
+  code        String      @db.VarChar(150)
   kind        FeatureKind
-  httpMethod  String?                    @map("http_method") @db.VarChar(10)
-  path        String                     @db.VarChar(255)
-  name        String                     @db.VarChar(120)
-  description String?                    @db.Text
-  domain      String                     @db.VarChar(50)
-  isActive    Boolean                    @default(true) @map("is_active")
-  createdAt   DateTime                   @default(now()) @map("created_at")
-  updatedAt   DateTime                   @updatedAt @map("updated_at")
+  httpMethod  String?     @map("http_method") @db.VarChar(10)
+  path        String      @db.VarChar(255)
+  name        String      @db.VarChar(120)
+  description String?     @db.Text
+  domain      String      @db.VarChar(50)
+  isActive    Boolean     @default(true) @map("is_active")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
 
-  templateItems FeatureAccessTemplateItem[]
+  templateItems         FeatureAccessTemplateItem[]
+  FeatureNavigationItem FeatureNavigationItem[]
 
   @@unique([code], map: "uq_feature_code")
   @@unique([path, httpMethod], map: "uq_feature_path_method")
@@ -609,18 +613,18 @@ model Feature {
 }
 
 model FeatureAccessTemplate {
-  id          String                     @id @default(uuid())
-  code        String                     @db.VarChar(100)
-  name        String                     @db.VarChar(120)
-  description String?                    @db.Text
-  domain      String?                    @db.VarChar(50)
-  scopeLevel  ScopeLevel                 @map("scope_level")
-  isSystem    Boolean                    @default(false) @map("is_system")
-  isActive    Boolean                    @default(true) @map("is_active")
-  createdAt   DateTime                   @default(now()) @map("created_at")
-  updatedAt   DateTime                   @updatedAt @map("updated_at")
+  id          String     @id @default(uuid())
+  code        String     @db.VarChar(100)
+  name        String     @db.VarChar(120)
+  description String?    @db.Text
+  domain      String?    @db.VarChar(50)
+  scopeLevel  ScopeLevel @map("scope_level")
+  isSystem    Boolean    @default(false) @map("is_system")
+  isActive    Boolean    @default(true) @map("is_active")
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
 
-  items    FeatureAccessTemplateItem[]
+  items      FeatureAccessTemplateItem[]
   roleAccess RoleAccess[]
 
   @@unique([code], map: "uq_template_code")
@@ -628,14 +632,14 @@ model FeatureAccessTemplate {
 }
 
 model FeatureAccessTemplateItem {
-  id             String                 @id @default(uuid())
-  templateId     String                 @map("template_id")
-  featureId      String                 @map("feature_id")
-  action         String                 @db.VarChar(30)
-  effect         EffectType
-  scopeLevel     ScopeLevel?            @map("scope_level")
-  scopeOverride  Boolean                @default(false) @map("scope_override")
-  createdAt      DateTime               @default(now()) @map("created_at")
+  id            String      @id @default(uuid())
+  templateId    String      @map("template_id")
+  featureId     String      @map("feature_id")
+  action        String      @db.VarChar(30)
+  effect        EffectType
+  scopeLevel    ScopeLevel? @map("scope_level")
+  scopeOverride Boolean     @default(false) @map("scope_override")
+  createdAt     DateTime    @default(now()) @map("created_at")
 
   template FeatureAccessTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
   feature  Feature               @relation(fields: [featureId], references: [id], onDelete: Cascade)
@@ -661,4 +665,67 @@ model RoleAccess {
   @@index([roleId], map: "role_access_role_id_idx")
   @@index([templateId], map: "role_access_template_id_fkey")
   @@map("role_access")
+}
+
+model FeatureNavigationTemplate {
+  id          String   @id @default(uuid())
+  code        String   @db.VarChar(100)
+  name        String   @db.VarChar(120)
+  description String?  @db.Text
+  companyId   String?  @map("company_id")
+  isSystem    Boolean  @default(false) @map("is_system")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  items    FeatureNavigationItem[]
+  roleNavs RoleNavigation[]
+  company  Company?                @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([code], map: "uq_nav_template_code")
+  @@index([companyId])
+  @@map("feature_navigation_templates")
+}
+
+model FeatureNavigationItem {
+  id          String   @id @default(uuid())
+  templateId  String   @map("template_id")
+  parentId    String?  @map("parent_id")
+  name        String   @db.VarChar(120)
+  alias       String?  @db.VarChar(120)
+  icon        String?  @db.VarChar(50)
+  type        String   @db.VarChar(20)
+  sortOrder   Int      @default(0) @map("sort_order")
+  featureCode String?  @map("feature_code") @db.VarChar(150)
+  url         String?  @db.VarChar(255)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  template FeatureNavigationTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  parent   FeatureNavigationItem?    @relation("ItemHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children FeatureNavigationItem[]   @relation("ItemHierarchy")
+  feature  Feature?                  @relation(fields: [featureCode], references: [code])
+
+  @@index([templateId])
+  @@index([parentId])
+  @@index([featureCode])
+  @@map("feature_navigation_items")
+}
+
+model RoleNavigation {
+  id                   String   @id @default(uuid())
+  companyId            String   @map("company_id")
+  roleId               String   @map("role_id")
+  navigationTemplateId String   @map("navigation_template_id")
+  isActive             Boolean  @default(true) @map("is_active")
+  createdAt            DateTime @default(now()) @map("created_at")
+
+  template FeatureNavigationTemplate @relation(fields: [navigationTemplateId], references: [id], onDelete: Cascade)
+  role     Role                      @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  company  Company                   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, roleId], map: "uq_role_navigation")
+  @@index([companyId])
+  @@index([roleId])
+  @@index([navigationTemplateId])
+  @@map("role_navigations")
 }
