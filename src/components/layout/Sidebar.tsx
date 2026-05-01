@@ -350,6 +350,29 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               );
             })}
 
+          {/* TEMP: Hard-coded Feature Manager (will be moved to dynamic navigation later) */}
+          <div
+            className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg cursor-pointer transition-colors mt-2 ${
+              pathname === "/dashboard/feature-manager"
+                ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
+                : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100"
+            }`}
+            onClick={() => {
+              router.push("/dashboard/feature-manager");
+            }}
+          >
+            <span
+              className={
+                pathname === "/dashboard/feature-manager"
+                  ? "text-blue-600 dark:text-blue-400"
+                  : "text-zinc-500 dark:text-zinc-400"
+              }
+            >
+              <Icons.Sliders className="w-5 h-5" />
+            </span>
+            <span className="flex-1">Feature Manager</span>
+          </div>
+
           {/* Coming Soon items */}
           <div className="mt-2">
             {comingSoonItems.map((item) => (
