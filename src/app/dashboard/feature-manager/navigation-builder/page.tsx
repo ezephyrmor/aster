@@ -20,6 +20,61 @@ interface NewItemDialog {
   parentId?: string;
 }
 
+const commonIcons = [
+  "Home",
+  "Settings",
+  "Users",
+  "User",
+  "Shield",
+  "Folder",
+  "Layout",
+  "SquareStack",
+  "Building",
+  "Calendar",
+  "Clock",
+  "FileText",
+  "CreditCard",
+  "Briefcase",
+  "BookOpen",
+  "PieChart",
+  "BarChart",
+  "Bell",
+  "Mail",
+  "MessageSquare",
+  "HelpCircle",
+  "Settings2",
+  "Sliders",
+  "Lock",
+  "Unlock",
+  "Database",
+  "Globe",
+  "Link",
+  "Image",
+  "Camera",
+  "Video",
+  "Music",
+  "Download",
+  "Upload",
+  "Plus",
+  "Minus",
+  "Edit",
+  "Trash2",
+  "Check",
+  "X",
+  "ChevronDown",
+  "ChevronRight",
+  "Circle",
+  "Square",
+  "Star",
+  "Heart",
+  "Zap",
+  "Sun",
+  "Moon",
+  "Cloud",
+  "MapPin",
+  "Phone",
+];
+
 const initialNavigation: NavItem[] = [
   {
     id: "1",
@@ -113,9 +168,14 @@ export default function NavigationBuilderPage() {
     null,
   );
   const [newItemName, setNewItemName] = useState("");
-  const [newItemType, setNewItemType] = useState<"page" | "container">("page");
+  const [newItemType, setNewItemType] = useState<"page" | "container">(
+    "container",
+  );
+  const [selectedIcon, setSelectedIcon] = useState("Folder");
   const [editingItem, setEditingItem] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
+  const [editIcon, setEditIcon] = useState("");
+  const [iconSearch, setIconSearch] = useState("");
 
   const getIcon = (iconName: string) => {
     const Icon = (Icons as any)[iconName] || Icons.Circle;
@@ -140,7 +200,7 @@ export default function NavigationBuilderPage() {
     const newItem: NavItem = {
       id: String(Date.now()),
       name: newItemName.trim(),
-      icon: newItemType === "container" ? "Folder" : "Circle",
+      icon: selectedIcon,
       type: newItemType,
       url: newItemType === "page" ? "" : undefined,
       children: [],
@@ -167,6 +227,7 @@ export default function NavigationBuilderPage() {
 
     setNewItemDialog(null);
     setNewItemName("");
+    setSelectedIcon("Folder");
     setShowAddMenu(null);
     addToast(
       `${newItemType === "container" ? "Container" : "Page item"} created successfully`,
@@ -174,21 +235,22 @@ export default function NavigationBuilderPage() {
     );
   };
 
-  const updateItemName = (itemId: string) => {
+  const updateItem = (itemId: string) => {
     if (!editName.trim()) return;
 
-    const updateName = (items: NavItem[]): NavItem[] => {
+    const updateValues = (items: NavItem[]): NavItem[] => {
       return items.map((item) => {
         if (item.id === itemId) {
-          return { ...item, name: editName.trim() };
+          return { ...item, name: editName.trim(), icon: editIcon };
         }
-        return { ...item, children: updateName(item.children) };
+        return { ...item, children: updateValues(item.children) };
       });
     };
 
-    setNavigation(updateName(navigation));
+    setNavigation(updateValues(navigation));
     setEditingItem(null);
     setEditName("");
+    setEditIcon("");
   };
 
   const deleteItem = (itemId: string) => {
@@ -209,6 +271,47 @@ export default function NavigationBuilderPage() {
     addToast("JSON copied to clipboard", "success");
   };
 
+  const filteredIcons = commonIcons.filter((icon) =>
+    icon.toLowerCase().includes(iconSearch.toLowerCase()),
+  );
+
+  const renderIconPicker = (
+    currentIcon: string,
+    onSelect: (icon: string) => void,
+    showSearch: boolean = true,
+  ) => (
+    <div className="border border-zinc-200 dark:border-zinc-700 rounded-lg p-3 bg-zinc-50 dark:bg-zinc-900/50">
+      {showSearch && (
+        <input
+          type="text"
+          placeholder="Search icons..."
+          value={iconSearch}
+          onChange={(e) => setIconSearch(e.target.value)}
+          className="w-full px-3 py-1.5 mb-3 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded text-sm text-zinc-900 dark:text-zinc-100"
+        />
+      )}
+      <div className="grid grid-cols-8 gap-1 max-h-[180px] overflow-y-auto">
+        {filteredIcons.map((iconName) => {
+          const Icon = (Icons as any)[iconName] || Icons.Circle;
+          const isSelected = currentIcon === iconName;
+          return (
+            <button
+              key={iconName}
+              onClick={() => onSelect(iconName)}
+              className={`p-2 rounded-md transition-colors ${
+                isSelected
+                  ? "bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400"
+                  : "hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400"
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+
   const renderNavItem = (item: NavItem, depth: number = 0) => {
     const isActive = activeItem === item.id;
     const isEditing = editingItem === item.id;
@@ -216,30 +319,35 @@ export default function NavigationBuilderPage() {
     if (isEditing) {
       return (
         <div key={item.id} style={{ marginLeft: `${depth * 28}px` }}>
-          <div className="flex items-center gap-2 p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20">
+          <div className="flex flex-col gap-3 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20">
             <input
               type="text"
               autoFocus
               value={editName}
               onChange={(e) => setEditName(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && updateItemName(item.id)}
-              className="flex-1 px-2 py-1 bg-white dark:bg-zinc-800 border border-blue-300 dark:border-blue-700 rounded text-sm text-zinc-900 dark:text-zinc-100"
+              onKeyDown={(e) => e.key === "Enter" && updateItem(item.id)}
+              className="w-full px-2 py-1.5 bg-white dark:bg-zinc-800 border border-blue-300 dark:border-blue-700 rounded text-sm text-zinc-900 dark:text-zinc-100"
+              placeholder="Item name"
             />
-            <button
-              onClick={() => updateItemName(item.id)}
-              className="p-1 bg-green-500 hover:bg-green-600 text-white rounded"
-            >
-              <Icons.Check className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => {
-                setEditingItem(null);
-                setEditName("");
-              }}
-              className="p-1 bg-zinc-500 hover:bg-zinc-600 text-white rounded"
-            >
-              <Icons.X className="w-4 h-4" />
-            </button>
+            {renderIconPicker(editIcon, setEditIcon, false)}
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => updateItem(item.id)}
+                className="px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-sm"
+              >
+                Save
+              </button>
+              <button
+                onClick={() => {
+                  setEditingItem(null);
+                  setEditName("");
+                  setEditIcon("");
+                }}
+                className="px-3 py-1 bg-zinc-500 hover:bg-zinc-600 text-white rounded text-sm"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       );
@@ -308,6 +416,8 @@ export default function NavigationBuilderPage() {
                     setNewItemDialog({ type: "child", parentId: item.id });
                     setNewItemType("page");
                     setNewItemName("");
+                    setSelectedIcon("Circle");
+                    setIconSearch("");
                   }}
                   className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded text-left text-zinc-700 dark:text-zinc-300"
                 >
@@ -320,6 +430,8 @@ export default function NavigationBuilderPage() {
                     setNewItemDialog({ type: "child", parentId: item.id });
                     setNewItemType("container");
                     setNewItemName("");
+                    setSelectedIcon("Folder");
+                    setIconSearch("");
                   }}
                   className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded text-left text-zinc-700 dark:text-zinc-300"
                 >
@@ -334,9 +446,11 @@ export default function NavigationBuilderPage() {
                 e.stopPropagation();
                 setEditingItem(item.id);
                 setEditName(item.name);
+                setEditIcon(item.icon);
+                setIconSearch("");
               }}
               className="p-1 hover:bg-zinc-200 dark:hover:bg-zinc-600 rounded text-zinc-500 hover:text-zinc-700"
-              title="Rename item"
+              title="Edit item"
             >
               <Icons.Edit className="w-4 h-4" />
             </button>
@@ -440,12 +554,47 @@ export default function NavigationBuilderPage() {
           onClick={() => setNewItemDialog(null)}
         >
           <div
-            className="bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 shadow-xl p-6 w-[400px]"
+            className="bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 shadow-xl p-6 w-[480px]"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 mb-4">
-              Add new {newItemType === "container" ? "Container" : "Page Item"}
+              Add new item
             </h3>
+
+            <div className="flex gap-3 mb-4">
+              <button
+                onClick={() => {
+                  setNewItemType("container");
+                  setSelectedIcon("Folder");
+                }}
+                className={`flex-1 py-2 px-3 rounded-lg border-2 transition-colors ${
+                  newItemType === "container"
+                    ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                    : "border-zinc-300 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-600 text-zinc-700 dark:text-zinc-300"
+                }`}
+              >
+                <div className="flex flex-col items-center gap-1">
+                  <Icons.Folder className="w-5 h-5" />
+                  <span className="text-xs">Container</span>
+                </div>
+              </button>
+              <button
+                onClick={() => {
+                  setNewItemType("page");
+                  setSelectedIcon("Circle");
+                }}
+                className={`flex-1 py-2 px-3 rounded-lg border-2 transition-colors ${
+                  newItemType === "page"
+                    ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                    : "border-zinc-300 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-600 text-zinc-700 dark:text-zinc-300"
+                }`}
+              >
+                <div className="flex flex-col items-center gap-1">
+                  <Icons.Link className="w-5 h-5" />
+                  <span className="text-xs">Page Item</span>
+                </div>
+              </button>
+            </div>
 
             <input
               type="text"
@@ -455,6 +604,13 @@ export default function NavigationBuilderPage() {
               placeholder="Enter name..."
               className="w-full px-3 py-2 mb-4 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-zinc-100"
             />
+
+            <div className="mb-4">
+              <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2 block">
+                Icon
+              </label>
+              {renderIconPicker(selectedIcon, setSelectedIcon)}
+            </div>
 
             <div className="flex justify-end gap-3">
               <button
@@ -487,6 +643,8 @@ export default function NavigationBuilderPage() {
                 setNewItemDialog({ type: "root" });
                 setNewItemType("container");
                 setNewItemName("");
+                setSelectedIcon("Folder");
+                setIconSearch("");
               }}
               className="flex items-center gap-1 px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
             >
