@@ -350,27 +350,128 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               );
             })}
 
-          {/* TEMP: Hard-coded Feature Manager (will be moved to dynamic navigation later) */}
-          <div
-            className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg cursor-pointer transition-colors mt-2 ${
-              pathname === "/dashboard/feature-manager"
-                ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
-                : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100"
-            }`}
-            onClick={() => {
-              router.push("/dashboard/feature-manager");
-            }}
-          >
-            <span
-              className={
-                pathname === "/dashboard/feature-manager"
-                  ? "text-blue-600 dark:text-blue-400"
-                  : "text-zinc-500 dark:text-zinc-400"
-              }
+          {/* Access & Navigation Section */}
+          <div key="access-navigation" className="mt-2">
+            <div
+              className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg cursor-pointer transition-colors ${
+                [
+                  "/dashboard/feature-manager",
+                  "/dashboard/feature-manager/features",
+                  "/dashboard/feature-manager/navigation-builder",
+                  "/dashboard/feature-manager/role-mapping",
+                ].includes(pathname)
+                  ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
+                  : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100"
+              }`}
+              onClick={() => {
+                const currentState =
+                  localStorage.getItem(`nav_access_navigation_open`) || "false";
+                localStorage.setItem(
+                  `nav_access_navigation_open`,
+                  currentState === "true" ? "false" : "true",
+                );
+                setRenderKey((prev) => prev + 1);
+              }}
             >
-              <Icons.Sliders className="w-5 h-5" />
-            </span>
-            <span className="flex-1">Feature Manager</span>
+              <span
+                className={
+                  [
+                    "/dashboard/feature-manager",
+                    "/dashboard/feature-manager/features",
+                    "/dashboard/feature-manager/navigation-builder",
+                    "/dashboard/feature-manager/role-mapping",
+                  ].includes(pathname)
+                    ? "text-blue-600 dark:text-blue-400"
+                    : "text-zinc-500 dark:text-zinc-400"
+                }
+              >
+                <Icons.Settings className="w-5 h-5" />
+              </span>
+              <span className="flex-1">Access & Navigation</span>
+              <Icons.ChevronDown
+                className={`w-4 h-4 transition-transform duration-200 ${localStorage.getItem(`nav_access_navigation_open`) === "true" ? "rotate-180" : ""}`}
+                fill="none"
+                stroke="currentColor"
+              />
+            </div>
+
+            {localStorage.getItem(`nav_access_navigation_open`) === "true" && (
+              <div className="ml-4 pl-4 border-l border-zinc-200 dark:border-zinc-700 space-y-1">
+                {/* Features */}
+                <div
+                  className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg cursor-pointer transition-colors ${
+                    pathname === "/dashboard/feature-manager" ||
+                    pathname === "/dashboard/feature-manager/features"
+                      ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
+                      : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100"
+                  }`}
+                  onClick={() => {
+                    router.push("/dashboard/feature-manager");
+                  }}
+                >
+                  <span
+                    className={
+                      pathname === "/dashboard/feature-manager" ||
+                      pathname === "/dashboard/feature-manager/features"
+                        ? "text-blue-600 dark:text-blue-400"
+                        : "text-zinc-400 dark:text-zinc-500"
+                    }
+                  >
+                    <Icons.List className="w-5 h-5" />
+                  </span>
+                  <span className="flex-1">Features</span>
+                </div>
+
+                {/* Navigation Builder */}
+                <div
+                  className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg cursor-pointer transition-colors ${
+                    pathname === "/dashboard/feature-manager/navigation-builder"
+                      ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
+                      : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100"
+                  }`}
+                  onClick={() => {
+                    router.push(
+                      "/dashboard/feature-manager/navigation-builder",
+                    );
+                  }}
+                >
+                  <span
+                    className={
+                      pathname ===
+                      "/dashboard/feature-manager/navigation-builder"
+                        ? "text-blue-600 dark:text-blue-400"
+                        : "text-zinc-400 dark:text-zinc-500"
+                    }
+                  >
+                    <Icons.Map className="w-5 h-5" />
+                  </span>
+                  <span className="flex-1">Navigation Builder</span>
+                </div>
+
+                {/* Role Mapping */}
+                <div
+                  className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg cursor-pointer transition-colors ${
+                    pathname === "/dashboard/feature-manager/role-mapping"
+                      ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
+                      : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100"
+                  }`}
+                  onClick={() => {
+                    router.push("/dashboard/feature-manager/role-mapping");
+                  }}
+                >
+                  <span
+                    className={
+                      pathname === "/dashboard/feature-manager/role-mapping"
+                        ? "text-blue-600 dark:text-blue-400"
+                        : "text-zinc-400 dark:text-zinc-500"
+                    }
+                  >
+                    <Icons.Key className="w-5 h-5" />
+                  </span>
+                  <span className="flex-1">Role Mapping</span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Coming Soon items */}
