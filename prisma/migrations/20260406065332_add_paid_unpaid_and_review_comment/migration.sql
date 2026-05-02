@@ -1,3 +1,0 @@
--- AlterTable
-ALTER TABLE `leave_requests` ADD COLUMN `is_paid` BOOLEAN NOT NULL DEFAULT true,
-    ADD COLUMN `review_comment` TEXT NULL;
