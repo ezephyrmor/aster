@@ -15,7 +15,7 @@ export async function buildUserNavigation({
     where: {
       companyId,
       roleId,
-      isActive: true,
+      archivedAt: null,
     },
   });
 
