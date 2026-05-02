@@ -139,7 +139,6 @@ async function seedCoreSystem() {
         path: "/dashboard",
         name: "View Dashboard",
         domain: "dashboard",
-        isActive: true,
       },
       {
         id: "00000000-0000-0000-0000-000000001002",
@@ -148,7 +147,6 @@ async function seedCoreSystem() {
         path: "/dashboard/users",
         name: "View Users",
         domain: "users",
-        isActive: true,
       },
       {
         id: "00000000-0000-0000-0000-000000001003",
@@ -157,7 +155,6 @@ async function seedCoreSystem() {
         path: "/dashboard/profile",
         name: "View Profile",
         domain: "profile",
-        isActive: true,
       },
       {
         id: "00000000-0000-0000-0000-000000001004",
@@ -166,7 +163,6 @@ async function seedCoreSystem() {
         path: "/dashboard/settings",
         name: "View Settings",
         domain: "settings",
-        isActive: true,
       },
       {
         id: "00000000-0000-0000-0000-000000001005",
@@ -176,7 +172,6 @@ async function seedCoreSystem() {
         path: "/api/auth/me",
         name: "Get current user",
         domain: "auth",
-        isActive: true,
       },
       // Legacy features integration start
       {
@@ -187,7 +182,6 @@ async function seedCoreSystem() {
         name: "Admin Settings",
         description: "System administration settings",
         domain: "admin",
-        isActive: true,
       },
       {
         id: "00000000-0000-0000-0000-000000001007",
@@ -197,7 +191,6 @@ async function seedCoreSystem() {
         name: "Analytics Dashboard",
         description: "Reports and analytics",
         domain: "analytics",
-        isActive: true,
       },
       {
         id: "00000000-0000-0000-0000-000000001008",
@@ -207,7 +200,6 @@ async function seedCoreSystem() {
         name: "Brands Management",
         description: "Manage company brands",
         domain: "brands",
-        isActive: true,
       },
       {
         id: "00000000-0000-0000-0000-000000001009",
@@ -217,7 +209,6 @@ async function seedCoreSystem() {
         name: "Calendar",
         description: "Company events and calendar",
         domain: "calendar",
-        isActive: true,
       },
       {
         id: "00000000-0000-0000-0000-000000001010",
@@ -227,7 +218,6 @@ async function seedCoreSystem() {
         name: "Employees",
         description: "Employee directory",
         domain: "employees",
-        isActive: true,
       },
       {
         id: "00000000-0000-0000-0000-000000001011",
@@ -237,7 +227,6 @@ async function seedCoreSystem() {
         name: "Infractions Management",
         description: "View and manage all infractions",
         domain: "infractions",
-        isActive: true,
       },
       {
         id: "00000000-0000-0000-0000-000000001012",
@@ -247,7 +236,6 @@ async function seedCoreSystem() {
         name: "Create Infraction",
         description: "Create new infraction record",
         domain: "infractions",
-        isActive: true,
       },
       {
         id: "00000000-0000-0000-0000-000000001013",
@@ -257,7 +245,6 @@ async function seedCoreSystem() {
         name: "Leave Requests",
         description: "Submit and view leave requests",
         domain: "leaves",
-        isActive: true,
       },
       {
         id: "00000000-0000-0000-0000-000000001014",
@@ -267,7 +254,6 @@ async function seedCoreSystem() {
         name: "Approve Leaves",
         description: "Approve or reject leave requests",
         domain: "leaves",
-        isActive: true,
       },
       {
         id: "00000000-0000-0000-0000-000000001015",
@@ -277,7 +263,6 @@ async function seedCoreSystem() {
         name: "My Infractions",
         description: "View your own infractions",
         domain: "infractions",
-        isActive: true,
       },
       {
         id: "00000000-0000-0000-0000-000000001016",
@@ -287,7 +272,6 @@ async function seedCoreSystem() {
         name: "Work Schedules",
         description: "Employee work schedules",
         domain: "schedules",
-        isActive: true,
       },
       {
         id: "00000000-0000-0000-0000-000000001017",
@@ -297,7 +281,6 @@ async function seedCoreSystem() {
         name: "Teams Management",
         description: "Manage teams and team members",
         domain: "teams",
-        isActive: true,
       },
       // Legacy features integration end
     ];

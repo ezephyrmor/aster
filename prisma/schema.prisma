@@ -155,6 +155,15 @@ model User {
   managedBrandsHistory    BrandManagerHistory[]   @relation("BrandManagerHistoryUsers")
   performedStatusHistory  EmployeeStatusHistory[] @relation("EmployeeStatusHistoryPerformedBy")
 
+  // Archive Audit Relations
+  archivedLeaveTypes LeaveType[] @relation("LeaveTypeArchivedBy")
+  archivedInfractionTypes InfractionType[] @relation("InfractionTypeArchivedBy")
+  archivedInfractionOffenses InfractionOffense[] @relation("InfractionOffenseArchivedBy")
+  archivedFeatures Feature[] @relation("FeatureArchivedBy")
+  archivedAccessTemplates FeatureAccessTemplate[] @relation("AccessTemplateArchivedBy")
+  archivedNavTemplates FeatureNavigationTemplate[] @relation("NavTemplateArchivedBy")
+  archivedRoleNavigations RoleNavigation[] @relation("RoleNavigationArchivedBy")
+
   @@index([companyId], map: "users_company_id_fkey")
   @@map("users")
 }
@@ -367,13 +376,16 @@ model LeaveType {
   description      String?        @db.Text
   defaultDaysLimit Int?           @map("default_days_limit")
   color            String         @default("purple") @db.VarChar(20)
-  isActive         Boolean        @default(true) @map("is_active")
+  archivedAt       DateTime?      @map("archived_at")
+  archivedBy       String?        @map("archived_by")
   createdAt        DateTime       @default(now()) @map("created_at")
   leaveRequests    LeaveRequest[]
   company          Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  archivedByUser   User?          @relation("LeaveTypeArchivedBy", fields: [archivedBy], references: [id])
 
   @@unique([companyId, name])
   @@index([companyId])
+  @@index([archivedBy])
   @@map("leave_types")
 }
 
@@ -533,14 +545,17 @@ model InfractionType {
   name        String              @db.VarChar(100)
   description String?             @db.Text
   color       String              @default("red") @db.VarChar(20)
-  isActive    Boolean             @default(true) @map("is_active")
+  archivedAt  DateTime?           @map("archived_at")
+  archivedBy  String?             @map("archived_by")
   createdAt   DateTime            @default(now()) @map("created_at")
   offenses    InfractionOffense[]
   infractions Infraction[]
   company     Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  archivedByUser User?           @relation("InfractionTypeArchivedBy", fields: [archivedBy], references: [id])
 
   @@unique([companyId, name])
   @@index([companyId])
+  @@index([archivedBy])
   @@map("infraction_types")
 }
 
@@ -552,14 +567,17 @@ model InfractionOffense {
   severityLevel Int            @map("severity_level") // 1=Minor, 2=Major, 3=Severe
   typeId        String         @map("type_id")
   type          InfractionType @relation(fields: [typeId], references: [id])
-  isActive      Boolean        @default(true) @map("is_active")
+  archivedAt    DateTime?      @map("archived_at")
+  archivedBy    String?        @map("archived_by")
   createdAt     DateTime       @default(now()) @map("created_at")
   infractions   Infraction[]
   company       Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  archivedByUser User?        @relation("InfractionOffenseArchivedBy", fields: [archivedBy], references: [id])
 
   @@unique([companyId, name])
   @@index([companyId])
   @@index([typeId], map: "infraction_offenses_type_id_fkey")
+  @@index([archivedBy])
   @@map("infraction_offenses")
 }
 
@@ -602,15 +620,18 @@ model Feature {
   name        String      @db.VarChar(120)
   description String?     @db.Text
   domain      String      @db.VarChar(50)
-  isActive    Boolean     @default(true) @map("is_active")
+  archivedAt  DateTime?   @map("archived_at")
+  archivedBy  String?     @map("archived_by")
   createdAt   DateTime    @default(now()) @map("created_at")
   updatedAt   DateTime    @updatedAt @map("updated_at")
 
   templateItems         FeatureAccessTemplateItem[]
   FeatureNavigationItem FeatureNavigationItem[]
+  archivedByUser        User? @relation("FeatureArchivedBy", fields: [archivedBy], references: [id])
 
   @@unique([code], map: "uq_feature_code")
   @@unique([path, httpMethod], map: "uq_feature_path_method")
+  @@index([archivedBy])
   @@map("features")
 }
 
@@ -622,14 +643,17 @@ model FeatureAccessTemplate {
   domain      String?    @db.VarChar(50)
   scopeLevel  ScopeLevel @map("scope_level")
   isSystem    Boolean    @default(false) @map("is_system")
-  isActive    Boolean    @default(true) @map("is_active")
+  archivedAt  DateTime?  @map("archived_at")
+  archivedBy  String?    @map("archived_by")
   createdAt   DateTime   @default(now()) @map("created_at")
   updatedAt   DateTime   @updatedAt @map("updated_at")
 
   items      FeatureAccessTemplateItem[]
   roleAccess RoleAccess[]
+  archivedByUser User? @relation("AccessTemplateArchivedBy", fields: [archivedBy], references: [id])
 
   @@unique([code], map: "uq_template_code")
+  @@index([archivedBy])
   @@map("feature_access_templates")
 }
 
@@ -676,16 +700,19 @@ model FeatureNavigationTemplate {
   description String?  @db.Text
   companyId   String?  @map("company_id")
   isSystem    Boolean  @default(false) @map("is_system")
-  isActive    Boolean  @default(true) @map("is_active")
+  archivedAt  DateTime? @map("archived_at")
+  archivedBy  String?  @map("archived_by")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   items    FeatureNavigationItem[]
   roleNavs RoleNavigation[]
   company  Company?                @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  archivedByUser User? @relation("NavTemplateArchivedBy", fields: [archivedBy], references: [id])
 
   @@unique([code], map: "uq_nav_template_code")
   @@index([companyId])
+  @@index([archivedBy])
   @@map("feature_navigation_templates")
 }
 
@@ -720,16 +747,19 @@ model RoleNavigation {
   companyId            String   @map("company_id")
   roleId               String   @map("role_id")
   navigationTemplateId String   @map("navigation_template_id")
-  isActive             Boolean  @default(true) @map("is_active")
+  archivedAt           DateTime? @map("archived_at")
+  archivedBy           String?   @map("archived_by")
   createdAt            DateTime @default(now()) @map("created_at")
 
   template FeatureNavigationTemplate @relation(fields: [navigationTemplateId], references: [id], onDelete: Cascade)
   role     Role                      @relation(fields: [roleId], references: [id], onDelete: Cascade)
   company  Company                   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  archivedByUser User? @relation("RoleNavigationArchivedBy", fields: [archivedBy], references: [id])
 
   @@unique([companyId, roleId], map: "uq_role_navigation")
   @@index([companyId])
   @@index([roleId])
   @@index([navigationTemplateId])
+  @@index([archivedBy])
   @@map("role_navigations")
 }
