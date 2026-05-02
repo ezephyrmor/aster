@@ -8,7 +8,7 @@
 ALTER TABLE `users` DROP FOREIGN KEY `users_role_id_fkey`;
 
 -- AlterTable
-ALTER TABLE `employee_profiles` ADD COLUMN `role_id` INTEGER NOT NULL DEFAULT 3;
+ALTER TABLE `employee_profiles` ADD COLUMN `role_id` VARCHAR(191) NOT NULL DEFAULT 3;
 
 -- AlterTable
 ALTER TABLE `users` DROP COLUMN `role_id`;

@@ -1,15 +1,15 @@
 -- AlterTable
-ALTER TABLE `brands` ADD COLUMN `company_id` INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE `brands` ADD COLUMN `company_id` VARCHAR(191) NOT NULL DEFAULT 1;
 
 -- AlterTable
-ALTER TABLE `teams` ADD COLUMN `company_id` INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE `teams` ADD COLUMN `company_id` VARCHAR(191) NOT NULL DEFAULT 1;
 
 -- AlterTable
-ALTER TABLE `users` ADD COLUMN `company_id` INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE `users` ADD COLUMN `company_id` VARCHAR(191) NOT NULL DEFAULT 1;
 
 -- CreateTable
 CREATE TABLE `companies` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `id` VARCHAR(191) NOT NULL,
     `name` VARCHAR(150) NOT NULL,
     `status` ENUM('active', 'inactive', 'suspended', 'trial') NOT NULL DEFAULT 'active',
     `timezone` VARCHAR(50) NOT NULL DEFAULT 'Asia/Manila',
@@ -22,8 +22,8 @@ CREATE TABLE `companies` (
 
 -- CreateTable
 CREATE TABLE `company_profiles` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `company_id` INTEGER NOT NULL,
+    `id` VARCHAR(191) NOT NULL,
+    `company_id` VARCHAR(191) NOT NULL,
     `legal_name` VARCHAR(200) NULL,
     `tax_id` VARCHAR(50) NULL,
     `email` VARCHAR(200) NULL,

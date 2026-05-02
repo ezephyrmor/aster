@@ -1,6 +1,6 @@
 -- CreateTable
 CREATE TABLE `teams` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `id` VARCHAR(191) NOT NULL,
     `name` VARCHAR(100) NOT NULL,
     `description` TEXT NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -12,9 +12,9 @@ CREATE TABLE `teams` (
 
 -- CreateTable
 CREATE TABLE `team_members` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `team_id` INTEGER NOT NULL,
-    `user_id` INTEGER NOT NULL,
+    `id` VARCHAR(191) NOT NULL,
+    `team_id` VARCHAR(191) NOT NULL,
+    `user_id` VARCHAR(191) NOT NULL,
     `is_leader` BOOLEAN NOT NULL DEFAULT false,
     `status` ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
     `joined_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -26,11 +26,11 @@ CREATE TABLE `team_members` (
 
 -- CreateTable
 CREATE TABLE `team_history` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `team_id` INTEGER NOT NULL,
-    `team_member_id` INTEGER NULL,
+    `id` VARCHAR(191) NOT NULL,
+    `team_id` VARCHAR(191) NOT NULL,
+    `team_member_id` VARCHAR(191) NULL,
     `action` ENUM('joined', 'left', 'promoted', 'demoted', 'removed', 'created', 'updated') NOT NULL,
-    `performed_by` INTEGER NOT NULL,
+    `performed_by` VARCHAR(191) NOT NULL,
     `reason` TEXT NULL,
     `metadata` JSON NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),

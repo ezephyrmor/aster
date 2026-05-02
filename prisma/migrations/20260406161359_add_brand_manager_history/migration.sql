@@ -1,12 +1,12 @@
 -- CreateTable
 CREATE TABLE `brand_manager_history` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `brandId` INTEGER NOT NULL,
-    `user_id` INTEGER NULL,
+    `id` VARCHAR(191) NOT NULL,
+    `brandId` VARCHAR(191) NOT NULL,
+    `user_id` VARCHAR(191) NULL,
     `action` ENUM('ASSIGNED', 'REMOVED') NOT NULL,
-    `performed_by` INTEGER NOT NULL,
+    `performed_by` VARCHAR(191) NOT NULL,
     `timestamp` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `previous_manager_id` INTEGER NULL,
+    `previous_manager_id` VARCHAR(191) NULL,
     `reason` TEXT NULL,
     `ip_address` VARCHAR(45) NULL,
     `user_agent` TEXT NULL,

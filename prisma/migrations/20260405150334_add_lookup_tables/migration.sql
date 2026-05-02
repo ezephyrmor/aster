@@ -13,7 +13,7 @@
 */
 -- AlterTable
 ALTER TABLE `brands` DROP COLUMN `industry`,
-    ADD COLUMN `industry_id` INTEGER NULL;
+    ADD COLUMN `industry_id` VARCHAR(191) NULL;
 
 -- AlterTable
 ALTER TABLE `employee_profiles` DROP COLUMN `department`,
@@ -22,17 +22,17 @@ ALTER TABLE `employee_profiles` DROP COLUMN `department`,
     DROP COLUMN `emergency_contact_relation`,
     DROP COLUMN `position`,
     DROP COLUMN `status`,
-    ADD COLUMN `department_id` INTEGER NULL,
-    ADD COLUMN `position_id` INTEGER NULL,
-    ADD COLUMN `status_id` INTEGER NOT NULL DEFAULT 1;
+    ADD COLUMN `department_id` VARCHAR(191) NULL,
+    ADD COLUMN `position_id` VARCHAR(191) NULL,
+    ADD COLUMN `status_id` VARCHAR(191) NOT NULL DEFAULT 1;
 
 -- AlterTable
 ALTER TABLE `users` DROP COLUMN `role`,
-    ADD COLUMN `role_id` INTEGER NOT NULL DEFAULT 3;
+    ADD COLUMN `role_id` VARCHAR(191) NOT NULL DEFAULT 3;
 
 -- CreateTable
 CREATE TABLE `positions` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `id` VARCHAR(191) NOT NULL,
     `name` VARCHAR(100) NOT NULL,
     `description` TEXT NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -43,7 +43,7 @@ CREATE TABLE `positions` (
 
 -- CreateTable
 CREATE TABLE `departments` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `id` VARCHAR(191) NOT NULL,
     `name` VARCHAR(100) NOT NULL,
     `description` TEXT NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -54,7 +54,7 @@ CREATE TABLE `departments` (
 
 -- CreateTable
 CREATE TABLE `roles` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `id` VARCHAR(191) NOT NULL,
     `name` VARCHAR(50) NOT NULL,
     `description` TEXT NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -65,7 +65,7 @@ CREATE TABLE `roles` (
 
 -- CreateTable
 CREATE TABLE `employee_statuses` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `id` VARCHAR(191) NOT NULL,
     `name` VARCHAR(50) NOT NULL,
     `description` TEXT NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -76,7 +76,7 @@ CREATE TABLE `employee_statuses` (
 
 -- CreateTable
 CREATE TABLE `industries` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `id` VARCHAR(191) NOT NULL,
     `name` VARCHAR(100) NOT NULL,
     `description` TEXT NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),

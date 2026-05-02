@@ -1,8 +1,8 @@
 -- AlterTable
-ALTER TABLE `infractions` ADD COLUMN `company_id` INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE `infractions` ADD COLUMN `company_id` VARCHAR(191) NOT NULL DEFAULT 1;
 
 -- AlterTable
-ALTER TABLE `work_schedules` ADD COLUMN `company_id` INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE `work_schedules` ADD COLUMN `company_id` VARCHAR(191) NOT NULL DEFAULT 1;
 
 -- CreateIndex
 CREATE INDEX `infractions_company_id_idx` ON `infractions`(`company_id`);

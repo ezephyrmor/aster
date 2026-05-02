@@ -1,5 +1,5 @@
 -- AlterTable
-ALTER TABLE `leave_requests` ADD COLUMN `company_id` INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE `leave_requests` ADD COLUMN `company_id` VARCHAR(191) NOT NULL DEFAULT 1;
 
 -- CreateIndex
 CREATE INDEX `leave_requests_company_id_idx` ON `leave_requests`(`company_id`);

@@ -8,7 +8,7 @@
 DROP INDEX `leave_statuses_name_key` ON `leave_statuses`;
 
 -- AlterTable
-ALTER TABLE `leave_statuses` ADD COLUMN `company_id` INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE `leave_statuses` ADD COLUMN `company_id` VARCHAR(191) NOT NULL DEFAULT 1;
 
 -- CreateIndex
 CREATE INDEX `leave_statuses_company_id_idx` ON `leave_statuses`(`company_id`);

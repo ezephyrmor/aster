@@ -5,11 +5,11 @@
 
 */
 -- AlterTable
-ALTER TABLE `teams` ADD COLUMN `brand_id` INTEGER NOT NULL;
+ALTER TABLE `teams` ADD COLUMN `brand_id` VARCHAR(191) NOT NULL;
 
 -- CreateTable
 CREATE TABLE `brands` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `id` VARCHAR(191) NOT NULL,
     `name` VARCHAR(100) NOT NULL,
     `description` TEXT NULL,
     `logo` VARCHAR(500) NULL,
@@ -18,7 +18,7 @@ CREATE TABLE `brands` (
     `status` ENUM('active', 'inactive', 'archived') NOT NULL DEFAULT 'active',
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
-    `created_by` INTEGER NOT NULL,
+    `created_by` VARCHAR(191) NOT NULL,
 
     UNIQUE INDEX `brands_name_key`(`name`),
     PRIMARY KEY (`id`)

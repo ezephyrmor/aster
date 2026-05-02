@@ -25,25 +25,25 @@ DROP INDEX `positions_name_key` ON `positions`;
 DROP INDEX `roles_name_key` ON `roles`;
 
 -- AlterTable
-ALTER TABLE `calendar_events` ADD COLUMN `company_id` INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE `calendar_events` ADD COLUMN `company_id` VARCHAR(191) NOT NULL DEFAULT 1;
 
 -- AlterTable
-ALTER TABLE `departments` ADD COLUMN `company_id` INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE `departments` ADD COLUMN `company_id` VARCHAR(191) NOT NULL DEFAULT 1;
 
 -- AlterTable
-ALTER TABLE `infraction_offenses` ADD COLUMN `company_id` INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE `infraction_offenses` ADD COLUMN `company_id` VARCHAR(191) NOT NULL DEFAULT 1;
 
 -- AlterTable
-ALTER TABLE `infraction_types` ADD COLUMN `company_id` INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE `infraction_types` ADD COLUMN `company_id` VARCHAR(191) NOT NULL DEFAULT 1;
 
 -- AlterTable
-ALTER TABLE `leave_types` ADD COLUMN `company_id` INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE `leave_types` ADD COLUMN `company_id` VARCHAR(191) NOT NULL DEFAULT 1;
 
 -- AlterTable
-ALTER TABLE `positions` ADD COLUMN `company_id` INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE `positions` ADD COLUMN `company_id` VARCHAR(191) NOT NULL DEFAULT 1;
 
 -- AlterTable
-ALTER TABLE `roles` ADD COLUMN `company_id` INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE `roles` ADD COLUMN `company_id` VARCHAR(191) NOT NULL DEFAULT 1;
 
 -- CreateIndex
 CREATE INDEX `calendar_events_company_id_idx` ON `calendar_events`(`company_id`);

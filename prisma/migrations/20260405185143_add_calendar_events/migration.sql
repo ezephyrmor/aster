@@ -1,12 +1,12 @@
 -- CreateTable
 CREATE TABLE `calendar_events` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `id` VARCHAR(191) NOT NULL,
     `title` VARCHAR(200) NOT NULL,
     `description` TEXT NULL,
     `start_date` DATETIME(3) NOT NULL,
     `end_date` DATETIME(3) NOT NULL,
     `color` VARCHAR(20) NOT NULL DEFAULT 'blue',
-    `created_by` INTEGER NOT NULL,
+    `created_by` VARCHAR(191) NOT NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
 

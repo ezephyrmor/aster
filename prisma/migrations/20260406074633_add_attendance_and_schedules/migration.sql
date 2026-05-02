@@ -1,7 +1,7 @@
 -- CreateTable
 CREATE TABLE `work_schedules` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `user_id` INTEGER NOT NULL,
+    `id` VARCHAR(191) NOT NULL,
+    `user_id` VARCHAR(191) NOT NULL,
     `day_of_week` INTEGER NOT NULL,
     `start_time` VARCHAR(191) NOT NULL,
     `end_time` VARCHAR(191) NOT NULL,
@@ -18,9 +18,9 @@ CREATE TABLE `work_schedules` (
 
 -- CreateTable
 CREATE TABLE `attendance` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `user_id` INTEGER NOT NULL,
-    `schedule_id` INTEGER NULL,
+    `id` VARCHAR(191) NOT NULL,
+    `user_id` VARCHAR(191) NOT NULL,
+    `schedule_id` VARCHAR(191) NULL,
     `date` DATE NOT NULL,
     `clock_in` DATETIME(3) NULL,
     `clock_out` DATETIME(3) NULL,

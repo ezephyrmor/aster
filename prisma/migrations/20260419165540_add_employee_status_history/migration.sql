@@ -1,12 +1,12 @@
 -- CreateTable
 CREATE TABLE `employee_status_history` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `user_id` INTEGER NOT NULL,
-    `status_id` INTEGER NOT NULL,
+    `id` VARCHAR(191) NOT NULL,
+    `user_id` VARCHAR(191) NOT NULL,
+    `status_id` VARCHAR(191) NOT NULL,
     `effective_date` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `reason` TEXT NULL,
     `notes` TEXT NULL,
-    `performed_by` INTEGER NOT NULL,
+    `performed_by` VARCHAR(191) NOT NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `ip_address` VARCHAR(45) NULL,
     `user_agent` TEXT NULL,

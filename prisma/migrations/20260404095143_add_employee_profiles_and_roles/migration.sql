@@ -3,8 +3,8 @@ ALTER TABLE `users` ADD COLUMN `role` ENUM('admin', 'hr', 'employee') NOT NULL D
 
 -- CreateTable
 CREATE TABLE `employee_profiles` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `user_id` INTEGER NOT NULL,
+    `id` VARCHAR(191) NOT NULL,
+    `user_id` VARCHAR(191) NOT NULL,
     `first_name` VARCHAR(100) NOT NULL,
     `last_name` VARCHAR(100) NOT NULL,
     `middle_name` VARCHAR(100) NULL,
