@@ -276,12 +276,15 @@ CREATE TABLE `leave_types` (
     `description` TEXT NULL,
     `default_days_limit` INTEGER NULL,
     `color` VARCHAR(20) NOT NULL DEFAULT 'purple',
-    `is_active` BOOLEAN NOT NULL DEFAULT true,
+    `archived_at` DATETIME(3) NULL,
+    `archived_by` VARCHAR(191) NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     INDEX `leave_types_company_id_idx`(`company_id`),
+    INDEX `leave_types_archived_by_idx`(`archived_by`),
     UNIQUE INDEX `leave_types_company_id_name_key`(`company_id`, `name`),
-    PRIMARY KEY (`id`)
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`archived_by`) REFERENCES `users`(`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
@@ -400,12 +403,15 @@ CREATE TABLE `infraction_types` (
     `name` VARCHAR(100) NOT NULL,
     `description` TEXT NULL,
     `color` VARCHAR(20) NOT NULL DEFAULT 'red',
-    `is_active` BOOLEAN NOT NULL DEFAULT true,
+    `archived_at` DATETIME(3) NULL,
+    `archived_by` VARCHAR(191) NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     INDEX `infraction_types_company_id_idx`(`company_id`),
+    INDEX `infraction_types_archived_by_idx`(`archived_by`),
     UNIQUE INDEX `infraction_types_company_id_name_key`(`company_id`, `name`),
-    PRIMARY KEY (`id`)
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`archived_by`) REFERENCES `users`(`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
@@ -416,13 +422,16 @@ CREATE TABLE `infraction_offenses` (
     `description` TEXT NULL,
     `severity_level` INTEGER NOT NULL,
     `type_id` VARCHAR(191) NOT NULL,
-    `is_active` BOOLEAN NOT NULL DEFAULT true,
+    `archived_at` DATETIME(3) NULL,
+    `archived_by` VARCHAR(191) NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     INDEX `infraction_offenses_company_id_idx`(`company_id`),
     INDEX `infraction_offenses_type_id_fkey`(`type_id`),
+    INDEX `infraction_offenses_archived_by_idx`(`archived_by`),
     UNIQUE INDEX `infraction_offenses_company_id_name_key`(`company_id`, `name`),
-    PRIMARY KEY (`id`)
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`archived_by`) REFERENCES `users`(`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
@@ -459,13 +468,16 @@ CREATE TABLE `features` (
     `name` VARCHAR(120) NOT NULL,
     `description` TEXT NULL,
     `domain` VARCHAR(50) NOT NULL,
-    `is_active` BOOLEAN NOT NULL DEFAULT true,
+    `archived_at` DATETIME(3) NULL,
+    `archived_by` VARCHAR(191) NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
 
     UNIQUE INDEX `uq_feature_code`(`code`),
     UNIQUE INDEX `uq_feature_path_method`(`path`, `http_method`),
-    PRIMARY KEY (`id`)
+    INDEX `features_archived_by_idx`(`archived_by`),
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`archived_by`) REFERENCES `users`(`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
@@ -477,12 +489,15 @@ CREATE TABLE `feature_access_templates` (
     `domain` VARCHAR(50) NULL,
     `scope_level` ENUM('self', 'team', 'department', 'brand', 'company') NOT NULL,
     `is_system` BOOLEAN NOT NULL DEFAULT false,
-    `is_active` BOOLEAN NOT NULL DEFAULT true,
+    `archived_at` DATETIME(3) NULL,
+    `archived_by` VARCHAR(191) NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
 
     UNIQUE INDEX `uq_template_code`(`code`),
-    PRIMARY KEY (`id`)
+    INDEX `feature_access_templates_archived_by_idx`(`archived_by`),
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`archived_by`) REFERENCES `users`(`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
@@ -526,13 +541,16 @@ CREATE TABLE `feature_navigation_templates` (
     `description` TEXT NULL,
     `company_id` VARCHAR(191) NULL,
     `is_system` BOOLEAN NOT NULL DEFAULT false,
-    `is_active` BOOLEAN NOT NULL DEFAULT true,
+    `archived_at` DATETIME(3) NULL,
+    `archived_by` VARCHAR(191) NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
 
     INDEX `feature_navigation_templates_company_id_idx`(`company_id`),
+    INDEX `feature_navigation_templates_archived_by_idx`(`archived_by`),
     UNIQUE INDEX `uq_nav_template_code`(`code`),
-    PRIMARY KEY (`id`)
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`archived_by`) REFERENCES `users`(`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
@@ -563,14 +581,17 @@ CREATE TABLE `role_navigations` (
     `company_id` VARCHAR(191) NOT NULL,
     `role_id` VARCHAR(191) NOT NULL,
     `navigation_template_id` VARCHAR(191) NOT NULL,
-    `is_active` BOOLEAN NOT NULL DEFAULT true,
+    `archived_at` DATETIME(3) NULL,
+    `archived_by` VARCHAR(191) NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     INDEX `role_navigations_company_id_idx`(`company_id`),
     INDEX `role_navigations_role_id_idx`(`role_id`),
     INDEX `role_navigations_navigation_template_id_idx`(`navigation_template_id`),
+    INDEX `role_navigations_archived_by_idx`(`archived_by`),
     UNIQUE INDEX `uq_role_navigation`(`company_id`, `role_id`),
-    PRIMARY KEY (`id`)
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`archived_by`) REFERENCES `users`(`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- AddForeignKey
@@ -752,3 +773,45 @@ ALTER TABLE `role_navigations` ADD CONSTRAINT `role_navigations_role_id_fkey` FO
 
 -- AddForeignKey
 ALTER TABLE `role_navigations` ADD CONSTRAINT `role_navigations_company_id_fkey` FOREIGN KEY (`company_id`) REFERENCES `companies`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- DropForeignKey
+ALTER TABLE `feature_access_templates` DROP FOREIGN KEY `feature_access_templates_ibfk_1`;
+
+-- DropForeignKey
+ALTER TABLE `feature_navigation_templates` DROP FOREIGN KEY `feature_navigation_templates_ibfk_1`;
+
+-- DropForeignKey
+ALTER TABLE `features` DROP FOREIGN KEY `features_ibfk_1`;
+
+-- DropForeignKey
+ALTER TABLE `infraction_offenses` DROP FOREIGN KEY `infraction_offenses_ibfk_1`;
+
+-- DropForeignKey
+ALTER TABLE `infraction_types` DROP FOREIGN KEY `infraction_types_ibfk_1`;
+
+-- DropForeignKey
+ALTER TABLE `leave_types` DROP FOREIGN KEY `leave_types_ibfk_1`;
+
+-- DropForeignKey
+ALTER TABLE `role_navigations` DROP FOREIGN KEY `role_navigations_ibfk_1`;
+
+-- AddForeignKey
+ALTER TABLE `leave_types` ADD CONSTRAINT `leave_types_archived_by_fkey` FOREIGN KEY (`archived_by`) REFERENCES `users`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `infraction_types` ADD CONSTRAINT `infraction_types_archived_by_fkey` FOREIGN KEY (`archived_by`) REFERENCES `users`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `infraction_offenses` ADD CONSTRAINT `infraction_offenses_archived_by_fkey` FOREIGN KEY (`archived_by`) REFERENCES `users`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `features` ADD CONSTRAINT `features_archived_by_fkey` FOREIGN KEY (`archived_by`) REFERENCES `users`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `feature_access_templates` ADD CONSTRAINT `feature_access_templates_archived_by_fkey` FOREIGN KEY (`archived_by`) REFERENCES `users`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `feature_navigation_templates` ADD CONSTRAINT `feature_navigation_templates_archived_by_fkey` FOREIGN KEY (`archived_by`) REFERENCES `users`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `role_navigations` ADD CONSTRAINT `role_navigations_archived_by_fkey` FOREIGN KEY (`archived_by`) REFERENCES `users`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
