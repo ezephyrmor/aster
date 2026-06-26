@@ -418,7 +418,7 @@ export async function POST(
           });
         }
         return NextResponse.json(
-          { error: "Invalid credentials. Try admin@demo.com / demo123" },
+          { error: "Invalid credentials. Try admin / admin123" },
           { status: 401 },
         );
       }

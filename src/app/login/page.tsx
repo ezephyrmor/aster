@@ -143,52 +143,12 @@ export default function LoginPage() {
                   </td>
                   <td className="py-2 px-3">
                     <code className="bg-white dark:bg-zinc-800 px-2 py-1 rounded font-mono text-zinc-900 dark:text-zinc-100 text-xs">
-                      admin@demo.com
+                      admin
                     </code>
                   </td>
                   <td className="py-2 px-3">
                     <code className="bg-white dark:bg-zinc-800 px-2 py-1 rounded font-mono text-zinc-900 dark:text-zinc-100 text-xs">
-                      demo123
-                    </code>
-                  </td>
-                </tr>
-                <tr className="border-b border-zinc-200 dark:border-zinc-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
-                  <td className="py-2 px-3">
-                    <span className="inline-flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-full bg-blue-500" />
-                      <span className="font-medium text-zinc-700 dark:text-zinc-300">
-                        Employee
-                      </span>
-                    </span>
-                  </td>
-                  <td className="py-2 px-3">
-                    <code className="bg-white dark:bg-zinc-800 px-2 py-1 rounded font-mono text-zinc-900 dark:text-zinc-100 text-xs">
-                      juan@demo.com
-                    </code>
-                  </td>
-                  <td className="py-2 px-3">
-                    <code className="bg-white dark:bg-zinc-800 px-2 py-1 rounded font-mono text-zinc-900 dark:text-zinc-100 text-xs">
-                      demo123
-                    </code>
-                  </td>
-                </tr>
-                <tr className="hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
-                  <td className="py-2 px-3">
-                    <span className="inline-flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-full bg-purple-500" />
-                      <span className="font-medium text-zinc-700 dark:text-zinc-300">
-                        Manager
-                      </span>
-                    </span>
-                  </td>
-                  <td className="py-2 px-3">
-                    <code className="bg-white dark:bg-zinc-800 px-2 py-1 rounded font-mono text-zinc-900 dark:text-zinc-100 text-xs">
-                      maria@demo.com
-                    </code>
-                  </td>
-                  <td className="py-2 px-3">
-                    <code className="bg-white dark:bg-zinc-800 px-2 py-1 rounded font-mono text-zinc-900 dark:text-zinc-100 text-xs">
-                      demo123
+                      admin123
                     </code>
                   </td>
                 </tr>
