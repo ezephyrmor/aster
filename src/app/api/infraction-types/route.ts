@@ -5,7 +5,7 @@ import prisma from "@/lib/db";
 export async function GET() {
   try {
     const types = await prisma.infractionType.findMany({
-      where: { isActive: true },
+      where: { archivedAt: null },
       orderBy: { name: "asc" },
     });
 

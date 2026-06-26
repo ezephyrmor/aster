@@ -19,8 +19,9 @@ export function Form<T extends FieldValues>({
 }: FormProps<T>) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const form = useForm<T>({
-    resolver: schema ? zodResolver(schema) : undefined,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const form = useForm<any>({
+    resolver: (schema ? zodResolver(schema as any) : undefined) as any,
     defaultValues,
     values,
     mode: "onBlur",

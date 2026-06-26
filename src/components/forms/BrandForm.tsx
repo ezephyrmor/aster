@@ -10,9 +10,9 @@ import { CreateBrandSchema, UpdateBrandSchema } from "@/lib/validations";
 import type { z } from "zod";
 import { Button } from "../ui/button";
 
-type CreateBrandData = z.infer<typeof CreateBrandSchema>;
-type UpdateBrandData = z.infer<typeof UpdateBrandSchema>;
-type BrandFormData = CreateBrandData | UpdateBrandData;
+export type CreateBrandData = z.infer<typeof CreateBrandSchema>;
+export type UpdateBrandData = z.infer<typeof UpdateBrandSchema>;
+export type BrandFormData = CreateBrandData | UpdateBrandData;
 
 interface BrandFormProps {
   initialData?: Partial<BrandFormData>;

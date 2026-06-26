@@ -3,14 +3,14 @@
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import BrandForm from "@/components/forms/BrandForm";
-import type { CreateBrandData } from "@/lib/validations";
+import type { BrandFormData } from "@/components/forms/BrandForm";
 import { useToast } from "@/lib/toast";
 
 export default function CreateBrandPage() {
   const router = useRouter();
   const { addToast } = useToast();
 
-  const handleSubmit = async (data: CreateBrandData) => {
+  const handleSubmit = async (data: BrandFormData) => {
     try {
       const response = await fetch("/api/brands", {
         method: "POST",

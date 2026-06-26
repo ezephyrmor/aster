@@ -92,7 +92,7 @@ export default function ClockInButton() {
     setActionLoading(true);
 
     try {
-      const body: { userId: number; type: string; reason?: string } = {
+      const body: { userId: string; type: string; reason?: string } = {
         userId: user.id,
         type,
       };

@@ -8,7 +8,7 @@ import * as Icons from "lucide-react";
 import type { NavigationItem } from "@/types/navigation";
 
 // Admin role ID
-const ADMIN_ROLE_ID = 1;
+const ADMIN_ROLE_ID = "00000000-0000-0000-0000-000000000201";
 
 interface SidebarProps {
   isOpen: boolean;

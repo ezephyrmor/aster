@@ -2,27 +2,9 @@
 
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
-import UserForm from "@/components/forms/UserForm";
+import UserForm, { type UserFormData } from "@/components/forms/UserForm";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { format, formatDistanceToNow } from "date-fns";
-
-interface UserFormData {
-  role: "admin" | "hr" | "employee";
-  firstName: string;
-  lastName: string;
-  middleName?: string;
-  contactNumber?: string;
-  personalEmail?: string;
-  address?: string;
-  dateOfBirth?: string;
-  position?: string;
-  department?: string;
-  hireDate?: string;
-  emergencyContactName?: string;
-  emergencyContactNumber?: string;
-  emergencyContactRelation?: string;
-  status?: "active" | "on_leave" | "terminated" | "inactive";
-}
 
 export default function EditUserPage({
   params,
@@ -63,7 +45,7 @@ export default function EditUserPage({
         const data = await response.json();
 
         // Combine user and employeeProfile data for the form
-        const formData: UserFormData = {
+        setUserData({
           role: data.employeeProfile?.role?.id || "",
           firstName: data.employeeProfile?.firstName || "",
           lastName: data.employeeProfile?.lastName || "",
@@ -90,9 +72,7 @@ export default function EditUserPage({
           emergencyContactRelation:
             data.employeeProfile?.emergencyContactRelation || "",
           status: data.employeeProfile?.status?.id || "",
-        };
-
-        setUserData(formData);
+        } as any);
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");
       } finally {

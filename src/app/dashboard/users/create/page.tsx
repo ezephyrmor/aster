@@ -2,27 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import UserForm from "@/components/forms/UserForm";
+import UserForm, { type UserFormData } from "@/components/forms/UserForm";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-
-interface UserFormData {
-  username?: string;
-  password?: string;
-  role: "admin" | "hr" | "employee";
-  firstName: string;
-  lastName: string;
-  middleName?: string;
-  contactNumber?: string;
-  personalEmail?: string;
-  address?: string;
-  dateOfBirth?: string;
-  position?: string;
-  department?: string;
-  hireDate?: string;
-  emergencyContactName?: string;
-  emergencyContactNumber?: string;
-  emergencyContactRelation?: string;
-}
 
 interface GeneratedCredentials {
   username: string;

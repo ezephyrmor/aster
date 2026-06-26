@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 
 // Admin role ID
-const ADMIN_ROLE_ID = 1;
+const ADMIN_ROLE_ID = "00000000-0000-0000-0000-000000000201";
 
 export default function AdminSettingsPage() {
   const { user, isLoading } = useAuth();

@@ -53,12 +53,12 @@ export async function GET() {
       },
     });
 
-    // Get users by role
+    // Get users by role (count employee profiles assigned to each role)
     const usersByRole = await prisma.role.findMany({
       include: {
         _count: {
           select: {
-            users: true,
+            employeeProfiles: true,
           },
         },
       },
@@ -82,9 +82,7 @@ export async function GET() {
         },
       },
       orderBy: {
-        teams: {
-          _count: "desc",
-        },
+        createdAt: "desc",
       },
       take: 10,
     });
@@ -124,23 +122,13 @@ export async function GET() {
       totalTeams > 0 ? (totalTeamMembers / totalTeams).toFixed(1) : "0";
 
     // Format recent activity for the frontend
-    const formattedActivity = recentActivity.map(
-      (activity: {
-        id: number;
-        action: string;
-        team?: { name: string } | null;
-        teamMember?: {
-          user?: { username: string } | null;
-        } | null;
-        createdAt: Date;
-      }) => ({
-        id: activity.id,
-        action: formatActivityAction(activity.action),
-        description: getActivityDescription(activity),
-        time: getTimeAgo(activity.createdAt),
-        type: getActivityType(activity.action),
-      }),
-    );
+    const formattedActivity = recentActivity.map((activity) => ({
+      id: activity.id,
+      action: formatActivityAction(activity.action),
+      description: getActivityDescription(activity),
+      time: getTimeAgo(activity.createdAt),
+      type: getActivityType(activity.action),
+    }));
 
     return NextResponse.json({
       stats: {
@@ -168,9 +156,9 @@ export async function GET() {
           }),
         ),
         usersByRole: usersByRole.map(
-          (role: { name: string; _count: { users: number } }) => ({
+          (role: { name: string; _count: { employeeProfiles: number } }) => ({
             name: role.name,
-            count: role._count.users,
+            count: role._count.employeeProfiles,
           }),
         ),
         teamsPerBrand: teamsPerBrand.map(

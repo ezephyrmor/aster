@@ -231,31 +231,8 @@ export const POST = withAuth(
       const salt = generateSalt();
       const hashedPassword = await hashPassword(generatedPassword, salt);
 
-      // Get role ID
       const companyId = auth.user.companyId;
-
-      // Role is now passed as numeric ID directly from AsyncSelect
-      let roleId = role;
-
-      // Fallback for backward compatibility if string name is still passed
-      if (typeof role === "string") {
-        const roleRecord = await prisma.role.findUnique({
-          where: {
-            companyId_name: {
-              companyId,
-              name: role || "employee",
-            },
-          },
-        });
-
-        if (!roleRecord) {
-          return NextResponse.json(
-            { error: "Invalid role specified" },
-            { status: 400 },
-          );
-        }
-        roleId = roleRecord.id;
-      }
+      const roleId = role;
 
       // Get position ID if provided
       let positionId: string | null = null;
@@ -344,7 +321,7 @@ export const POST = withAuth(
                 emergencyContactName,
                 emergencyContactNumber,
                 emergencyContactRelation,
-                statusId: statusId || 1, // Default to "active" status
+                statusId: statusId || "1", // Default to "active" status
               },
             },
           },
@@ -364,7 +341,7 @@ export const POST = withAuth(
         await tx.employeeStatusHistory.create({
           data: {
             userId: newUser.id,
-            statusId: statusId || 1,
+            statusId: statusId || "1",
             effectiveDate: newUser.employeeProfile?.hireDate || new Date(),
             reason: "Employee account created",
             notes: "System generated record on account creation",

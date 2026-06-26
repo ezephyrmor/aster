@@ -80,9 +80,6 @@ export async function GET(request: NextRequest) {
       ],
     });
 
-    // Parse teamId if provided
-    const teamIdNum = teamId ? parseInt(teamId) : null;
-
     // Format response for autocomplete
     const results = users.map((user) => {
       // Get active team membership (if any)
@@ -92,7 +89,7 @@ export async function GET(request: NextRequest) {
 
       // Check if user is already in the specified team
       const isInSpecifiedTeam =
-        teamIdNum && activeMembership && activeMembership.teamId === teamIdNum;
+        teamId && activeMembership && activeMembership.teamId === teamId;
 
       return {
         id: user.id,

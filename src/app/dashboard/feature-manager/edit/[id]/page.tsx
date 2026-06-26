@@ -1,20 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useEffect, use } from "react";
-import FeatureForm from "@/components/forms/FeatureForm";
+import { useState, useEffect } from "react";
+import FeatureForm, { type FeatureFormData } from "@/components/forms/FeatureForm";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import * as Icons from "lucide-react";
-
-interface FeatureFormData {
-  code: string;
-  name: string;
-  description?: string;
-  domain: string;
-  kind: "page" | "action" | "api";
-  httpMethod?: string;
-  path: string;
-}
 
 export default function EditFeaturePage({
   params,
@@ -22,7 +12,7 @@ export default function EditFeaturePage({
   params: { id: string };
 }) {
   const router = useRouter();
-  const { id } = use(params as Promise<{ id: string }>);
+  const { id } = params;
   const [feature, setFeature] = useState<FeatureFormData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);

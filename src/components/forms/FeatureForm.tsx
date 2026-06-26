@@ -10,9 +10,9 @@ import { CreateFeatureSchema, UpdateFeatureSchema } from "@/lib/validations";
 import type { z } from "zod";
 import { Button } from "../ui/button";
 
-type CreateFeatureData = z.infer<typeof CreateFeatureSchema>;
-type UpdateFeatureData = z.infer<typeof UpdateFeatureSchema>;
-type FeatureFormData = CreateFeatureData | UpdateFeatureData;
+export type CreateFeatureData = z.infer<typeof CreateFeatureSchema>;
+export type UpdateFeatureData = z.infer<typeof UpdateFeatureSchema>;
+export type FeatureFormData = CreateFeatureData | UpdateFeatureData;
 
 interface FeatureFormProps {
   initialData?: Partial<FeatureFormData>;

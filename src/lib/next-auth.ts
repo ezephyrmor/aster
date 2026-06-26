@@ -14,6 +14,7 @@ import {
 import type { NextRequest } from "next/server";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  // @ts-expect-error - @auth/prisma-adapter bundled @auth/core version mismatch
   adapter: PrismaAdapter(prisma),
   session: {
     strategy: "jwt",
@@ -48,7 +49,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             return {
               id: demoUser.id.toString(),
               username: demoUser.email,
-              roleId: demoUser.roleId,
               role: demoUser.role,
             } as any;
           }
@@ -105,12 +105,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         return {
           id: user.id.toString(),
           username: user.username,
-          roleId: user.employeeProfile.roleId,
+          roleId: user.employeeProfile!.roleId,
           companyId: user.companyId,
           companyName: user.company?.name,
-          role: user.employeeProfile.role,
-          ip: getClientIp(req),
-          fingerprint: await generateFingerprint(req),
+          role: user.employeeProfile!.role,
+          ip: getClientIp(req as any),
+          fingerprint: await generateFingerprint(req as any),
           userAgent: req.headers.get("user-agent") || "",
           timestamp: Math.floor(Date.now() / 1000),
           nonce: generateNonce(),
@@ -151,10 +151,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (session.user) {
         session.user.id = token.id as string;
         session.user.username = token.username as string;
-        session.user.roleId = token.roleId as number;
-        session.user.companyId = token.companyId as number;
+        session.user.roleId = token.roleId as string;
+        session.user.companyId = token.companyId as string;
         session.user.companyName = token.companyName as string;
-        session.user.role = token.role;
+        session.user.role = token.role as { id: string; name: string; description: string | null; };
       }
 
       // console.log("Session object built:", JSON.stringify(session, null, 2));
@@ -171,13 +171,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
        * in production can leak sensitive security information to client-side code.
        */
       if (securityConfig.debugSessionSecurity) {
-        // @ts-ignore - Add security debug info to session
         session.security = {
-          ip: token.ip,
-          fingerprint: token.fingerprint,
-          userAgent: token.userAgent,
-          timestamp: token.timestamp,
-          nonce: token.nonce,
+          ip: token.ip as string | undefined,
+          fingerprint: token.fingerprint as string | undefined,
+          userAgent: token.userAgent as string | undefined,
+          timestamp: token.timestamp as number | undefined,
+          nonce: token.nonce as string | undefined,
         };
       }
 
@@ -189,7 +188,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
 
   // Suppress CredentialsSignin errors from being logged to console
-  onError: (error) => {
+  onError: (error: Error) => {
     // Ignore expected authentication failure errors
     if (error.name === "CredentialsSignin") {
       return;

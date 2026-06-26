@@ -7,13 +7,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { id } = await params;
-    const brandId = parseInt(id);
-
-    if (isNaN(brandId)) {
-      return NextResponse.json({ error: "Invalid brand ID" }, { status: 400 });
-    }
-
+    const brandId = (await params).id;
     // Check if brand exists
     const brand = await prisma.brand.findUnique({
       where: { id: brandId },
@@ -80,15 +74,15 @@ export async function GET(
 
     // Format response
     interface HistoryRecord {
-      id: number;
-      brandId: number;
+      id: string;
+      brandId: string;
       action: string;
       timestamp: Date;
       reason: string | null;
       ipAddress: string | null;
       userAgent: string | null;
       user: {
-        id: number;
+        id: string;
         username: string;
         employeeProfile: {
           firstName: string;
@@ -96,14 +90,14 @@ export async function GET(
         } | null;
       } | null;
       performedByUser: {
-        id: number;
+        id: string;
         username: string;
         employeeProfile: {
           firstName: string;
           lastName: string;
         } | null;
       };
-      previousManagerId: number | null;
+      previousManagerId: string | null;
     }
 
     const formattedHistory = history.map((record: HistoryRecord) => ({

@@ -4,7 +4,7 @@ import {
   ServerSideDataTable,
   FilterConfig,
 } from "@/components/tables/ServerSideDataTable";
-import { columns, Leave } from "@/components/tables/columns/LeaveColumns";
+import { columns, LeaveRequest as Leave } from "@/components/tables/columns/LeaveColumns";
 import { useServerSideDataTable } from "@/hooks/useServerSideDataTable";
 
 interface LeaveListProps {

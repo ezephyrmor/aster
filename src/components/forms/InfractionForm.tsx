@@ -49,7 +49,7 @@ export default function InfractionForm({
   return (
     <Form
       schema={isEditMode ? UpdateInfractionSchema : CreateInfractionSchema}
-      defaultValues={defaultValues}
+      defaultValues={defaultValues as any}
       values={initialData}
       onSubmit={handleFormSubmit}
       className="space-y-6"

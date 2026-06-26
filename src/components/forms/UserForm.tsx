@@ -14,9 +14,9 @@ import Modal from "../modals/Modal";
 import { useToast } from "@/lib/toast";
 import { Button } from "../ui/button";
 
-type CreateUserData = z.infer<typeof CreateUserSchema>;
-type UpdateUserData = z.infer<typeof UpdateUserSchema>;
-type UserFormData = CreateUserData | UpdateUserData;
+export type CreateUserData = z.infer<typeof CreateUserSchema>;
+export type UpdateUserData = z.infer<typeof UpdateUserSchema>;
+export type UserFormData = CreateUserData | UpdateUserData;
 
 interface UserFormProps {
   initialData?: Partial<UserFormData>;
@@ -119,7 +119,8 @@ export default function UserForm({
   };
 
   // Extract data from employeeProfile if it exists, otherwise fall back to root
-  const profileData = initialData?.employeeProfile || initialData;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const profileData = (initialData as any)?.employeeProfile || initialData;
 
   const defaultValues = {
     username: initialData?.username || "",

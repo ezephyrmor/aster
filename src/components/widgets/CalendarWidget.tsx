@@ -21,7 +21,7 @@ interface CalendarDay {
 }
 
 interface CalendarWidgetProps {
-  userId?: number; // Optional: if provided, only show this user's leaves
+  userId?: number | string; // Optional: if provided, only show this user's leaves
 }
 
 export default function CalendarWidget({ userId }: CalendarWidgetProps) {

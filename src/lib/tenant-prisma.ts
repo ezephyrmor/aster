@@ -10,7 +10,7 @@ import { auth } from "@/lib/next-auth";
  * @param companyId - The company id to scope all operations to
  * @returns Prisma client scoped to the specified company
  */
-export function getScopedPrisma(companyId: number) {
+export function getScopedPrisma(companyId: string) {
   // List of all tables that are tenant scoped
   const tenantTables = [
     "user",
@@ -54,7 +54,8 @@ export function getScopedPrisma(companyId: number) {
             return originalMethod;
           }
 
-          return function (...args: any[]) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          return function (this: any, ...args: any[]) {
             let options = args[0] || {};
 
             // Modify query based on method
@@ -104,7 +105,7 @@ export function getScopedPrisma(companyId: number) {
             }
 
             args[0] = options;
-            return originalMethod.apply(modelTarget, args);
+            return (originalMethod as Function).apply(modelTarget, args);
           };
         },
       });

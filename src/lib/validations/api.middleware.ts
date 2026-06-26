@@ -55,6 +55,6 @@ export function withValidation<T extends z.ZodTypeAny>(
       return error;
     }
 
-    return handler(data, request, ...args);
+    return handler(data!, request, ...args);
   };
 }

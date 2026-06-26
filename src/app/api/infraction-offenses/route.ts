@@ -8,12 +8,12 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const typeId = searchParams.get("typeId");
 
-    const where: { isActive: boolean; typeId?: number } = {
-      isActive: true,
+    const where: { archivedAt: null; typeId?: string } = {
+      archivedAt: null,
     };
 
     if (typeId) {
-      where.typeId = parseInt(typeId);
+      where.typeId = typeId;
     }
 
     const offenses = await prisma.infractionOffense.findMany({

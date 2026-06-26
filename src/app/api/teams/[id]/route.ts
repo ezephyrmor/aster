@@ -71,7 +71,7 @@ export async function PUT(
     const { id } = await params;
     const teamId = id;
     const body = await request.json();
-    const { name, description, brandId, managerId, status, performedBy } = body;
+    const { name, description, brandId, performedBy } = body;
 
     // Check if team exists
     const existingTeam = await prisma.team.findUnique({
@@ -126,8 +126,6 @@ export async function PUT(
         description:
           description !== undefined ? description : existingTeam.description,
         brandId: brandId !== undefined ? brandId : existingTeam.brandId,
-        managerId,
-        status,
       },
     });
 
@@ -137,7 +135,7 @@ export async function PUT(
         data: {
           teamId,
           action: "updated",
-          performedBy: performedBy || 1,
+          performedBy: performedBy || "1",
           reason: changes.join(", "),
           metadata,
         },

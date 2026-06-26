@@ -3,7 +3,7 @@
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import BrandForm from "@/components/forms/BrandForm";
+import BrandForm, { type BrandFormData } from "@/components/forms/BrandForm";
 import type { UpdateBrandData } from "@/lib/validations";
 import { useToast } from "@/lib/toast";
 
@@ -164,7 +164,7 @@ export default function EditBrandPage({
       <div className="max-w-2xl">
         {brand && (
           <BrandForm
-            initialData={brand}
+            initialData={brand as BrandFormData}
             onSubmit={handleSubmit}
             onCancel={handleCancel}
           />

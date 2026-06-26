@@ -2,19 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import FeatureForm from "@/components/forms/FeatureForm";
+import FeatureForm, { type FeatureFormData } from "@/components/forms/FeatureForm";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import * as Icons from "lucide-react";
 
-interface FeatureFormData {
-  code: string;
-  name: string;
-  description?: string;
-  domain: string;
-  kind: "page" | "action" | "api";
-  httpMethod?: string;
-  path: string;
-}
 
 export default function CreateFeaturePage() {
   const router = useRouter();

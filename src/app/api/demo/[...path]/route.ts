@@ -95,8 +95,9 @@ export async function GET(
         // Return mock attendance status
         const userId = request.nextUrl.searchParams.get("userId");
         if (userId) {
-          const attendance = demoStore.getAttendanceByUserId(userId);
-          const schedule = demoStore.getScheduleByUserId(userId);
+          const userIdNum = parseInt(userId);
+          const attendance = demoStore.getAttendanceByUserId(userIdNum);
+          const schedule = demoStore.getScheduleByUserId(userIdNum);
           return NextResponse.json({
             attendance: attendance[0] || null,
             schedule: schedule,
@@ -260,7 +261,14 @@ export async function GET(
         // Handle single resource requests (e.g., users/1)
         if (pathParts.length === 2) {
           const [resource, id] = pathParts;
-          const resourceId = id;
+          const resourceId = parseInt(id, 10);
+
+          if (isNaN(resourceId)) {
+            return NextResponse.json(
+              { error: "Invalid resource ID" },
+              { status: 400 },
+            );
+          }
 
           switch (resource) {
             case "users":

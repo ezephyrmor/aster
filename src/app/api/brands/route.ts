@@ -146,7 +146,7 @@ export const POST = withValidation(CreateBrandSchema, async (data) => {
         website,
         industryId,
         managerId,
-        createdBy: 1, // TODO: Get from authenticated user
+        createdBy: "1", // TODO: Get from authenticated user
       },
       include: {
         industry: true,

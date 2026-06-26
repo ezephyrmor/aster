@@ -7,15 +7,9 @@ export async function PUT(
   { params }: { params: Promise<{ id: string; memberId: string }> },
 ) {
   try {
-    const { id, memberId } = await params;
-    const teamId = parseInt(id);
-    const memberRecordId = parseInt(memberId);
+    const { id: teamId, memberId: memberRecordId } = await params;
     const body = await request.json();
     const { isLeader, reason, performedBy } = body;
-
-    if (isNaN(teamId) || isNaN(memberRecordId)) {
-      return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
-    }
 
     // Check if team member exists
     const existingMember = await prisma.teamMember.findUnique({
@@ -68,7 +62,7 @@ export async function PUT(
         teamId,
         teamMemberId: memberRecordId,
         action,
-        performedBy: performedBy || 1,
+        performedBy: performedBy || "1",
         reason,
         metadata: {
           userId: existingMember.userId,
@@ -94,15 +88,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string; memberId: string }> },
 ) {
   try {
-    const { id, memberId } = await params;
-    const teamId = parseInt(id);
-    const memberRecordId = parseInt(memberId);
+    const { id: teamId, memberId: memberRecordId } = await params;
     const body = await request.json();
     const { reason, performedBy } = body || {};
-
-    if (isNaN(teamId) || isNaN(memberRecordId)) {
-      return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
-    }
 
     // Check if team member exists
     const existingMember = await prisma.teamMember.findUnique({
@@ -132,7 +120,7 @@ export async function DELETE(
         teamId,
         teamMemberId: memberRecordId,
         action: "left",
-        performedBy: performedBy || 1,
+        performedBy: performedBy || "1",
         reason,
         metadata: {
           userId: existingMember.userId,

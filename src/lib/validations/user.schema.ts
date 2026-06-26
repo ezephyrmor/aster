@@ -4,27 +4,21 @@ import { validationRules } from "./validation.utils";
 const BaseUserSchema = z.object({
   username: z.string().optional(),
   password: z.string().optional(),
-  role: z.coerce.number().int().min(1),
+  role: z.string().min(1, "Role is required"),
   firstName: validationRules.name,
   lastName: validationRules.name,
   middleName: z.string().optional(),
   contactNumber: validationRules.phone.optional().or(z.literal("")),
   personalEmail: validationRules.email.optional().or(z.literal("")),
   address: z.string().optional(),
-  dateOfBirth: z.coerce
-    .date()
-    .optional()
-    .or(z.string().transform((v) => (v ? new Date(v) : undefined))),
-  position: z.coerce.number().int().optional(),
-  department: z.coerce.number().int().optional(),
-  hireDate: z.coerce
-    .date()
-    .optional()
-    .or(z.string().transform((v) => (v ? new Date(v) : undefined))),
+  dateOfBirth: z.string().optional(),
+  position: z.string().optional(),
+  department: z.string().optional(),
+  hireDate: z.string().optional(),
   emergencyContactName: z.string().optional(),
   emergencyContactNumber: validationRules.phone.optional().or(z.literal("")),
   emergencyContactRelation: z.string().optional(),
-  status: z.coerce.number().int().min(1).default(1),
+  status: z.string().optional(),
 });
 
 /**

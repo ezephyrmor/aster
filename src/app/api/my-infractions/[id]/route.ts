@@ -7,8 +7,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { id: idStr } = await params;
-    const id = parseInt(idStr);
+    const id = (await params).id;
 
     // Get current user from cookie
     const userCookie = request.cookies.get("user")?.value;

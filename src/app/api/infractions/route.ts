@@ -33,11 +33,11 @@ export const GET = withAuth(
       }
 
       if (typeId) {
-        where.typeId = parseInt(typeId);
+        where.typeId = typeId;
       }
 
       if (offenseId) {
-        where.offenseId = parseInt(offenseId);
+        where.offenseId = offenseId;
       }
 
       if (acknowledged !== null && acknowledged !== undefined) {
