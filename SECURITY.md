@@ -6,8 +6,8 @@ This project follows semantic versioning for security updates. Only the latest s
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 14.x    | ✅ Fully supported |
-| < 14.0  | ❌ Not supported   |
+| 0.1.x   | ✅ Fully supported |
+| < 0.1   | ❌ Not supported   |
 
 Older versions are not actively maintained with security updates. We recommend always using the latest stable release.
 
@@ -17,11 +17,10 @@ We take security vulnerabilities seriously. Thank you for your responsible discl
 
 **DO NOT create public GitHub issues for security vulnerabilities.**
 
-Instead, please report vulnerabilities via email to:
+Instead, please report vulnerabilities via email or create a private issue:
 
-```
-security@yourdomain.com
-```
+- **GitHub**: Open a security advisory at `https://github.com/magical-owl/aster/security/advisories`
+- **Email**: security@magicalowl.com
 
 ### Reporting Guidelines
 

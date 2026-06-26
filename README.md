@@ -1,35 +1,36 @@
 # Aster HR Management System
 
-A comprehensive HR management system built with Next.js, TypeScript, and Prisma ORM. Features include user management, team management, leave tracking, attendance monitoring, infraction tracking, and calendar events.
+A comprehensive HR management system built with Next.js, TypeScript, and Prisma ORM with PostgreSQL. Features include user management, team management, leave tracking, attendance monitoring, infraction tracking, calendar events, role-based access control, and multi-tenant company support.
 
 ## 🚀 Features
 
 ### 🔐 **Secure Authentication**
 
-- **Session management** with HTTP-only cookies
+- **Session management** with HTTP-only cookies (NextAuth v5)
 - **Password security** with salt + pepper + bcrypt (12 rounds)
 - **Protected routes** with automatic redirect to login
 - **Session validation** and secure logout functionality
+- **Captcha verification** for login attempts
 
 ### 👥 **User Management**
 
 - Full CRUD operations for users
 - Employee profiles with department and position
-- Role-based access control (Admin, HR, Employee)
-- User search functionality
+- Role-based access control (Admin, HR, Manager, Employee)
+- Multi-company (tenant) isolation
 
 ### 👨‍👩‍👧‍👦 **Team Management**
 
-- Create and manage teams
+- Create and manage teams under brands
 - Assign team members with team leaders
 - Brand-based team organization
-- Team member tracking
+- Team member history tracking
 
 ### 🏢 **Brand Management**
 
-- Manage multiple brands
-- Assign brand managers
-- Track manager assignment history
+- Manage multiple brands with industry classification
+- Assign brand managers with full audit history
+- Track manager assignment changes
 - Brand-specific team organization
 
 ### 📅 **Leave Management**
@@ -43,16 +44,15 @@ A comprehensive HR management system built with Next.js, TypeScript, and Prisma 
 ### ⏰ **Attendance & Schedules**
 
 - Clock in/out functionality
-- Schedule management
+- Schedule management with configurable shifts
 - Attendance tracking with late/undertime detection
 - Early clock-out with reason tracking
 - Real-time attendance status
 
 ### ⚠️ **Infraction System**
 
-- Track employee infractions
-- Infraction types with severity levels
-- Offense level tracking (1st, 2nd, 3rd, 4th offense)
+- Track employee infractions with severity levels
+- Infraction types and offense level tracking
 - Employee acknowledgment workflow
 - Infraction history tracking
 
@@ -66,146 +66,166 @@ A comprehensive HR management system built with Next.js, TypeScript, and Prisma 
 ### 📊 **Analytics Dashboard**
 
 - Real-time metrics and statistics
-- User analytics
-- Attendance overview
+- User, brand, and team analytics
 - Pending items tracking (leaves, infractions)
+- Activity history
 
 ### 🎨 **Modern UI/UX**
 
 - **Dark/light mode support** with smooth transitions
 - **Responsive design** for all devices
-- **Professional dashboard** with user information and stats
+- **Professional dashboard** with navigation sidebar
 - **Toast notifications** for user feedback
-- **Loading states** and error handling throughout
+- **Shadcn UI** components
 
 ### 🧪 **Demo Mode**
 
-- Full demo data mode for testing without database
+- Full demo data mode for testing without a database
 - Pre-populated users, teams, brands, and events
-- Easy switching between demo and production mode
+- Toggle via `DEMO_MODE=true` environment variable
+
+### 🏢 **Multi-Tenancy**
+
+- Company-scoped data isolation
+- Automatic company ID injection on all queries
+- Proxy-based tenant Prisma client
+
+### 🧭 **Navigation & Permissions**
+
+- Feature-based navigation templates
+- Role-specific navigation assignment
+- Granular permissions (view, create, edit, delete, approve) per navigation item
+- Page-level access control guard
 
 ## 🏗️ Architecture
 
 ```
 ├── src/
 │   ├── app/                    # Next.js App Router
-│   │   ├── api/               # API routes
-│   │   │   ├── auth/          # Authentication endpoints
-│   │   │   ├── users/         # User management
-│   │   │   ├── teams/         # Team management
-│   │   │   ├── brands/        # Brand management
-│   │   │   ├── leaves/        # Leave management
-│   │   │   ├── attendance/    # Attendance tracking
-│   │   │   ├── schedules/     # Schedule management
-│   │   │   ├── infractions/   # Infraction tracking
-│   │   │   ├── calendar/      # Calendar events
-│   │   │   └── analytics/     # Analytics data
-│   │   ├── dashboard/         # Protected admin pages
-│   │   │   ├── users/         # User management pages
-│   │   │   ├── teams/         # Team management pages
-│   │   │   ├── brands/        # Brand management pages
-│   │   │   ├── leaves/        # Leave management pages
-│   │   │   ├── schedules/     # Schedule pages
-│   │   │   ├── infractions/   # Infraction pages
-│   │   │   ├── calendar/      # Calendar page
-│   │   │   └── analytics/     # Analytics page
-│   │   └── login/             # Authentication pages
-│   ├── components/            # Reusable UI components
-│   │   ├── LoginForm.tsx      # Secure login form
-│   │   ├── Sidebar.tsx        # Navigation sidebar
-│   │   ├── ClockInButton.tsx  # Attendance clock button
-│   │   ├── CalendarWidget.tsx # Calendar widget
-│   │   └── ...                # More components
-│   ├── lib/                   # Core utilities
-│   │   ├── auth.tsx           # Authentication context
-│   │   ├── db.ts              # Database connection
-│   │   ├── password.ts        # Password utilities
-│   │   ├── toast.tsx          # Toast notifications
-│   │   └── demo/              # Demo mode store
-│   └── app/                   # Root application
-├── prisma/                    # Database schema
-├── scripts/                   # Development utilities
-└── public/                    # Static assets
+│   │   ├── api/                # API routes (Prisma-based)
+│   │   │   ├── auth/           # Authentication (NextAuth v5)
+│   │   │   ├── users/          # User management
+│   │   │   ├── teams/          # Team management
+│   │   │   ├── brands/         # Brand management
+│   │   │   ├── leaves/         # Leave management
+│   │   │   ├── attendance/     # Attendance tracking
+│   │   │   ├── schedules/      # Schedule management
+│   │   │   ├── infractions/    # Infraction tracking
+│   │   │   ├── calendar/       # Calendar events
+│   │   │   ├── analytics/      # Analytics data
+│   │   │   ├── features/       # Feature management
+│   │   │   ├── navigation/     # Navigation management
+│   │   │   └── demo/           # Demo mode API
+│   │   ├── dashboard/          # Protected dashboard pages
+│   │   └── login/              # Login page
+│   ├── components/             # Reusable UI components
+│   │   ├── forms/              # Form components (LoginForm, UserForm, etc.)
+│   │   ├── layout/             # DashboardLayout, Sidebar, PageAccessGuard
+│   │   ├── tables/             # Server-side data tables
+│   │   ├── ui/                 # Shadcn UI primitives
+│   │   ├── form/               # Form field components
+│   │   └── widgets/            # CalendarWidget, ClockInButton, etc.
+│   ├── lib/                    # Core utilities
+│   │   ├── db.ts               # Prisma client singleton
+│   │   ├── tenant-prisma.ts    # Multi-tenant Prisma proxy
+│   │   ├── next-auth.ts        # NextAuth v5 configuration
+│   │   ├── auth.tsx            # Auth context & hooks
+│   │   ├── password.ts         # Password hashing utilities
+│   │   ├── role-access-check.ts # Page-level access control
+│   │   └── demo/               # Demo mode data store
+│   ├── config/                 # App configuration
+│   ├── types/                  # TypeScript type definitions
+│   └── hooks/                  # Custom React hooks
+├── prisma/                     # Database schema & migrations
+├── scripts/                    # Seeding scripts
+│   └── seed/                   # Modular seed phases
+└── public/                     # Static assets
 ```
 
 ## 🛠️ Tech Stack
 
 ### Frontend
 
-- **Next.js 15** - React framework with App Router
+- **Next.js 16** - React framework with App Router and Turbopack
 - **TypeScript** - Type-safe development
-- **Tailwind CSS** - Utility-first styling
+- **Tailwind CSS v4** - Utility-first styling
 - **React Hook Form** - Form management
 - **Zod** - Runtime validation
+- **TanStack Table** - Data tables
+- **Lucide React** - Icons
+- **Shadcn UI** - Component primitives
 
 ### Backend
 
+- **Next.js API Routes** - Serverless API endpoints
 - **Prisma ORM** - Database modeling and queries
-- **SQLite** - Default database (easily switchable to MySQL/PostgreSQL)
+- **PostgreSQL** - Production database (via Docker or Vercel Marketplace)
+- **NextAuth v5** - Authentication with Credentials provider
 - **bcrypt** - Password hashing
-- **Next.js API Routes** - Serverless functions
 
 ### Development
 
 - **TypeScript** - Type safety
 - **ESLint** - Code linting
 - **Prettier** - Code formatting
-- **Git** - Version control
+- **Vitest** - Unit & integration testing
+- **Docker** - Local PostgreSQL
 
-## 🚀 Quick Start
+## 🚀 Quick Start (Docker + PostgreSQL)
 
 ### Prerequisites
 
 - Node.js 18+
 - npm or pnpm
+- Docker Desktop
 
 ### Installation
 
 1. **Clone the repository**
 
 ```bash
-git clone https://github.com/ezephyrmor/aster.git
+git clone https://github.com/magical-owl/aster.git
 cd aster
 ```
 
-2. **Install dependencies**
+2. **Start PostgreSQL in Docker**
+
+```bash
+docker run --name aster-postgres \
+  -e POSTGRES_USER=aster \
+  -e POSTGRES_PASSWORD=aster \
+  -e POSTGRES_DB=aster \
+  -p 5432:5432 \
+  -d postgres:16
+```
+
+3. **Install dependencies**
 
 ```bash
 npm install
 ```
 
-3. **Set up environment**
+4. **Set up environment**
 
-```bash
-cp .env.example .env.local
+Copy `.env.example` to `.env` and update the database URL:
+
+```env
+DATABASE_URL="postgresql://aster:aster@localhost:5432/aster"
+NEXTAUTH_SECRET="your-secret-key-here"
+NEXTAUTH_URL="http://localhost:3000"
+PASSWORD_PEPPER="your-pepper-secret"
 ```
 
-4. **Run database migrations**
+5. **Run database migrations**
 
 ```bash
 npx prisma migrate dev
 ```
 
-5. **Generate Prisma client**
-
-```bash
-npx prisma generate
-```
-
 6. **Seed the database**
 
 ```bash
-# Seed lookup tables first
-npx tsx scripts/seed-lookup-tables.ts
-
-# Seed admin users
-npx tsx scripts/seed-admin.ts
-
-# Seed dummy data (optional)
-npx tsx scripts/seed-dummy-data.ts
-
-# Or seed everything at once
-npx tsx scripts/seed-all-data.ts
+npm run db:seed:all
 ```
 
 7. **Start development server**
@@ -218,44 +238,54 @@ npm run dev
 
 Navigate to `http://localhost:3000`
 
-### Environment Variables
-
-Create a `.env.local` file with the following:
-
-```env
-# Database (SQLite default)
-DATABASE_URL="file:./dev.db"
-
-# For MySQL/PostgreSQL:
-# DATABASE_URL="mysql://root:password@localhost:3306/aster_db"
-# DATABASE_URL="postgresql://user:password@localhost:5432/aster_db"
-
-# Application
-NEXTAUTH_SECRET="your-secret-key-here"
-NEXTAUTH_URL="http://localhost:3000"
-
-# Password pepper (for additional security)
-PASSWORD_PEPPER="your-pepper-secret"
-
-# Demo mode (set to "true" to enable demo mode)
-DEMO_MODE="false"
-```
-
-## 📖 Usage
-
 ### Default Credentials
 
-**Database Mode:**
+| Role   | Username | Password |
+|--------|----------|----------|
+| Admin  | `admin`  | `admin123` |
 
-- **Username**: `admin`
-- **Password**: `password123`
+⚠️ **Important:** Change the password after first login in production!
 
-**Demo Mode:**
-| Role | Email | Password |
-|------|-------|----------|
-| Admin | admin@demo.com | demo123 |
-| Employee | juan@demo.com | demo123 |
-| Manager | maria@demo.com | demo123 |
+## 🚀 Vercel Deployment
+
+### 1. Provision a PostgreSQL Database
+
+From the Vercel Marketplace:
+
+- **Neon** (recommended — free tier available)
+- **Supabase**
+- **Xata**
+
+### 2. Connect to Vercel
+
+1. Vercel project dashboard → **Storage** tab
+2. Click **Connect Database** → Choose your provider
+3. Vercel auto-sets `DATABASE_URL` as an environment variable
+4. If using Neon, also add `DIRECT_URL` for migrations
+
+### 3. Set Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `DATABASE_URL` | PostgreSQL connection string (auto-set by marketplace) |
+| `DIRECT_URL` | Direct connection for migrations (Neon only) |
+| `NEXTAUTH_SECRET` | Generate with `openssl rand -base64 32` |
+| `NEXTAUTH_URL` | Your Vercel deployment URL (auto-set by Vercel) |
+| `PASSWORD_PEPPER` | Generate with `openssl rand -base64 32` |
+
+### 4. Build Command
+
+In Vercel project settings, set:
+
+```bash
+npx prisma migrate deploy && next build
+```
+
+### 5. Deploy
+
+Push your code to the connected Git repository.
+
+## 📖 Usage
 
 ### Available Routes
 
@@ -266,99 +296,77 @@ DEMO_MODE="false"
 | `/dashboard/users`          | User management                   |
 | `/dashboard/teams`          | Team management                   |
 | `/dashboard/brands`         | Brand management                  |
-| `/dashboard/leaves/request` | Submit leave requests             |
-| `/dashboard/leaves/approve` | Approve leave requests (managers) |
+| `/dashboard/leaves`         | Leave request & approval          |
 | `/dashboard/schedules`      | Schedule management               |
 | `/dashboard/infractions`    | Infraction tracking               |
 | `/dashboard/my-infractions` | View own infractions              |
 | `/dashboard/calendar`       | Calendar events                   |
 | `/dashboard/analytics`      | Analytics dashboard               |
 | `/dashboard/settings`       | User settings                     |
+| `/dashboard/feature-manager`| Navigation & feature management   |
 
 ### Development Scripts
 
 ```bash
-npm run dev          # Start development server
-npm run build        # Build for production
-npm run start        # Start production server
-npm run lint         # Run ESLint
-npm run format       # Format code with Prettier
+npm run dev              # Start development server
+npm run dev+             # Clean + start dev server
+npm run build            # Build for production
+npm run start            # Start production server
+npm run lint             # Run ESLint
+npm run db:seed          # Run main seed
+npm run db:seed:all      # Run all seeds
+npm run db:reset         # Reset DB + re-seed
+npm run db:reset+        # Sync schema + reset + re-seed
+npm run db:studio        # Open Prisma Studio
+npm run generate         # Regenerate Prisma client
 ```
 
-### Database Seeding Scripts
+## 🔒 Security
 
-The project includes comprehensive seeding scripts:
+### Password Security
 
-```bash
-# Individual scripts
-npx tsx scripts/seed-lookup-tables.ts   # Roles, positions, departments, statuses
-npx tsx scripts/seed-admin.ts           # Admin and HR users
-npx tsx scripts/seed-dummy-data.ts      # Sample users, brands, teams
-npx tsx scripts/seed-team-members.ts    # Assign members to teams
-npx tsx scripts/seed-leave-lookups.ts   # Leave types and statuses
-npx tsx scripts/seed-infraction-lookups.ts # Infraction types and offenses
-npx tsx scripts/seed-calendar-events.ts # Calendar events
-npx tsx scripts/seed-schedules.ts       # Work schedules
-npx tsx scripts/seed-attendance.ts      # Attendance records
-npx tsx scripts/seed-leaves.ts          # Leave requests
-npx tsx scripts/seed-infractions.ts     # Infraction records
+- **Salt**: Unique cryptographic salt generated per user (stored in DB)
+- **Pepper**: Secret value stored in `PASSWORD_PEPPER` env var (never in DB)
+- **Bcrypt**: Industry-standard hashing with 12 rounds
 
-# All-in-one script
-npx tsx scripts/seed-all-data.ts        # Run all seeds in order
-```
+**Formula**: `bcrypt.hash(password + pepper, salt)`
 
-## 🎛️ Demo Mode
+### Additional Security Features
 
-Enable demo mode to test the application without a database:
-
-1. Set `DEMO_MODE=true` in `.env.local`
-2. Restart the development server
-3. Use demo credentials to login
-
-Demo mode provides:
-
-- Pre-populated users, teams, brands
-- Sample leave requests and infractions
-- Calendar events
-- Analytics data
+- **HTTPS enforcement** in production
+- **CSRF protection** with NextAuth
+- **Session management** with HTTP-only cookies
+- **Input validation** with Zod schemas
+- **SQL injection protection** with Prisma ORM
+- **Page-level access control** with role-based permissions
+- **Multi-tenant isolation** via automatic company ID scoping
+- **Captcha verification** on login
 
 ## 📊 Project Status
 
 ### Completed Features
 
-- ✅ Authentication System
-- ✅ User Management
-- ✅ Team Management
-- ✅ Brand Management
-- ✅ Leave Management
+- ✅ Authentication System (NextAuth v5 + Captcha)
+- ✅ User Management with Employee Profiles
+- ✅ Team Management with History
+- ✅ Brand Management with Manager Audit
+- ✅ Leave Management (types, credits, requests, approval)
 - ✅ Attendance & Schedules
-- ✅ Infraction System
+- ✅ Infraction System (types, offenses, acknowledgment)
 - ✅ Calendar Events
 - ✅ Analytics Dashboard
+- ✅ Multi-Tenant Company Isolation
+- ✅ Feature & Navigation Management
+- ✅ Role-Based Page Access Control
 - ✅ Demo Mode
 - ✅ Dark/Light Theme
+- ✅ Server-Side Data Tables
 
 ### In Progress
 
 - 🔄 Advanced reporting
 - 🔄 Email notifications
 - 🔄 Export functionality
-
-## 🔒 Security
-
-### Password Security
-
-- **Salt**: Unique cryptographic salt generated per user
-- **Pepper**: Secret value stored in environment variable
-- **Bcrypt**: Industry-standard hashing with 12 rounds
-
-### Additional Security Features
-
-- **HTTPS enforcement** in production
-- **CSRF protection** with secure cookies
-- **Session management** with HTTP-only cookies
-- **Input validation** with type safety
-- **SQL injection protection** with Prisma ORM
 
 ## 🤝 Contributing
 
@@ -369,32 +377,9 @@ Demo mode provides:
 5. Push to the branch: `git push origin feature-name`
 6. Submit a pull request
 
-## 📞 Support
-
-For support, create an issue on GitHub or contact the development team.
-
 ## 📄 License
 
 This project is licensed under the MIT License.
-
-## 🏆 Highlights
-
-### Technical Skills Demonstrated
-
-- **Full-stack development** with modern JavaScript/TypeScript
-- **Authentication & Authorization** implementation
-- **Database design** and ORM usage
-- **Responsive UI/UX** design principles
-- **Security best practices** implementation
-- **Git workflow** and version control
-
-### Modern Development Practices
-
-- **Type safety** with TypeScript throughout
-- **Component-based architecture** with React
-- **API design** with RESTful principles
-- **Database migrations** and schema management
-- **Code quality** with ESLint and Prettier
 
 ---
 
@@ -403,4 +388,5 @@ This project is licensed under the MIT License.
 [![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://typescriptlang.org/)
 [![Prisma](https://img.shields.io/badge/Prisma-3982CE?style=for-the-badge&logo=Prisma&logoColor=white)](https://prisma.io/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://postgresql.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
