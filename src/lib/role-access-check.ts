@@ -156,13 +156,14 @@ export async function checkPageAccess(
 
   try {
     // Query the role's navigation items with their permissions and linked feature paths
-    const rows: Array<{
-      item_url: string | null;
-      feature_code: string | null;
-      feature_path: string | null;
-      permissions: Record<string, boolean> | null;
-    }> = await prisma.$queryRawUnsafe(
-      `
+    const rows = await prisma.$queryRaw<
+      Array<{
+        item_url: string | null;
+        feature_code: string | null;
+        feature_path: string | null;
+        permissions: Record<string, boolean> | null;
+      }>
+    >`
       SELECT
         fni.url AS item_url,
         fni.feature_code,
@@ -175,12 +176,10 @@ export async function checkPageAccess(
         ON fni.template_id = fnt.id
       LEFT JOIN features f
         ON f.code = fni.feature_code AND f.archived_at IS NULL
-      WHERE rn.role_id = ?
+      WHERE rn.role_id = ${roleId}
         AND rn.archived_at IS NULL
       ORDER BY fni.sort_order ASC
-      `,
-      roleId,
-    );
+    `;
 
     // If no navigation template is assigned to this role, deny access
     if (!rows || rows.length === 0) {
