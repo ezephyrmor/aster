@@ -77,7 +77,7 @@ AI-backed features (e.g. an AI sticker generator) add a new attack surface: call
 - All provider calls go through a **`withAuth` proxy route** (`src/app/api/ai/...`); the browser never holds the key.
 - **Validate + length-cap** prompts/params with Zod before calling the provider (cost + prompt-injection / abuse guard).
 - **Do not log** keys, raw prompts, or full responses; return only safe output (object URLs), never the key.
-- **Rate-limit + cost guard** per user/tenant; provide a `AI_MODE=mock` dev path (no real key) mirroring `src/lib/demo/`.
+- **Rate-limit + cost guard** per user/tenant; provide a `mock` provider dev path (`AI_PROVIDER=mock`, no real key) mirroring `src/lib/demo/`.
 - Persist only tenant-scoped metadata/result URLs (never keys).
 
 ---

@@ -129,6 +129,32 @@ export function extractFirstB64(json: unknown): string | null {
   return null;
 }
 
+/**
+ * Recursively find the first image URL in a provider JSON payload. Some image
+ * APIs (including OpenRouter "images/generations") return a URL rather than
+ * base64. Returns null when only base64 (or nothing) is present.
+ */
+export function extractFirstImageUrl(json: unknown): string | null {
+  if (typeof json === "string") {
+    if (/^https?:\/\/.+\.(png|jpg|jpeg|webp)(\?.*)?$/i.test(json)) return json;
+    return null;
+  }
+  if (Array.isArray(json)) {
+    for (const item of json) {
+      const found = extractFirstImageUrl(item);
+      if (found) return found;
+    }
+    return null;
+  }
+  if (json && typeof json === "object") {
+    for (const value of Object.values(json)) {
+      const found = extractFirstImageUrl(value);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
 /** Shared JSON → image helper. Throws typed ProviderError on failure. */
 async function postForImage(
   url: string,
@@ -149,13 +175,20 @@ async function postForImage(
 
     const json = (await res.json()) as unknown;
     const b64 = extractFirstB64(json);
-    if (!b64) {
+    if (b64) {
+      return Buffer.from(b64, "base64");
+    }
+    // Some providers return an image URL instead of base64 — fetch it.
+    const imageUrl = extractFirstImageUrl(json);
+    if (!imageUrl) {
       throw new ProviderError(
         "invalid-response",
         "No image data found in provider response",
       );
     }
-    return Buffer.from(b64, "base64");
+    const imageRes = await fetch(imageUrl, { signal: controller.signal });
+    if (!imageRes.ok) throw { status: imageRes.status } as unknown;
+    return Buffer.from(await imageRes.arrayBuffer());
   } catch (err) {
     clearTimeout(timer);
     throw toProviderError(err, "provider");
@@ -249,11 +282,14 @@ async function googleWorker(req: GenerateStickerRequest): Promise<GenerateSticke
 async function openrouterWorker(req: GenerateStickerRequest): Promise<GenerateStickerResult> {
   const key = process.env.OPENROUTER_API_KEY;
   if (!key) throw new ProviderError("not-configured", "OpenRouter key not configured");
+  // Model is configurable via env (default to a strong image model). Providers
+  // without native negative support receive it via text injection.
+  const model = process.env.AI_MODEL || "black-forest-labs/flux-1.1-pro";
   const buffer = await postForImage(
     "https://openrouter.ai/api/v1/images/generations",
     { Authorization: `Bearer ${key}` },
     {
-      model: "black-forest-labs/flux-1.1-pro",
+      model,
       prompt: req.positivePrompt,
       negative_prompt: req.negativePrompt ?? "",
       n: 1,

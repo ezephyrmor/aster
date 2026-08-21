@@ -170,7 +170,7 @@ For AI-backed features (e.g. an AI sticker generator), the codebase follows this
 - **`src/lib/validations/ai.schema.ts`** — Zod schemas validating prompt/style/size before any provider call.
 - Results are persisted tenant-scoped (metadata/URLs only, never keys).
 
-Key environment variables: `OPENAI_API_KEY` (+ provider-specific keys) and `AI_MODE=mock` for fake provider calls in dev. See `docs/security.md` and the `ai-feature` skill.
+Key environment variables: per-provider keys (`OPENAI_API_KEY`, `STABILITY_API_KEY`, `GOOGLE_API_KEY`, `OPENROUTER_API_KEY`), `AI_PROVIDER` to select the default provider, and `AI_MODEL` to override the model id. `mock` needs no key. See `docs/security.md` and the `ai-feature` skill.
 
 ---
 

@@ -121,8 +121,9 @@ Set in `.env` (git-ignored; copy from `sample.env`).
 | `CAPTCHA_SECRET` | CAPTCHA token signing | Optional (dev fallback exists) |
 | `DEMO_MODE` | `"true"` to run without a database | Optional |
 | `AUTHJS_LOGGER_LEVEL` | Auth logs (silent in sample) | Optional |
-| `OPENAI_API_KEY` (or provider) | Server-only AI provider key | Only for AI features (see `ai-feature` skill) |
-| `AI_MODE` | `"mock"` to fake provider calls in dev | Optional |
+| `OPENAI_API_KEY` / `STABILITY_API_KEY` / `GOOGLE_API_KEY` / `OPENROUTER_API_KEY` | Server-only AI provider key (one per provider) | Only for AI features (see `ai-feature` skill) |
+| `AI_PROVIDER` | Default AI provider (`openai \| stability \| google \| openrouter \| mock`) | Optional (default `mock`) |
+| `AI_MODEL` | Override the image model id (used by the openrouter worker) | Optional |
 
 Never commit secrets. Document any new env var in `sample.env` with placeholder values.
 

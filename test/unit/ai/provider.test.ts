@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   extractFirstB64,
+  extractFirstImageUrl,
   supportsNativeNegative,
   STICKER_PROVIDERS,
 } from "@/lib/ai/provider";
@@ -42,5 +43,20 @@ describe("STICKER_PROVIDERS", () => {
     for (const p of ["openai", "stability", "google", "openrouter", "mock"]) {
       expect(STICKER_PROVIDERS).toContain(p);
     }
+  });
+});
+
+describe("extractFirstImageUrl", () => {
+  it("finds an image URL in nested JSON (OpenRouter-style)", () => {
+    const json = { data: [{ url: "https://cdn.example.com/img/flux-1.png?x=1" }] };
+    expect(extractFirstImageUrl(json)).toBe("https://cdn.example.com/img/flux-1.png?x=1");
+  });
+
+  it("returns null when only base64 is present", () => {
+    expect(extractFirstImageUrl({ data: [{ b64_json: "AAAA==" }] })).toBeNull();
+  });
+
+  it("does not match non-image URLs", () => {
+    expect(extractFirstImageUrl("https://example.com/page")).toBeNull();
   });
 });

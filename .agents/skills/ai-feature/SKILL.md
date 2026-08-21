@@ -31,6 +31,22 @@ export function isAiConfigured() {
 }
 ```
 
+### Multi-provider keys & response shapes
+
+The sticker generator's `src/lib/ai/provider.ts` supports several providers; each reads **its own** key, so only the key for your selected provider is required:
+
+| Provider | Env key | Negative prompt |
+| --- | --- | --- |
+| `openai` | `OPENAI_API_KEY` | injected into the prompt text |
+| `stability` | `STABILITY_API_KEY` | native `negative_prompt` |
+| `google` (Imagen) | `GOOGLE_API_KEY` | injected into the prompt text |
+| `openrouter` | `OPENROUTER_API_KEY` | native `negative_prompt` |
+| `mock` | *(none)* | n/a — renders a placeholder image |
+
+- `AI_PROVIDER` selects the default provider (`mock` when unset); a saved pack may override it.
+- `AI_MODEL` overrides the model id used by the OpenRouter worker.
+- Provider responses may return **base64 or an image URL** — the shared fetch helper handles both (`extractFirstB64` → `extractFirstImageUrl`, downloading the URL when needed).
+
 ---
 
 ## 2. Architecture for an AI feature

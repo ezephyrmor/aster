@@ -57,7 +57,7 @@ AI-backed features (e.g. an AI sticker generator) follow this playbook — see `
 - **Use a `withAuth` proxy route** (`src/app/api/ai/...`) — the browser never holds the key.
 - **Validate + cap** prompts/params with a Zod schema (`src/lib/validations/ai.schema.ts`) before any provider call (cost + abuse guard).
 - Do **not** log keys, prompts, or full responses; return safe output (URLs), never the key.
-- Provide a mock (`AI_MODE=mock`) for dev so the UI works without a key.
+- Provide a `mock` provider (`AI_PROVIDER=mock`) for dev so the UI works without a key.
 
 ## 8. Code style & linting
 
