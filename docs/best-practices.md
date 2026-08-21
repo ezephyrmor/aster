@@ -49,13 +49,23 @@ This file documents the conventions AI agents (and humans) should follow when wo
 
 See also the dedicated designer skill (`.agents/skills/designer/SKILL.md`).
 
-## 7. Code style & linting
+## 7. AI features
+
+AI-backed features (e.g. an AI sticker generator) follow this playbook — see `.agents/skills/ai-feature/SKILL.md`.
+
+- **Keys are server-side only.** Provider API keys live in `process.env`, documented in `sample.env` with placeholders, and are called from server-only `src/lib/ai/` modules — never from client components.
+- **Use a `withAuth` proxy route** (`src/app/api/ai/...`) — the browser never holds the key.
+- **Validate + cap** prompts/params with a Zod schema (`src/lib/validations/ai.schema.ts`) before any provider call (cost + abuse guard).
+- Do **not** log keys, prompts, or full responses; return safe output (URLs), never the key.
+- Provide a mock (`AI_MODE=mock`) for dev so the UI works without a key.
+
+## 8. Code style & linting
 
 - `npm run lint` runs **ESLint** (`eslint.config.mjs`, `eslint-config-next`).
 - Run lint + prettier on changed files before pushing. Match existing import ordering, formatting, and naming (camelCase variables, PascalCase components, snake_case DB columns).
 - Do not introduce unused dependencies; keep `package.json` tidy.
 
-## 8. Commands cheat-sheet
+## 9. Commands cheat-sheet
 
 | Task | Command |
 | --- | --- |

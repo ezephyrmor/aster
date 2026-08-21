@@ -39,6 +39,7 @@ Aster is a **self-contained Next.js application** (not the Next.js framework mon
 | `.agents/skills/api-route/SKILL.md` | Creating / modifying an API route |
 | `.agents/skills/testing/SKILL.md` | Writing or updating a Vitest suite |
 | `.agents/skills/designer/SKILL.md` | Building or changing any UI (design system) |
+| `.agents/skills/ai-feature/SKILL.md` | Building any AI-backed feature (image/text models, API keys, proxy routes) |
 
 Invoke a skill by reading its `SKILL.md` and following its checklist.
 
@@ -120,6 +121,8 @@ Set in `.env` (git-ignored; copy from `sample.env`).
 | `CAPTCHA_SECRET` | CAPTCHA token signing | Optional (dev fallback exists) |
 | `DEMO_MODE` | `"true"` to run without a database | Optional |
 | `AUTHJS_LOGGER_LEVEL` | Auth logs (silent in sample) | Optional |
+| `OPENAI_API_KEY` (or provider) | Server-only AI provider key | Only for AI features (see `ai-feature` skill) |
+| `AI_MODE` | `"mock"` to fake provider calls in dev | Optional |
 
 Never commit secrets. Document any new env var in `sample.env` with placeholder values.
 
@@ -135,8 +138,9 @@ These are non-negotiable and mirror the deeper docs.
 4. **Write tests for every route** (mocking `@/lib/db` + `@/lib/api-auth`). See `docs/testing.md` + the `testing` skill. Assert tenant scoping in at least one test.
 5. **Match the UI design system** — reuse `src/components/ui` primitives, `cn()`, Tailwind v4 + zinc dark mode, and the gradient-button conventions. See the `designer` skill.
 6. **Do not loosen security.** Keep `validateSessionSecurity`, password hashing (salt+pepper+bcrypt), HTTP-only cookies, and CAPTCHA intact. Use `docs/security.md` as the authority.
-7. **DB changes go through migrations.** New/edited `schema.prisma` models require a new migration; preserve `@@map`/`@@index` conventions and soft-delete/archive patterns.
-8. **Demo mode & `debugSessionSecurity` are dev aids** — keep them out of production paths.
+7. **AI keys stay server-side.** For any AI feature, provider API keys live in server env vars and are called only through a `withAuth` proxy route — never in client code. See the `ai-feature` skill.
+8. **DB changes go through migrations.** New/edited `schema.prisma` models require a new migration; preserve `@@map`/`@@index` conventions and soft-delete/archive patterns.
+9. **Demo mode & `debugSessionSecurity` are dev aids** — keep them out of production paths.
 
 ---
 

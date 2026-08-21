@@ -14,7 +14,7 @@ Handy map for contributors and AI agents:
 - [`docs/testing.md`](docs/testing.md) — Vitest setup & patterns
 - [`SETUP.md`](SETUP.md) — local + Vercel setup guide
 - [`scripts/SEEDING_GUIDE.md`](scripts/SEEDING_GUIDE.md) — database seeding guide
-- [`.agents/skills/`](.agents/skills/) — reusable agent playbooks (api-route, testing, designer)
+- [`.agents/skills/`](.agents/skills/) — reusable agent playbooks (api-route, testing, designer, **ai-feature**)
 
 ## 🚀 Features
 

@@ -63,7 +63,8 @@ Aster is a **multi-tenant HR web application** built on the modern Next.js App R
 │   │   ├── navigation-builder.ts# Builds user navigation from role
 │   │   ├── validations/       # Zod schemas (user, team, brand, schedule, ...)
 │   │   ├── utils.ts            # cn() + formatting helpers
-│   │   └── demo/               # In-memory demo store (DEMO_MODE)
+│   │   ├── demo/               # In-memory demo store (DEMO_MODE)
+│   │   └── ai/                 # AI provider wrappers (server-only keys) — see ai-feature skill
 │   ├── middleware.ts           # Global request gate (auth + security + demo rewrite)
 │   └── types/                  # Shared TS types (navigation, next-auth)
 ├── prisma/
@@ -79,7 +80,9 @@ Aster is a **multi-tenant HR web application** built on the modern Next.js App R
 │   └── setup.ts                # Global Vitest mocks
 ├── public/                     # Static assets
 ├── docs/                       # This documentation set
-└── .agents/skills/             # Agent playbooks (api-route, testing, designer)
+└── .agents/skills/             # Agent playbooks (api-route, testing, designer, ai-feature)
+```
+
 ---
 
 ## 3. API route inventory
@@ -158,5 +161,17 @@ Demo state is **in-memory and non-persistent** — a restart resets it. It is fo
 
 ---
 
+## 7. AI provider layer (external model calls)
+
+For AI-backed features (e.g. an AI sticker generator), the codebase follows this shape — see `.agents/skills/ai-feature/SKILL.md` for the full playbook.
+
+- **`src/lib/ai/`** — server-only provider wrappers that read the API key from `process.env` and call the external model. Never imported by client code.
+- **`src/app/api/ai/.../route.ts`** — `withAuth`-guarded proxy routes. The browser calls these; the key never leaves the server.
+- **`src/lib/validations/ai.schema.ts`** — Zod schemas validating prompt/style/size before any provider call.
+- Results are persisted tenant-scoped (metadata/URLs only, never keys).
+
+Key environment variables: `OPENAI_API_KEY` (+ provider-specific keys) and `AI_MODE=mock` for fake provider calls in dev. See `docs/security.md` and the `ai-feature` skill.
+
+---
+
 See also: `docs/lifecycle.md`, `docs/best-practices.md`, `docs/security.md`, `docs/testing.md`.
-```

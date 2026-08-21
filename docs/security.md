@@ -69,6 +69,17 @@ The strongest data-protection control. `getScopedPrisma(companyId)` returns a `P
 
 Server-side page authorization maps URLs to navigation items and enforces **granular action permissions** (`view` / `create` / `edit` / `delete` / `approve`) stored per navigation item. Dynamic route segments `[param]` are matched with a generated regex. A `SUPER_ADMIN_ROLE_ID` bypass is defined for feature-manager tooling.
 
+### 2.4 AI features — server-side keys only
+
+AI-backed features (e.g. an AI sticker generator) add a new attack surface: calling external model providers. Follow `.agents/skills/ai-feature/SKILL.md`. In short:
+
+- **API keys are server-side env vars** (`process.env`), documented with placeholders in `sample.env`, **never shipped to the client**.
+- All provider calls go through a **`withAuth` proxy route** (`src/app/api/ai/...`); the browser never holds the key.
+- **Validate + length-cap** prompts/params with Zod before calling the provider (cost + prompt-injection / abuse guard).
+- **Do not log** keys, raw prompts, or full responses; return only safe output (object URLs), never the key.
+- **Rate-limit + cost guard** per user/tenant; provide a `AI_MODE=mock` dev path (no real key) mirroring `src/lib/demo/`.
+- Persist only tenant-scoped metadata/result URLs (never keys).
+
 ---
 
 ## 3. Transport & cookies
