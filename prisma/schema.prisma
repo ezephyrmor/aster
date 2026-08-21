@@ -108,6 +108,9 @@ model Company {
   workSchedules             WorkSchedule[]
   FeatureNavigationTemplate FeatureNavigationTemplate[]
   RoleNavigation            RoleNavigation[]
+  stickerPacks              StickerPack[]
+  stickerItems              StickerItem[]
+  stickerAssets             StickerAsset[]
 
   @@map("companies")
 }
@@ -156,12 +159,13 @@ model User {
   performedStatusHistory  EmployeeStatusHistory[] @relation("EmployeeStatusHistoryPerformedBy")
 
   // Archive Audit Relations
-  archivedLeaveTypes       LeaveType[]                @relation("LeaveTypeArchivedBy")
-  archivedInfractionTypes  InfractionType[]           @relation("InfractionTypeArchivedBy")
-  archivedInfractionOffenses InfractionOffense[]      @relation("InfractionOffenseArchivedBy")
-  archivedFeatures         Feature[]                  @relation("FeatureArchivedBy")
-  archivedNavTemplates     FeatureNavigationTemplate[] @relation("NavTemplateArchivedBy")
-  archivedRoleNavigations  RoleNavigation[]            @relation("RoleNavigationArchivedBy")
+  archivedLeaveTypes         LeaveType[]                 @relation("LeaveTypeArchivedBy")
+  archivedInfractionTypes    InfractionType[]            @relation("InfractionTypeArchivedBy")
+  archivedInfractionOffenses InfractionOffense[]         @relation("InfractionOffenseArchivedBy")
+  archivedFeatures           Feature[]                   @relation("FeatureArchivedBy")
+  archivedNavTemplates       FeatureNavigationTemplate[] @relation("NavTemplateArchivedBy")
+  archivedRoleNavigations    RoleNavigation[]            @relation("RoleNavigationArchivedBy")
+  stickerPacksCreated        StickerPack[]               @relation("StickerPackCreatedBy")
 
   @@index([companyId], map: "users_company_id_idx")
   @@map("users")
@@ -539,18 +543,18 @@ enum AttendanceStatus {
 }
 
 model InfractionType {
-  id          String              @id @default(uuid())
-  companyId   String              @default("1") @map("company_id")
-  name        String              @db.VarChar(100)
-  description String?             @db.Text
-  color       String              @default("red") @db.VarChar(20)
-  archivedAt  DateTime?           @map("archived_at")
-  archivedBy  String?             @map("archived_by")
-  createdAt   DateTime            @default(now()) @map("created_at")
-  offenses    InfractionOffense[]
-  infractions Infraction[]
-  company     Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  archivedByUser User?           @relation("InfractionTypeArchivedBy", fields: [archivedBy], references: [id])
+  id             String              @id @default(uuid())
+  companyId      String              @default("1") @map("company_id")
+  name           String              @db.VarChar(100)
+  description    String?             @db.Text
+  color          String              @default("red") @db.VarChar(20)
+  archivedAt     DateTime?           @map("archived_at")
+  archivedBy     String?             @map("archived_by")
+  createdAt      DateTime            @default(now()) @map("created_at")
+  offenses       InfractionOffense[]
+  infractions    Infraction[]
+  company        Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  archivedByUser User?               @relation("InfractionTypeArchivedBy", fields: [archivedBy], references: [id])
 
   @@unique([companyId, name])
   @@index([companyId])
@@ -559,19 +563,19 @@ model InfractionType {
 }
 
 model InfractionOffense {
-  id            String         @id @default(uuid())
-  companyId     String         @default("1") @map("company_id")
-  name          String         @db.VarChar(100)
-  description   String?        @db.Text
-  severityLevel Int            @map("severity_level") // 1=Minor, 2=Major, 3=Severe
-  typeId        String         @map("type_id")
-  type          InfractionType @relation(fields: [typeId], references: [id])
-  archivedAt    DateTime?      @map("archived_at")
-  archivedBy    String?        @map("archived_by")
-  createdAt     DateTime       @default(now()) @map("created_at")
-  infractions   Infraction[]
-  company       Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  archivedByUser User?        @relation("InfractionOffenseArchivedBy", fields: [archivedBy], references: [id])
+  id             String         @id @default(uuid())
+  companyId      String         @default("1") @map("company_id")
+  name           String         @db.VarChar(100)
+  description    String?        @db.Text
+  severityLevel  Int            @map("severity_level") // 1=Minor, 2=Major, 3=Severe
+  typeId         String         @map("type_id")
+  type           InfractionType @relation(fields: [typeId], references: [id])
+  archivedAt     DateTime?      @map("archived_at")
+  archivedBy     String?        @map("archived_by")
+  createdAt      DateTime       @default(now()) @map("created_at")
+  infractions    Infraction[]
+  company        Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  archivedByUser User?          @relation("InfractionOffenseArchivedBy", fields: [archivedBy], references: [id])
 
   @@unique([companyId, name])
   @@index([companyId])
@@ -625,7 +629,7 @@ model Feature {
   updatedAt   DateTime    @updatedAt @map("updated_at")
 
   FeatureNavigationItem FeatureNavigationItem[]
-  archivedByUser        User? @relation("FeatureArchivedBy", fields: [archivedBy], references: [id])
+  archivedByUser        User?                   @relation("FeatureArchivedBy", fields: [archivedBy], references: [id])
 
   @@unique([code], map: "uq_feature_code")
   @@unique([path, httpMethod], map: "uq_feature_path_method")
@@ -634,21 +638,21 @@ model Feature {
 }
 
 model FeatureNavigationTemplate {
-  id          String   @id @default(uuid())
-  code        String   @db.VarChar(100)
-  name        String   @db.VarChar(120)
-  description String?  @db.Text
-  companyId   String?  @map("company_id")
-  isSystem    Boolean  @default(false) @map("is_system")
+  id          String    @id @default(uuid())
+  code        String    @db.VarChar(100)
+  name        String    @db.VarChar(120)
+  description String?   @db.Text
+  companyId   String?   @map("company_id")
+  isSystem    Boolean   @default(false) @map("is_system")
   archivedAt  DateTime? @map("archived_at")
-  archivedBy  String?  @map("archived_by")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  archivedBy  String?   @map("archived_by")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
 
-  items    FeatureNavigationItem[]
-  roleNavs RoleNavigation[]
-  company  Company?                @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  archivedByUser User? @relation("NavTemplateArchivedBy", fields: [archivedBy], references: [id])
+  items          FeatureNavigationItem[]
+  roleNavs       RoleNavigation[]
+  company        Company?                @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  archivedByUser User?                   @relation("NavTemplateArchivedBy", fields: [archivedBy], references: [id])
 
   @@unique([code], map: "uq_nav_template_code")
   @@index([companyId])
@@ -684,18 +688,18 @@ model FeatureNavigationItem {
 }
 
 model RoleNavigation {
-  id                   String   @id @default(uuid())
-  companyId            String   @map("company_id")
-  roleId               String   @map("role_id")
-  navigationTemplateId String   @map("navigation_template_id")
+  id                   String    @id @default(uuid())
+  companyId            String    @map("company_id")
+  roleId               String    @map("role_id")
+  navigationTemplateId String    @map("navigation_template_id")
   archivedAt           DateTime? @map("archived_at")
   archivedBy           String?   @map("archived_by")
-  createdAt            DateTime @default(now()) @map("created_at")
+  createdAt            DateTime  @default(now()) @map("created_at")
 
-  template FeatureNavigationTemplate @relation(fields: [navigationTemplateId], references: [id], onDelete: Cascade)
-  role     Role                      @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  company  Company                   @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  archivedByUser User? @relation("RoleNavigationArchivedBy", fields: [archivedBy], references: [id])
+  template       FeatureNavigationTemplate @relation(fields: [navigationTemplateId], references: [id], onDelete: Cascade)
+  role           Role                      @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  company        Company                   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  archivedByUser User?                     @relation("RoleNavigationArchivedBy", fields: [archivedBy], references: [id])
 
   @@unique([companyId, roleId], map: "uq_role_navigation")
   @@index([companyId])
@@ -703,4 +707,74 @@ model RoleNavigation {
   @@index([navigationTemplateId])
   @@index([archivedBy])
   @@map("role_navigations")
+}
+
+model StickerPack {
+  id                String   @id @default(uuid())
+  companyId         String   @map("company_id")
+  createdById       String   @map("created_by_id")
+  name              String   @db.VarChar(120)
+  theme             String   @db.VarChar(80)
+  style             String   @db.VarChar(80)
+  provider          String   @default("mock") @db.VarChar(40)
+  count             Int      @default(6)
+  size              Int      @default(1024)
+  transparent       Boolean  @default(true)
+  outline           Boolean  @default(false)
+  batchInstructions String?  @map("batch_instructions") @db.Text
+  negativePrompt    String?  @map("negative_prompt") @db.Text
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  items     StickerItem[]
+  assets    StickerAsset[]
+  company   Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdBy User           @relation("StickerPackCreatedBy", fields: [createdById], references: [id])
+
+  @@index([companyId])
+  @@map("sticker_packs")
+}
+
+model StickerItem {
+  id                   String   @id @default(uuid())
+  packId               String   @map("pack_id")
+  companyId            String   @map("company_id")
+  name                 String   @db.VarChar(120)
+  instructions         String?  @db.Text
+  negativeInstructions String?  @map("negative_instructions") @db.Text
+  status               String   @default("pending") @db.VarChar(30)
+  error                String?  @db.Text
+  sortOrder            Int      @default(0) @map("sort_order")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  pack    StickerPack   @relation(fields: [packId], references: [id], onDelete: Cascade)
+  company Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  asset   StickerAsset?
+
+  @@unique([packId, name])
+  @@index([companyId])
+  @@map("sticker_items")
+}
+
+model StickerAsset {
+  id        String   @id @default(uuid())
+  itemId    String   @unique @map("item_id")
+  packId    String   @map("pack_id")
+  companyId String   @map("company_id")
+  filename  String   @db.VarChar(200)
+  mime      String   @default("image/png") @db.VarChar(40)
+  width     Int      @default(1024)
+  height    Int      @default(1024)
+  data      Bytes
+  metadata  Json?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  item    StickerItem @relation(fields: [itemId], references: [id])
+  pack    StickerPack @relation(fields: [packId], references: [id], onDelete: Cascade)
+  company Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([packId])
+  @@index([companyId])
+  @@map("sticker_assets")
 }

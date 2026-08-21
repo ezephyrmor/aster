@@ -302,6 +302,15 @@ async function seedCoreSystem() {
         description: "Map roles to navigation templates",
         domain: "feature-manager",
       },
+      {
+        id: "00000000-0000-0000-0000-000000001022",
+        code: "sticker-generator.view",
+        kind: FeatureKind.page,
+        path: "/dashboard/sticker-generator",
+        name: "Sticker Generator",
+        description: "Generate production-ready transparent sticker assets",
+        domain: "sticker-generator",
+      },
     ];
 
     for (const feature of features) {
@@ -504,6 +513,20 @@ async function seedCoreSystem() {
         icon: "home",
         url: "/dashboard",
         featureCode: "dashboard.view",
+        permissions: defaultPermissions,
+      },
+      // Sticker Generator (admin template) — appended last so prior index-derived
+      // IDs (and their already-seeded rows) are NOT shifted.
+      {
+        templateId: navTemplates[0].id,
+        code: "sticker-generator",
+        name: "Sticker Generator",
+        type: "link",
+        parentId: "00000000-0000-0000-0000-000000003104",
+        sortOrder: 6,
+        icon: "sticker",
+        url: "/dashboard/sticker-generator",
+        featureCode: "sticker-generator.view",
         permissions: defaultPermissions,
       },
     ];

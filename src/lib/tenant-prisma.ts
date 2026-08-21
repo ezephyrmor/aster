@@ -34,6 +34,9 @@ export function getScopedPrisma(companyId: string) {
     "infractionType",
     "infractionOffense",
     "featureNavigationTemplate",
+    "stickerPack",
+    "stickerItem",
+    "stickerAsset",
   ];
 
   const scopedPrisma = new Proxy(prisma, {

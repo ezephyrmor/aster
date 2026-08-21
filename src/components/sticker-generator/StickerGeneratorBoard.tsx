@@ -1,0 +1,184 @@
+"use client";
+
+import { useState, useCallback, useRef } from "react";
+import { useToast } from "@/lib/toast";
+import ConfigForm from "./ConfigForm";
+import ItemListEditor from "./ItemListEditor";
+import ResultGrid from "./ResultGrid";
+import type { PackConfig, ClientItem, StickerAssetDTO } from "./types";
+import { DEFAULT_PACK_CONFIG, type StickerPackDTO } from "./types";
+
+const CONCURRENCY = 3;
+
+interface StickerGeneratorBoardProps {
+  onReset?: () => void;
+}
+
+export default function StickerGeneratorBoard({ onReset: _onReset }: StickerGeneratorBoardProps) {
+  const toast = useToast();
+  const [config, setConfig] = useState<PackConfig>(DEFAULT_PACK_CONFIG);
+  const [items, setItems] = useState<ClientItem[]>([]);
+  const [packId, setPackId] = useState<string | null>(null);
+  const [generating, setGenerating] = useState(false);
+  const abortRef = useRef(false);
+  const itemsRef = useRef<ClientItem[]>([]);
+  itemsRef.current = items;
+
+  const patchItem = useCallback((key: string, patch: Partial<ClientItem>) => {
+    setItems((prev) => prev.map((it) => (it.key === key ? { ...it, ...patch } : it)));
+  }, []);
+
+  const createPack = useCallback(async (): Promise<StickerPackDTO> => {
+    const res = await fetch("/api/ai/stickers/pack", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...config,
+        items: items
+          .filter((it) => it.name.trim())
+          .map((it) => ({
+            name: it.name.trim(),
+            instructions: it.instructions || undefined,
+            negativeInstructions: it.negativeInstructions || undefined,
+          })),
+      }),
+    });
+    if (!res.ok) throw new Error("Failed to create pack");
+    return (await res.json()) as StickerPackDTO;
+  }, [config, items]);
+
+  const generateOne = useCallback(
+    async (item: ClientItem, pid: string) => {
+      // Resolve the live id from the ref (ids are assigned after the batch snapshot).
+      const live = itemsRef.current.find((it) => it.key === item.key);
+      if (!live?.id) return;
+      patchItem(item.key, { status: "generating", error: null });
+      try {
+        const res = await fetch("/api/ai/stickers/process", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ packId: pid, itemId: live.id }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || "Generation failed");
+        }
+        patchItem(item.key, {
+          status: "completed",
+          error: null,
+          asset: {
+            itemId: data.itemId,
+            filename: data.filename,
+            width: data.width,
+            height: data.height,
+          } as StickerAssetDTO,
+        });
+      } catch (err) {
+        patchItem(item.key, { status: "failed", error: (err as Error).message || "Failed" });
+      }
+    },
+    [patchItem],
+  );
+
+  const runBatch = useCallback(async (targets: ClientItem[], pid: string) => {
+    setGenerating(true);
+    abortRef.current = false;
+    let index = 0;
+    const workers = Array.from({ length: CONCURRENCY }, async () => {
+      while (index < targets.length && !abortRef.current) {
+        const item = targets[index++];
+        await generateOne(item, pid);
+      }
+    });
+    await Promise.all(workers);
+    setGenerating(false);
+  }, [generateOne]);
+
+  const handleCreateAndGenerate = async () => {
+    const viable = items.filter((it) => it.name.trim());
+    if (viable.length === 0) {
+      toast.addToast("Add at least one sticker item.", "warning");
+      return;
+    }
+    toast.addToast(`Generating ${viable.length} stickers…`, "info");
+    try {
+      const pack = await createPack();
+      setPackId(pack.id);
+      // Map the persisted server items back onto the client rows (by order).
+      const viableNames = viable.map((it) => it.name.trim());
+      setItems((prev) =>
+        prev.map((it) => {
+          const idx = viableNames.indexOf(it.name.trim());
+          const server = idx >= 0 ? pack.items[idx] : null;
+          return server ? { ...it, id: server.id } : it;
+        }),
+      );
+      await runBatch(viable, pack.id);
+      toast.addToast("Batch complete.", "success");
+    } catch (error) {
+      toast.addToast((error as Error).message || "Failed to start batch", "error");
+    }
+  };
+
+  const handleRegenerate = async (key: string) => {
+    const item = items.find((it) => it.key === key);
+    if (!item || !packId) return;
+    await runBatch([item], packId);
+  };
+
+  const handleRetryFailed = async () => {
+    if (!packId) return;
+    const failedItems = items.filter((it) => it.status === "failed");
+    await runBatch(failedItems, packId);
+  };
+
+  const handleDelete = async (key: string) => {
+    const item = items.find((it) => it.key === key);
+    if (!item || !packId || !item.asset) {
+      setItems((prev) => prev.filter((it) => it.key !== key));
+      return;
+    }
+    try {
+      await fetch(`/api/ai/stickers/pack/${packId}/asset/${item.asset.itemId}`, { method: "DELETE" });
+      setItems((prev) => prev.map((it) => (it.key === key ? { ...it, status: "pending", asset: null, error: null } : it)));
+      toast.addToast(`${item.name} deleted.`, "success");
+    } catch {
+      toast.addToast("Failed to delete sticker.", "error");
+    }
+  };
+
+  const handleDownloadZip = async () => {
+    if (!packId) return;
+    try {
+      const res = await fetch(`/api/ai/stickers/pack/${packId}/zip`);
+      if (!res.ok) throw new Error("Failed to build zip");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${config.name.toLowerCase().replace(/[^a-z0-9]+/g, "-") || "stickers"}.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      toast.addToast((error as Error).message || "Failed to download zip", "error");
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <ConfigForm value={config} onChange={setConfig} onSubmit={handleCreateAndGenerate} />
+      <ItemListEditor items={items} onItemsChange={setItems} theme={config.theme} />
+      {items.filter((it) => it.name.trim()).length > 0 && (
+        <ResultGrid
+          items={items}
+          packId={packId}
+          onRegenerate={handleRegenerate}
+          onDelete={handleDelete}
+          onDownloadZip={handleDownloadZip}
+          onRetryFailed={handleRetryFailed}
+          generating={generating}
+        />
+      )}
+    </div>
+  );
+}
