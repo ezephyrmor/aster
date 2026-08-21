@@ -2,6 +2,20 @@
 
 A comprehensive HR management system built with Next.js, TypeScript, and Prisma ORM with PostgreSQL. Features include user management, team management, leave tracking, attendance monitoring, infraction tracking, calendar events, role-based access control, and multi-tenant company support.
 
+## 📚 Documentation
+
+Handy map for contributors and AI agents:
+
+- [`AGENTS.md`](AGENTS.md) — primary agent operating manual (lifecycle, rules, links)
+- [`docs/lifecycle.md`](docs/lifecycle.md) — start / request / auth / end lifecycles
+- [`docs/architecture.md`](docs/architecture.md) — annotated architecture & data model
+- [`docs/best-practices.md`](docs/best-practices.md) — code conventions
+- [`docs/security.md`](docs/security.md) — security model & guidance
+- [`docs/testing.md`](docs/testing.md) — Vitest setup & patterns
+- [`SETUP.md`](SETUP.md) — local + Vercel setup guide
+- [`scripts/SEEDING_GUIDE.md`](scripts/SEEDING_GUIDE.md) — database seeding guide
+- [`.agents/skills/`](.agents/skills/) — reusable agent playbooks (api-route, testing, designer)
+
 ## 🚀 Features
 
 ### 🔐 **Secure Authentication**
@@ -179,7 +193,7 @@ A comprehensive HR management system built with Next.js, TypeScript, and Prisma 
 - npm or pnpm
 - Docker Desktop
 
-### Installation
+### Installation (recommended: setup wizard)
 
 1. **Clone the repository**
 
@@ -188,55 +202,47 @@ git clone https://github.com/magical-owl/aster.git
 cd aster
 ```
 
-2. **Start PostgreSQL in Docker**
+2. **Run the one-shot setup wizard**
+
+The wizard creates your `.env`, installs dependencies, starts the local PostgreSQL container (`docker-compose.yml`), generates the Prisma client, runs migrations, and seeds:
 
 ```bash
-docker run --name aster-postgres \
-  -e POSTGRES_USER=aster \
-  -e POSTGRES_PASSWORD=aster \
-  -e POSTGRES_DB=aster \
-  -p 5432:5432 \
-  -d postgres:16
+npm run setup
 ```
 
-3. **Install dependencies**
-
-```bash
-npm install
-```
-
-4. **Set up environment**
-
-Copy `.env.example` to `.env` and update the database URL:
-
-```env
-DATABASE_URL="postgresql://aster:aster@localhost:5432/aster"
-NEXTAUTH_SECRET="your-secret-key-here"
-NEXTAUTH_URL="http://localhost:3000"
-PASSWORD_PEPPER="your-pepper-secret"
-```
-
-5. **Run database migrations**
-
-```bash
-npx prisma migrate dev
-```
-
-6. **Seed the database**
-
-```bash
-npm run db:seed:all
-```
-
-7. **Start development server**
+3. **Start the development server**
 
 ```bash
 npm run dev
 ```
 
-8. **Open your browser**
+4. **Open your browser**
 
 Navigate to `http://localhost:3000`
+
+### Manual installation
+
+Prefer to drive each step yourself? The equivalent flow:
+
+```bash
+# 1. Start PostgreSQL in Docker (see docker-compose.yml)
+docker compose up -d
+
+# 2. Install dependencies (postinstall runs prisma generate)
+npm install
+
+# 3. Environment — copy sample.env to .env and set secrets
+cp sample.env .env   # then edit NEXTAUTH_SECRET / PASSWORD_PEPPER / DATABASE_URL
+
+# 4. Run database migrations
+npx prisma migrate dev
+
+# 5. Seed the database
+npm run db:seed:all
+
+# 6. Dev server
+npm run dev
+```
 
 ### Default Credentials
 

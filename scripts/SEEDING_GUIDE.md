@@ -18,6 +18,11 @@ The seeding process creates a complete dataset including:
 
 ## Quick Start
 
+Seeding is a multi-phase, idempotent process. The runner is `scripts/seed/index.ts`, which runs these phases in dependency order:
+
+1. `01-core-system.ts` — default company, system roles, lookup tables (employee statuses, leave types, leave statuses, positions, departments, industries).
+2. `02-organization.ts` — navigation templates, default admin/HR users, and optional starter/demo data.
+
 ### Full Reset and Seed (Recommended for Fresh Start)
 
 ```bash
@@ -25,24 +30,14 @@ The seeding process creates a complete dataset including:
 npm run db:reset
 ```
 
-### Step-by-Step Seeding
+### Re-seed only (no reset)
 
 ```bash
-# 1. Seed lookup tables (roles, positions, departments, statuses, industries)
-npm run db:seed:lookup
-
-# 2. Create admin and HR users
-npm run db:seed:admin
-
-# 3. Seed infraction lookup data (types and offenses)
-npm run db:seed:infractions
-
-# 4. Seed leave lookup data (types and statuses)
-npm run db:seed:leaves
-
-# 5. Seed all comprehensive data (employees, schedules, attendance, brands, teams, leaves, infractions)
-npm run db:seed:all-data
+npm run db:seed          # equivalent to npm run db:seed:all
+npm run db:seed:all
 ```
+
+> The older step-by-step command names (`db:seed:lookup`, `db:seed:admin`, `db:seed:all-data`, ...) no longer exist — they were replaced by the phased `scripts/seed/` runner. To wipe and rebuild lookups plus data, use `npm run db:reset` or `npm run db:reset+` (which syncs schema first).
 
 ## Configuration
 
@@ -92,11 +87,11 @@ You can fully customize all seeding parameters via environment variables. All va
 ### Examples:
 
 ```bash
-# Custom counts
-SEED_EMPLOYEE_COUNT=200 SEED_BRAND_COUNT=20 SEED_TEAM_COUNT=30 npm run db:seed:all-data
+# Custom counts (only relevant if bounds exist in the org seed)
+SEED_EMPLOYEE_COUNT=200 SEED_BRAND_COUNT=20 SEED_TEAM_COUNT=30 npm run db:seed
 
 # Minimal test setup
-SEED_EMPLOYEE_COUNT=10 SEED_ATTENDANCE_DAYS_BACK=7 npm run db:seed:all-data
+SEED_EMPLOYEE_COUNT=10 SEED_ATTENDANCE_DAYS_BACK=7 npm run db:seed
 
 # Or create a .env file with any combination:
 SEED_EMPLOYEE_COUNT=50
@@ -149,10 +144,12 @@ After seeding, the script will display sample user credentials:
    ...
 ```
 
-**Admin Credentials** (from seed-admin.ts):
+**Admin Credentials** (seeded by `scripts/seed/02-organization.ts`):
 
 - Username: `admin`
-- Password: `password123`
+- Password: `admin123`
+
+> Heavy random demo data (the 100-employee / attendance / infraction dataset described in the Overview) lives in `scripts/seed-legacy/` and is kept for backward compatibility. The current phased seed focuses on core system + organization starter data.
 
 ## Troubleshooting
 
@@ -166,33 +163,30 @@ npm run db:reset
 
 ### Missing Lookup Data
 
-If you see errors about missing roles or positions, run the lookup seed first:
+If you see errors about missing roles or positions, an earlier seed run was interrupted or the lookups were removed. Re-run the full seed in order:
 
 ```bash
-npm run db:seed:lookup
-npm run db:seed:admin
-npm run db:seed:all-data
+npm run db:seed
+# or, to rebuild cleanly from schema + data:
+npm run db:reset
 ```
 
 ### Database Connection Issues
 
-Make sure your `.env` file has the correct `DATABASE_URL`:
+Make sure your `.env` file has the correct **PostgreSQL** `DATABASE_URL`:
 
 ```env
-DATABASE_URL="mysql://user:password@localhost:3306/database_name"
+DATABASE_URL="postgresql://aster:aster@localhost:5432/aster"
 ```
 
 ## Legacy Scripts
 
-The following scripts are kept for backward compatibility but are replaced by `seed-all-data.ts`:
-
-- `seed-dummy-data.ts` - Old employee/brand/team seeder (1000 users)
-- `seed-team-members.ts` - Standalone team member seeder
+`scripts/seed-legacy/` contains the older seeders (`seed-admin.ts`, `seed-all-data.ts`, `seed-dummy-data.ts`, `seed-team-members.ts`, and lookup seeders). They are kept for backward compatibility and reference data, but the **active** seeding path is `scripts/seed/` (`01-core-system.ts`, `02-organization.ts`), invoked via `npm run db:seed` / `npm run db:seed:all`.
 
 ## Best Practices
 
 1. **Always reset before seeding** for a clean database state
-2. **Run lookup seeds first** if doing step-by-step seeding
+2. **Run `npm run db:seed` after a schema sync** if you need lookup/org data freshly re-created
 3. **Check the summary** at the end of seeding to verify data was created
 4. **Save sample credentials** displayed at the end for testing
 

@@ -38,6 +38,31 @@ Instead, please report vulnerabilities via email or create a private issue:
 
 We will notify you when a fix is available and may publicly acknowledge your contribution if you wish.
 
+## Implemented Security Model
+
+This is the security architecture actually implemented in `src/`. For the full deep-dive, see [`docs/security.md`](docs/security.md).
+
+### Authentication
+
+- **Credentials + JWT session** (NextAuth v5, `src/lib/next-auth.ts`) with HTTP-only session cookies.
+- **Password hashing** — `bcrypt` 12 rounds + a per-user **salt** (stored) + a server-side **pepper** (`PASSWORD_PEPPER`, never stored). See `src/lib/password.ts`.
+- **Session binding / revalidation** — every request re-checks IP, browser fingerprint, user-agent, and a replay-protection timestamp/nonce against values captured at login (`src/config/security.config.ts`). Failures clear `next-auth.*` cookies and redirect to `/login`.
+- **CAPTCHA** on login — HMAC-signed, expiring challenge token (`src/lib/captcha.ts`, `src/app/api/captcha/*`).
+
+### Authorization & isolation
+
+- **`withAuth` guard** on every API handler (`src/lib/api-auth.ts`) — 401 on invalid sessions.
+- **Multi-tenant isolation** via a tenant-scoped Prisma proxy (`src/lib/tenant-prisma.ts`) that auto-injects `companyId` into all tenant queries.
+- **Page-level RBAC** with granular action permissions (`view/create/edit/delete/approve`) enforced server-side (`src/lib/role-access-check.ts`).
+- **Server-side input validation** with Zod (`src/lib/validations/`); SQL-injection resistance via Prisma (parameterized queries).
+
+### Data handling
+
+- Soft-delete/archive pattern (`archived`, `archivedAt`, `archivedBy`) for lookup/template entities; history tables for sensitive mutations.
+- Demo mode (`DEMO_MODE=true`) and `debugSessionSecurity` are **dev aids only** — never enabled in production.
+
+See [`docs/security.md`](docs/security.md) for the production checklist and agent security rules.
+
 ## Security Best Practices
 
 ### Environment Variables

@@ -6,22 +6,31 @@
 - PostgreSQL server running (local, Docker, or cloud)
 - npm or pnpm package manager
 
-## 1. Local Development Database Setup (Docker)
+## 1. Local Development Setup (recommended: wizard)
 
-Run PostgreSQL in a Docker container:
+A one-shot wizard handles *everything* — creating your `.env`, installing dependencies, starting the PostgreSQL Docker container, generating the Prisma client, running migrations, and seeding:
 
 ```bash
-docker run --name aster-postgres \
-  -e POSTGRES_USER=aster \
-  -e POSTGRES_PASSWORD=aster \
-  -e POSTGRES_DB=aster \
-  -p 5432:5432 \
-  -d postgres:16
+npm run setup
 ```
 
-### Configure Database Connection
+It's safe to re-run — already-finished steps are skipped.
 
-Update the `.env` file with your PostgreSQL credentials and security settings:
+### Manual equivalent
+
+Prefer to drive each step yourself?
+
+1. **Start PostgreSQL in Docker** (see `docker-compose.yml`):
+
+```bash
+docker compose up -d
+```
+
+2. **Configure environment** — copy `sample.env` to `.env` and set your PostgreSQL credentials and security settings:
+
+```bash
+cp sample.env .env
+```
 
 ```env
 DATABASE_URL="postgresql://aster:aster@localhost:5432/aster"
@@ -41,6 +50,8 @@ Replace:
 ```bash
 npm install
 ```
+
+The `postinstall` hook regenerates the Prisma client automatically (you can also run `npm run generate`).
 
 ## 3. Run Database Migrations
 
