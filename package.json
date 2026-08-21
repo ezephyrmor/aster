@@ -10,6 +10,7 @@
     "clean": "rm -rf .next node_modules/.cache .turbo",
     "build": "next build",
     "start": "next start",
+    "setup": "node scripts/setup.mjs",
     "lint": "eslint",
     "db:seed": "tsx scripts/seed/index.ts",
     "db:seed:all": "npm run db:seed",
