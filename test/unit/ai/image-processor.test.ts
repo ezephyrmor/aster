@@ -184,6 +184,53 @@ describe("processStickerImage — cutout cleanup", () => {
       processStickerImage(input, { canvasSize: 128, transparent: true }),
     ).rejects.toBeInstanceOf(ProcessingError);
   });
+
+  it("removes a non-uniform scenery-like background via tolerance escalation", async () => {
+    // Simulates a model ignoring "plain backdrop": a noisy multi-colored
+    // background (like leaves/corals) far from the sampled border color.
+    const size = 128;
+    const buf = Buffer.alloc(size * size * 4);
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        const i = (y * size + x) * 4;
+        // Varied green/blue "scenery" noise around a teal base.
+        const n = ((x * 7 + y * 13) % 3) * 18;
+        buf[i] = 30 + n;
+        buf[i + 1] = 120 + n;
+        buf[i + 2] = 110 + n;
+        buf[i + 3] = 255;
+      }
+    }
+    const set = (x: number, y: number, r: number, g: number, b: number) => {
+      const i = (y * size + x) * 4;
+      buf[i] = r;
+      buf[i + 1] = g;
+      buf[i + 2] = b;
+    };
+    for (let y = 40; y < 88; y++) {
+      for (let x = 40; x < 88; x++) set(x, y, 220, 30, 40);
+    }
+    const input = await sharp(buf, { raw: { width: size, height: size, channels: 4 } })
+      .png()
+      .toBuffer();
+
+    const result = await processStickerImage(input, { canvasSize: 256, transparent: true });
+    const raw = await toRawPng(result.buffer);
+    // Corners must be fully transparent — no scenery may survive there.
+    for (const [x, y] of [[2, 2], [253, 2], [2, 253], [253, 253]]) {
+      expect(raw[(y * 256 + x) * 4 + 3]).toBe(0);
+    }
+    let greenish = 0;
+    for (let i = 0; i < raw.length; i += 4) {
+      if (raw[i + 3] > 200 && raw[i + 1] > raw[i] && raw[i + 1] > raw[i + 2]) greenish++;
+    }
+    expect(greenish).toBeLessThan(200); // subject area is ~red, not scenery
+    let red = 0;
+    for (let i = 0; i < raw.length; i += 4) {
+      if (raw[i + 3] > 200 && raw[i] > 180 && raw[i + 1] < 120) red++;
+    }
+    expect(red).toBeGreaterThan(500);
+  });
 });
 
 describe("validateCutout", () => {

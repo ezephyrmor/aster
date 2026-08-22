@@ -98,7 +98,7 @@ export async function processStickerImage(
   //    return PNGs whose alpha channel exists but is fully opaque, so we detect
   //    "real" cutouts by scanning for any non-opaque pixel — not just the flag.
   if (opts.transparent && !hasAnyTransparency(rgba)) {
-    const keyed = keyOutBackgroundFlood(rgba, srcW, srcH);
+    const keyed = keyOutBackgroundWithEscalation(rgba, srcW, srcH);
     if (keyed) rgba = keyed;
   }
 
@@ -410,6 +410,45 @@ export async function validateCutout(
 }
 
 /**
+ * Key out the background, escalating tolerance when the first pass barely
+ * removes anything. Models that ignore the "plain solid backdrop" instruction
+ * and paint scenery (leaves, corals, gradients) produce backgrounds far from
+ * the sampled border color — a fixed tolerance would fail silently and the
+ * whole opaque image (background included) would ship as the sticker.
+ *
+ * Strategy: try progressively higher tolerances; accept the first pass that
+ * keys a meaningful share of the image (>4% of pixels). If none reaches that,
+ * fall back to the pass that removed the most — better an aggressive cutout
+ * than shipping a full background scene.
+ */
+function keyOutBackgroundWithEscalation(
+  rgba: Buffer,
+  width: number,
+  height: number,
+): Buffer | null {
+  const total = width * height;
+  const tolerances = [48, 72, 100, 132];
+  let best: Buffer | null = null;
+  let bestRemoved = 0;
+
+  for (const tolerance of tolerances) {
+    const keyed = keyOutBackgroundFlood(rgba, width, height, tolerance);
+    if (!keyed) return best;
+    let removed = 0;
+    for (let p = 0; p < total; p++) {
+      if (keyed[p * 4 + 3] === 0) removed++;
+    }
+    const fraction = removed / total;
+    if (fraction > bestRemoved) {
+      bestRemoved = fraction;
+      best = keyed;
+    }
+    if (fraction >= 0.04) return keyed;
+  }
+  return best;
+}
+
+/**
  * Key out the background by flood-filling from the image borders. Only pixels
  * connected to the edge and within `tolerance` of the sampled background color
  * become transparent — interior colors similar to the background are preserved
@@ -419,6 +458,7 @@ function keyOutBackgroundFlood(
   rgba: Buffer,
   width: number,
   height: number,
+  tolerance = 48,
 ): Buffer | null {
   const src = new Uint8Array(rgba);
   if (src.length === 0 || !width || !height) return null;
@@ -428,7 +468,6 @@ function keyOutBackgroundFlood(
   if (!bgColor) return null;
   const [br, bgG, bb] = bgColor;
 
-  const tolerance = 48;
   const nearBg = (i: number): boolean => {
     const dr = src[i] - br;
     const dg = src[i + 1] - bgG;

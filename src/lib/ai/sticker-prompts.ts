@@ -12,7 +12,12 @@ A single simple sticker icon. Exactly one isolated primary subject in the center
 Simple sticker design with clean silhouette and clean edges. Comfortable padding
 around the subject, nothing touching the canvas edges, no cropping.
 No text, letters, words, numbers, captions, labels, logo, watermark, or signature.
-No scenery, background detail, or unnecessary environment. Transparent background.
+The subject is completely isolated: it floats alone on a plain, uniform, flat,
+solid pure-white backdrop that fills the entire canvas behind it. Absolutely no
+scenery, habitat, environment, props, or background detail of any kind — the
+subject must NOT be shown in its natural setting (e.g. no leaves or branches
+behind a bird, no water, corals or sand behind a fish). Just the single object
+on an empty solid-white field.
 `.trim();
 
 /**
@@ -22,12 +27,15 @@ No scenery, background detail, or unnecessary environment. Transparent backgroun
 export const BASE_NEGATIVE_PROMPT = `
 multiple stickers, multiple subjects, duplicate objects, repeated objects, extra objects,
 unrelated objects, clutter, busy composition, scenery, environment, detailed background,
+natural setting, habitat, leaves, foliage, branches, trees, grass, flowers, sky, clouds,
+water, underwater, ocean, sea, waves, corals, coral reef, seaweed, aquarium plants, sand,
+ocean floor, ground, soil, rocks, landscape, room interior, table surface,
+colored background, gradient background,
 text, letters, words, numbers, captions, labels, logo, watermark, signature, hands, fingers,
 people unless explicitly requested, cropped subject, cut off object, object touching canvas
 edge, distorted proportions, malformed shapes, warped object, broken geometry, merged objects,
 floating parts, disconnected parts, blurry, pixelated, low quality, artifacts, messy edges,
-jagged edges, rough cutout, white background, colored background, gradient background,
-checkerboard background, fake transparency, excessive shadows, sticker sheet, collage, grid,
+jagged edges, rough cutout, checkerboard background, fake transparency, excessive shadows, sticker sheet, collage, grid,
 contact sheet
 `.replace(/\s+/g, " ").trim();
 

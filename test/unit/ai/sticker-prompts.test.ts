@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect } from "vitest";
 import {
   BASE_NEGATIVE_PROMPT,
   BASE_STICKER_PROMPT,
@@ -13,6 +13,13 @@ describe("negative-prompt system", () => {
     expect(BASE_NEGATIVE_PROMPT).toContain("sticker sheet");
     expect(BASE_NEGATIVE_PROMPT).toContain("checkerboard background");
     expect(BASE_NEGATIVE_PROMPT).toContain("contact sheet");
+    // Contextual-scenery terms (bird+leaves, fish+corals class of failures).
+    expect(BASE_NEGATIVE_PROMPT).toContain("foliage");
+    expect(BASE_NEGATIVE_PROMPT).toContain("coral reef");
+    expect(BASE_NEGATIVE_PROMPT).toContain("natural setting");
+    // "white background" was REMOVED: the positive prompt now asks for a solid
+    // white backdrop that the pipeline keys out — it must not be negated.
+    expect(BASE_NEGATIVE_PROMPT).not.toContain("white background");
   });
 
   it("builds negative from base + style-specific + user additional", () => {
@@ -80,11 +87,17 @@ describe("buildStickerPrompt", () => {
 });
 
 describe("base positive prompt rules", () => {
-  it("encourages a single isolated, centered subject with transparency", () => {
+  it("encourages a single isolated, centered subject on a plain backdrop", () => {
     const lower = BASE_STICKER_PROMPT.toLowerCase();
     expect(lower).toContain("one isolated");
     expect(lower).toContain("center");
-    expect(lower).toContain("transparent");
+    // Diffusion models cannot render real transparency — asking for a plain
+    // uniform solid backdrop is what actually prevents contextual scenery.
+    expect(lower).toContain("solid");
+    expect(lower).toContain("backdrop");
+    expect(lower).not.toContain("transparent background");
     expect(lower).toContain("no text");
+    // Explicit anti-habitat instruction.
+    expect(lower).toContain("natural setting");
   });
 });
