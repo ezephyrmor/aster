@@ -45,6 +45,11 @@ export type ProcessOptions = {
    * expand the cutout. Keep small to preserve legitimate soft edges.
    */
   boundsAlphaThreshold?: number;
+  /**
+   * Use nearest-neighbor scaling (crisp square pixels) — intended for the
+   * pixel-art style so downscaling doesn't blur the pixel grid.
+   */
+  pixelated?: boolean;
 };
 
 export type ProcessingErrorKind =
@@ -134,7 +139,12 @@ export async function processStickerImage(
 
   // 4. Resize preserving aspect ratio so the subject fills ~targetScale of the
   //    canvas; the remaining margin is intentional TRANSPARENT padding.
-  const fitted = await fitSubject(subject, canvas, targetScale);
+  const fitted = await fitSubject(
+    subject,
+    canvas,
+    targetScale,
+    opts.pixelated ? "nearest" : "lanczos3",
+  );
 
   // 5. Center the cutout on a transparent canvas (white when opacity off).
   const final = await centerOnCanvas(
@@ -772,6 +782,7 @@ async function fitSubject(
   subject: SizedBuffer,
   canvas: number,
   targetScale: number,
+  kernel: "nearest" | "lanczos3" = "lanczos3",
 ): Promise<SizedBuffer> {
   const scale = Math.min(
     (canvas * targetScale) / subject.width,
@@ -780,7 +791,7 @@ async function fitSubject(
   const outW = Math.max(1, Math.round(subject.width * scale));
   const outH = Math.max(1, Math.round(subject.height * scale));
   const buffer = await sharp(subject.buffer)
-    .resize({ width: outW, height: outH, fit: "fill" })
+    .resize({ width: outW, height: outH, fit: "fill", kernel })
     // Preserve the keyed alpha — no removeAlpha/ensureAlpha here.
     .png()
     .toBuffer();

@@ -111,6 +111,8 @@ export async function generateOneSticker(input: GenerateOneInput): Promise<OneSt
   const processed = await processStickerImage(raw.buffer, {
     canvasSize: input.pack.size,
     transparent: input.pack.transparent,
+    // Pixel-art output keeps hard square pixels — no smoothing on rescale.
+    pixelated: input.pack.style === "pixel-art",
   });
 
   return {

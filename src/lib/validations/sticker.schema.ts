@@ -25,8 +25,15 @@ export const STICKER_LIMITS = {
 } as const;
 
 /** Output canvas sizes offered in the UI (server-validated). */
-export const STICKER_SIZES = [256, 512, 768, 1024, 1536, 2048] as const;
+export const STICKER_SIZES = [32, 64, 128, 256, 512, 768, 1024, 1536, 2048] as const;
 const sizeValues = STICKER_SIZES.map((s) => s);
+
+/**
+ * Sizes below the standard minimum are only meaningful for pixel-art style
+ * (crisp low-res sprites). Any other style must use ≥ MIN_STANDARD_SIZE.
+ */
+export const PIXEL_ART_SIZES = [32, 64, 128] as const;
+export const MIN_STANDARD_SIZE = 256;
 
 /** White outline strengths (post-processing die-cut border width). */
 export const STICKER_OUTLINE_STRENGTHS = [
@@ -60,7 +67,12 @@ export const StickerPackSchema = z.object({
   outlineStrength: z.enum(outlineKeys).default("medium"),
   batchInstructions: z.string().trim().max(STICKER_LIMITS.batchInstructions).optional(),
   negativePrompt: z.string().trim().max(STICKER_LIMITS.negative).optional(),
-});
+})
+  // Sub-256 canvases only make sense for pixel-art sprites — reject them for
+  // any other style (and pixel-art still accepts the standard sizes too).
+  .refine((pack) => pack.size >= MIN_STANDARD_SIZE || pack.style === "pixel-art", {
+    message: `Sizes below ${MIN_STANDARD_SIZE} are only available for the "pixel-art" style.`,
+  });
 
 export const StickerItemSchema = z.object({
   id: z.string().optional(),

@@ -5,7 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { PackConfig } from "./types";
 import { STICKER_THEMES, STICKER_DISPLAY_STYLES } from "./presets-client";
-import { STICKER_SIZES } from "@/lib/validations";
+import { STICKER_SIZES, PIXEL_ART_SIZES, MIN_STANDARD_SIZE } from "@/lib/validations";
+
+/** Sizes valid for the currently selected style (sub-256 → pixel-art only). */
+function sizesForStyle(style: string): number[] {
+  const all = STICKER_SIZES as readonly number[];
+  return style === "pixel-art"
+    ? [...all]
+    : all.filter((s) => !(PIXEL_ART_SIZES as readonly number[]).includes(s));
+}
 
 type ProviderInfo = {
   id: string;
@@ -120,7 +128,16 @@ export default function ConfigForm({ value, onChange, onSubmit }: ConfigFormProp
           Style
           <select
             value={value.style}
-            onChange={(e) => set({ style: e.target.value })}
+            onChange={(e) => {
+              const nextStyle = e.target.value;
+              // Reset an invalid size when leaving pixel-art (sub-256 canvases
+              // are pixel-art-only) so the config never fails server validation.
+              const patch: Partial<PackConfig> = { style: nextStyle };
+              if (nextStyle !== "pixel-art" && value.size < MIN_STANDARD_SIZE) {
+                patch.size = MIN_STANDARD_SIZE;
+              }
+              set(patch);
+            }}
             className="mt-1 h-8 w-full rounded-md border border-input bg-transparent px-2.5 text-sm dark:bg-zinc-700 dark:border-zinc-600 dark:text-zinc-100"
           >
             {Object.entries(STICKER_DISPLAY_STYLES).map(([key, label]) => (
@@ -196,9 +213,10 @@ export default function ConfigForm({ value, onChange, onSubmit }: ConfigFormProp
             onChange={(e) => set({ size: Number(e.target.value) })}
             className="mt-1 h-8 w-full rounded-md border border-input bg-transparent px-2.5 text-sm dark:bg-zinc-700 dark:border-zinc-600 dark:text-zinc-100"
           >
-            {STICKER_SIZES.map((s) => (
+            {sizesForStyle(value.style).map((s) => (
               <option key={s} value={s}>
                 {s} × {s}
+                {value.style === "pixel-art" && s < MIN_STANDARD_SIZE ? " (pixel-art)" : ""}
               </option>
             ))}
           </select>
