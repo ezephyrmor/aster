@@ -85,6 +85,7 @@ export type StickerPromptInput = {
   theme: string;
   style: string;
   itemName: string;
+  outline?: boolean;
   batchInstructions?: string | null;
   itemInstructions?: string | null;
   batchNegative?: string | null;
@@ -153,6 +154,9 @@ export function buildStickerPrompt(input: StickerPromptInput): BuiltStickerPromp
     stylePrompt,
     themePrompt,
     `a sticker of ${input.itemName}`,
+    input.outline
+      ? "die-cut sticker with a clean solid white border around the silhouette"
+      : null,
     input.batchInstructions,
     input.itemInstructions,
   ]);

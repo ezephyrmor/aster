@@ -10,11 +10,18 @@ import { DEFAULT_PACK_CONFIG, type StickerPackDTO } from "./types";
 
 const CONCURRENCY = 3;
 
-export default function StickerGeneratorBoard({ defaultProvider }: { defaultProvider?: string }) {
+export default function StickerGeneratorBoard({
+  defaultProvider,
+  defaultPackName,
+}: {
+  defaultProvider?: string;
+  defaultPackName?: string;
+}) {
   const toast = useToast();
   const [config, setConfig] = useState<PackConfig>({
     ...DEFAULT_PACK_CONFIG,
     provider: defaultProvider || DEFAULT_PACK_CONFIG.provider,
+    name: defaultPackName || DEFAULT_PACK_CONFIG.name,
   });
   const [items, setItems] = useState<ClientItem[]>([]);
   const [packId, setPackId] = useState<string | null>(null);
@@ -65,6 +72,7 @@ export default function StickerGeneratorBoard({ defaultProvider }: { defaultProv
             filename: data.filename,
             width: data.width,
             height: data.height,
+            v: Date.now(), // bust the browser cache so the new image renders
           } as StickerAssetDTO,
         });
       } catch (err) {
@@ -198,8 +206,11 @@ export default function StickerGeneratorBoard({ defaultProvider }: { defaultProv
 
   return (
     <div className="space-y-4">
-      <ConfigForm value={config} onChange={setConfig} onSubmit={handleCreateAndGenerate} />
-      <ItemListEditor items={items} onItemsChange={setItems} theme={config.theme} />
+      {/* Configure Pack + Sticker Items side by side (6/6) */}
+      <div className="grid gap-4 lg:grid-cols-2 items-start">
+        <ConfigForm value={config} onChange={setConfig} onSubmit={handleCreateAndGenerate} />
+        <ItemListEditor items={items} onItemsChange={setItems} theme={config.theme} />
+      </div>
       {items.filter((it) => it.name.trim()).length > 0 && (
         <ResultGrid
           items={items}

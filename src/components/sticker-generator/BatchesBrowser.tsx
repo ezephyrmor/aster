@@ -105,7 +105,7 @@ export default function BatchesBrowser() {
   const completedCount = detailItems.filter((i) => i.status === "completed").length;
 
   return (
-    <div className="space-y-4">
+    <div className="grid gap-4 lg:grid-cols-2 items-start">
       {/* Pack list */}
       <div className="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-5 space-y-4">
         <div className="flex items-center justify-between">
@@ -146,7 +146,7 @@ export default function BatchesBrowser() {
       </div>
 
       {/* Selected pack detail */}
-      {selectedId && (
+      {selectedId ? (
         <div className="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-5 space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -209,6 +209,11 @@ export default function BatchesBrowser() {
               ))}
             </ul>
           )}
+        </div>
+      ) : (
+        <div className="rounded-lg border border-dashed border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 p-5 text-xs text-zinc-500 dark:text-zinc-400">
+          Select a batch on the left to preview its stickers, download them
+          individually or as a ZIP.
         </div>
       )}
     </div>

@@ -717,6 +717,7 @@ model StickerPack {
   theme             String   @db.VarChar(80)
   style             String   @db.VarChar(80)
   provider          String   @default("mock") @db.VarChar(40)
+  outlineStrength   String   @default("none") @map("outline_strength") @db.VarChar(20)
   count             Int      @default(6)
   size              Int      @default(1024)
   transparent       Boolean  @default(true)

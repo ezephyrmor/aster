@@ -46,6 +46,9 @@ export const PATCH = withAuth(async (req: NextRequest, context: Ctx, _auth: any)
           ...(packData.provider !== undefined ? { provider: String(packData.provider) } : {}),
           ...(packData.transparent !== undefined ? { transparent: Boolean(packData.transparent) } : {}),
           ...(packData.outline !== undefined ? { outline: Boolean(packData.outline) } : {}),
+          ...(packData.outlineStrength !== undefined
+            ? { outlineStrength: String(packData.outlineStrength) }
+            : {}),
           ...(packData.count !== undefined ? { count: Number(packData.count) } : {}),
           ...(packData.size !== undefined ? { size: Number(packData.size) } : {}),
           ...(packData.batchInstructions !== undefined ? { batchInstructions: String(packData.batchInstructions) } : {}),

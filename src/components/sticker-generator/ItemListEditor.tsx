@@ -103,20 +103,30 @@ export default function ItemListEditor({ items, onItemsChange, theme }: ItemList
                   ✕
                 </Button>
               </div>
-              <textarea
-                value={item.instructions}
-                onChange={(e) => update(item.key, { instructions: e.target.value })}
-                rows={1}
-                placeholder="Custom instructions for this item (optional)"
-                className="w-full rounded-md border border-input bg-transparent px-2.5 py-1.5 text-xs dark:bg-zinc-700 dark:border-zinc-600 dark:text-zinc-100"
-              />
-              <textarea
-                value={item.negativeInstructions}
-                onChange={(e) => update(item.key, { negativeInstructions: e.target.value })}
-                rows={1}
-                placeholder="Additional negative prompt for this item (optional)"
-                className="w-full rounded-md border border-input bg-transparent px-2.5 py-1.5 text-xs dark:bg-zinc-700 dark:border-zinc-600 dark:text-zinc-100"
-              />
+              <details className="text-xs text-zinc-600 dark:text-zinc-400">
+                <summary className="cursor-pointer select-none font-medium">
+                  Optional instructions
+                  {(item.instructions || item.negativeInstructions) && (
+                    <span className="ml-1 text-blue-500 dark:text-blue-400">• set</span>
+                  )}
+                </summary>
+                <div className="mt-2 space-y-2">
+                  <textarea
+                    value={item.instructions}
+                    onChange={(e) => update(item.key, { instructions: e.target.value })}
+                    rows={1}
+                    placeholder="Custom instructions for this item"
+                    className="w-full rounded-md border border-input bg-transparent px-2.5 py-1.5 text-xs dark:bg-zinc-700 dark:border-zinc-600 dark:text-zinc-100"
+                  />
+                  <textarea
+                    value={item.negativeInstructions}
+                    onChange={(e) => update(item.key, { negativeInstructions: e.target.value })}
+                    rows={1}
+                    placeholder="Additional negative prompt for this item"
+                    className="w-full rounded-md border border-input bg-transparent px-2.5 py-1.5 text-xs dark:bg-zinc-700 dark:border-zinc-600 dark:text-zinc-100"
+                  />
+                </div>
+              </details>
               {item.status === "failed" && item.error && (
                 <p className="text-xs text-red-600 dark:text-red-400">{item.error}</p>
               )}

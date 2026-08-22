@@ -28,6 +28,15 @@ export const STICKER_LIMITS = {
 export const STICKER_SIZES = [512, 768, 1024, 1536, 2048] as const;
 const sizeValues = STICKER_SIZES.map((s) => s);
 
+/** White outline strengths (post-processing die-cut border width). */
+export const STICKER_OUTLINE_STRENGTHS = [
+  "none",
+  "subtle",
+  "medium",
+  "thick",
+] as const;
+const outlineKeys = STICKER_OUTLINE_STRENGTHS as [string, ...string[]];
+
 const themeKeys = Object.keys(STICKER_THEMES) as [string, ...string[]];
 const styleKeys = Object.keys(STICKER_STYLES) as [string, ...string[]];
 
@@ -45,7 +54,8 @@ export const StickerPackSchema = z.object({
     })
     .default(STICKER_LIMITS.imageSize),
   transparent: z.boolean().default(true),
-  outline: z.boolean().default(false),
+  outline: z.boolean().default(true),
+  outlineStrength: z.enum(outlineKeys).default("medium"),
   batchInstructions: z.string().trim().max(STICKER_LIMITS.batchInstructions).optional(),
   negativePrompt: z.string().trim().max(STICKER_LIMITS.negative).optional(),
 });

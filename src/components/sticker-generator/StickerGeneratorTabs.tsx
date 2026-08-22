@@ -14,9 +14,14 @@ const tabs: Array<{ id: Tab; label: string }> = [
 interface StickerGeneratorTabsProps {
   /** Server-resolved default provider (from AI_PROVIDER env, fallback mock). */
   defaultProvider: string;
+  /** Server-computed md5(timestamp) seed for the initial pack name. */
+  defaultPackName: string;
 }
 
-export default function StickerGeneratorTabs({ defaultProvider }: StickerGeneratorTabsProps) {
+export default function StickerGeneratorTabs({
+  defaultProvider,
+  defaultPackName,
+}: StickerGeneratorTabsProps) {
   const [tab, setTab] = useState<Tab>("generator");
 
   return (
@@ -39,7 +44,10 @@ export default function StickerGeneratorTabs({ defaultProvider }: StickerGenerat
       </div>
 
       {tab === "generator" ? (
-        <StickerGeneratorBoard defaultProvider={defaultProvider} />
+        <StickerGeneratorBoard
+          defaultProvider={defaultProvider}
+          defaultPackName={defaultPackName}
+        />
       ) : (
         <BatchesBrowser />
       )}

@@ -1,11 +1,14 @@
+import { createHash } from "crypto";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import StickerGeneratorTabs from "@/components/sticker-generator/StickerGeneratorTabs";
 
-// Server component: resolve the default AI provider from env so the client
-// dropdown starts with the real provider (never defaults silently to mock
-// when a provider is configured).
+// Server component: resolve the default AI provider + a unique pack-name seed
+// (md5 of the current timestamp) so the client never needs an MD5 bundle.
 export default function StickerGeneratorPage() {
   const defaultProvider = process.env.AI_PROVIDER || "mock";
+  const defaultPackName = createHash("md5")
+    .update(String(Date.now()))
+    .digest("hex");
 
   return (
     <DashboardLayout
@@ -27,7 +30,10 @@ export default function StickerGeneratorPage() {
         </svg>
       }
     >
-      <StickerGeneratorTabs defaultProvider={defaultProvider} />
+      <StickerGeneratorTabs
+        defaultProvider={defaultProvider}
+        defaultPackName={defaultPackName}
+      />
     </DashboardLayout>
   );
 }

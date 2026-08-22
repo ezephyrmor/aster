@@ -22,8 +22,13 @@ const ALPHA_THRESHOLD = 12; // a pixel is "visible" if its alpha is above this
 export type ProcessOptions = {
   canvasSize?: number;
   transparent: boolean;
-  outline?: boolean;
   targetScale?: number;
+  /**
+   * Alpha threshold used when computing the visible subject bounds — pixels
+   * below it are treated as transparent so faint background remnants don't
+   * expand the cutout. Keep small to preserve legitimate soft edges.
+   */
+  boundsAlphaThreshold?: number;
 };
 
 export type ProcessingErrorKind =
@@ -73,45 +78,52 @@ export async function processStickerImage(
     .raw()
     .toBuffer();
 
-  // 2. If transparency is requested but the source has no alpha, key out the
-  //    dominant (edge) background color so the subject gets real transparency.
-  const hasRealAlpha = Boolean(meta.hasAlpha);
-  if (opts.transparent && !hasRealAlpha) {
-    const keyed = keyOutBackground(rgba, srcW, srcH);
+  // 2. If transparency is requested, key out the background. Note: many models
+  //    return PNGs whose alpha channel exists but is fully opaque, so we detect
+  //    "real" cutouts by scanning for any non-opaque pixel — not just the flag.
+  if (opts.transparent && !hasAnyTransparency(rgba)) {
+    const keyed = keyOutBackgroundFlood(rgba, srcW, srcH);
     if (keyed) rgba = keyed;
   }
 
-  // 3. Find visible-alpha bounds and trim excessive empty space.
-  const bounds = findAlphaBounds(rgba, srcW, srcH);
+  // 2b. Edge decontamination / de-fringing: pixels bordering transparency that
+  //     still carry background color (white halo, green spill, gray matte) get
+  //     their color unmixed and alpha feathered, so no fringe ring survives.
+  if (opts.transparent) {
+    rgba = decontaminateEdges(rgba, srcW, srcH, 2);
+  }
+
+  // 3. Find visible-alpha bounds (configurable threshold) and trim.
+  const alphaThreshold = opts.boundsAlphaThreshold ?? ALPHA_THRESHOLD;
+  const bounds = findAlphaBounds(rgba, srcW, srcH, alphaThreshold);
   if (!bounds) {
-    const blank = await sharpCanvas(canvas);
-    return { buffer: blank, width: canvas, height: canvas, bytes: blank.length };
+    // Per spec: a result with no distinguishable subject is a FAILURE, not a
+    // blank sticker.
+    throw new ProcessingError(
+      "processing",
+      "No distinguishable subject found after background removal.",
+    );
   }
 
   const subject = await trimToBounds(rgba, srcW, srcH, bounds);
 
-  // 4. Resize preserving aspect ratio so the subject fills ~targetScale.
+  // 4. Resize preserving aspect ratio so the subject fills ~targetScale of the
+  //    canvas; the remaining margin is intentional TRANSPARENT padding.
   const fitted = await fitSubject(subject, canvas, targetScale);
 
-  // 5. Optional white outline matte (grows the subject slightly).
-  let toCenter: Buffer;
-  let centerW: number;
-  let centerH: number;
-  if (opts.outline && opts.transparent) {
-    const outlined = await applyOutline(fitted.buffer, fitted.width, fitted.height);
-    toCenter = outlined.buffer;
-    centerW = outlined.width;
-    centerH = outlined.height;
-  } else {
-    toCenter = fitted.buffer;
-    centerW = fitted.width;
-    centerH = fitted.height;
-  }
+  // 5. Center the cutout on a transparent canvas (white when opacity off).
+  const final = await centerOnCanvas(
+    fitted.buffer,
+    fitted.width,
+    fitted.height,
+    canvas,
+    !opts.transparent,
+  );
 
-  // 6. Center on a canvas (transparent by default, white when opacity turned off).
-  const final = await centerOnCanvas(toCenter, centerW, centerH, canvas, !opts.transparent);
-
-  // 7. Validate the final file.
+  // 6. Validate: alpha channel, clean borders (no rectangular matte), a real
+  //    subject, and truly-transparent surroundings. Failure here means the
+  //    background removal did not complete — the sticker must NOT be marked
+  //    Ready.
   const finalMeta = await sharp(final).metadata();
   if (
     !finalMeta?.width ||
@@ -120,6 +132,9 @@ export async function processStickerImage(
     (opts.transparent && !finalMeta.hasAlpha)
   ) {
     throw new ProcessingError("transparency-failed", "Final PNG validation failed");
+  }
+  if (opts.transparent) {
+    validateCutout(final, canvas);
   }
 
   return { buffer: final, width: canvas, height: canvas, bytes: final.length };
@@ -157,7 +172,8 @@ export async function renderMockSticker(size = 1024): Promise<Buffer> {
       width: size,
       height: size,
       channels: 4,
-      background: { r: 0, g: 0, b: 0, alpha: 1 },
+      // Transparent base (sharp alpha is normalized 0..1).
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
     },
   })
     .composite([{ input: shape, left: pad, top: pad, blend: "over" }])
@@ -165,15 +181,21 @@ export async function renderMockSticker(size = 1024): Promise<Buffer> {
     .toBuffer();
 }
 
-/**
- * Key out the dominant edge color in an opaque RGBA buffer so the subject gets
- * real transparency. Returns a new RGBA buffer, or null if it cannot decide.
- */
-function keyOutBackground(rgba: Buffer, width: number, height: number): Buffer | null {
+/** True if at least one pixel is non-opaque (a real cutout already). */
+function hasAnyTransparency(rgba: Buffer): boolean {
+  const src = new Uint8Array(rgba);
+  for (let i = 3; i < src.length; i += 4) {
+    if (src[i] < 250) return true;
+  }
+  return false;
+}
+
+type RGB = [number, number, number];
+
+/** Sample the dominant corner color — the presumed background. */
+function getBgColor(rgba: Buffer, width: number, height: number): RGB | null {
   const src = new Uint8Array(rgba);
   if (src.length === 0 || !width || !height) return null;
-
-  // Sample the four corners to find a background color.
   const stride = width * 4;
   const corners = [
     0,
@@ -187,34 +209,240 @@ function keyOutBackground(rgba: Buffer, width: number, height: number): Buffer |
     const key = `${src[c]},${src[c + 1]},${src[c + 2]}`;
     counts.set(key, (counts.get(key) ?? 0) + 1);
   }
-  if (counts.size === 0) return null;
-
-  let bg: [number, number, number] | null = null;
+  let bestKey: string | null = null;
   let best = 0;
-  for (const [rgb, count] of counts) {
+  for (const [key, count] of counts) {
     if (count > best) {
       best = count;
-      const parts = rgb.split(",").map(Number);
-      bg = [parts[0], parts[1], parts[2]];
+      bestKey = key;
     }
   }
-  if (!bg) return null;
+  if (!bestKey) return null;
+  const parts = bestKey.split(",").map(Number);
+  return [parts[0], parts[1], parts[2]];
+}
+
+/**
+ * Edge decontamination / de-fringing. For opaque pixels that touch a fully
+ * transparent neighbor and still carry background color (white halo, green
+ * spill, gray matte), unmix the background contribution:
+ *
+ *   observed = k·fg + (1−k)·bg   →   fg = (observed − (1−k)·bg) / k
+ *
+ * where k grows with color distance from the background. This removes white/
+ * colored fringe rings while keeping smooth antialiased edges. Runs `passes`
+ * times so multi-pixel fringes are eaten layer by layer.
+ */
+function decontaminateEdges(
+  rgba: Buffer,
+  width: number,
+  height: number,
+  passes = 2,
+): Buffer {
+  const bg = getBgColor(rgba, width, height);
+  if (!bg) return rgba;
   const [br, bgG, bb] = bg;
 
-  const out = Buffer.from(new Uint8Array(rgba.length));
-  const threshold = 60;
-  for (let i = 0; i < src.length; i += 4) {
-    const r = src[i];
-    const g = src[i + 1];
-    const b = src[i + 2];
-    const dr = r - br;
-    const dg = g - bgG;
-    const db = b - bb;
-    const dist = Math.sqrt(dr * dr + dg * dg + db * db);
-    out[i] = r;
-    out[i + 1] = g;
-    out[i + 2] = b;
-    out[i + 3] = dist > threshold ? 255 : 0;
+  // Similarity bands: ≤ hardT → fully background; ≥ softT → fully foreground.
+  const hardT = 48;
+  const softT = 130;
+
+  let out = Buffer.from(new Uint8Array(rgba));
+  for (let pass = 0; pass < passes; pass++) {
+    const src = new Uint8Array(out);
+    const next = Buffer.from(new Uint8Array(out));
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const p = y * width + x;
+        const i = p * 4;
+        if (src[i + 3] === 0) continue;
+
+        // Only process pixels that border transparency.
+        const touchesTransparent =
+          (x > 0 && src[(p - 1) * 4 + 3] === 0) ||
+          (x < width - 1 && src[(p + 1) * 4 + 3] === 0) ||
+          (y > 0 && src[(p - width) * 4 + 3] === 0) ||
+          (y < height - 1 && src[(p + width) * 4 + 3] === 0);
+        if (!touchesTransparent) continue;
+
+        const dr = src[i] - br;
+        const dg = src[i + 1] - bgG;
+        const db = src[i + 2] - bb;
+        const dist = Math.sqrt(dr * dr + dg * dg + db * db);
+        if (dist >= softT) continue; // genuine foreground — leave untouched.
+
+        if (dist <= hardT) {
+          // Essentially background sitting on the edge → remove entirely.
+          next[i + 3] = 0;
+          continue;
+        }
+
+        // Partial fringe: estimate foreground coverage and unmix the color.
+        const k = Math.max(0.08, (dist - hardT) / (softT - hardT)); // fg ratio
+        const fgR = Math.max(0, Math.min(255, (src[i] - (1 - k) * br) / k));
+        const fgG = Math.max(0, Math.min(255, (src[i + 1] - (1 - k) * bgG) / k));
+        const fgB = Math.max(0, Math.min(255, (src[i + 2] - (1 - k) * bb) / k));
+        next[i] = fgR;
+        next[i + 1] = fgG;
+        next[i + 2] = fgB;
+        next[i + 3] = Math.round(255 * k);
+      }
+    }
+    out = next;
+  }
+  return out;
+}
+
+/**
+ * Spec-mandated pre-Ready validation of the final cutout:
+ * - has an alpha channel with truly-transparent surroundings,
+ * - outer boundary frame contains no opaque/semi-opaque background pixels
+ *   (catches rectangular white mattes and uncropped full-frame images),
+ * - a meaningful subject exists inside.
+ * Throws ProcessingError on any failure.
+ */
+export async function validateCutout(
+  final: Buffer,
+  canvas: number,
+  alphaThreshold = ALPHA_THRESHOLD,
+): Promise<void> {
+  // Accepts the encoded PNG; decodes to raw RGBA for pixel inspection.
+  const decoded = await sharp(final).ensureAlpha().raw().toBuffer();
+  const raw = new Uint8Array(decoded);
+  if (raw.length !== canvas * canvas * 4) {
+    throw new ProcessingError("transparency-failed", "Unexpected pixel buffer size");
+  }
+
+  // 1. Outer frame (2px) must be fully transparent — no rectangular matte.
+  let borderViolations = 0;
+  const frameCheck = (x: number, y: number) => {
+    const i = (y * canvas + x) * 4;
+    if (raw[i + 3] > alphaThreshold) borderViolations++;
+  };
+  for (let x = 0; x < canvas; x++) {
+    frameCheck(x, 0);
+    frameCheck(x, 1);
+    frameCheck(x, canvas - 1);
+    frameCheck(x, canvas - 2);
+  }
+  for (let y = 2; y < canvas - 2; y++) {
+    frameCheck(0, y);
+    frameCheck(1, y);
+    frameCheck(canvas - 1, y);
+    frameCheck(canvas - 2, y);
+  }
+  if (borderViolations > 0) {
+    throw new ProcessingError(
+      "transparency-failed",
+      `Cutout validation failed: ${borderViolations} opaque pixel(s) on the canvas border (leftover matte or uncropped background).`,
+    );
+  }
+
+  // 2. A real subject must exist inside the frame.
+  let subjectPixels = 0;
+  for (let i = 3; i < raw.length; i += 4) {
+    if (raw[i] >= 250) subjectPixels++;
+  }
+  const minPixels = Math.floor(canvas * canvas * 0.001); // ~0.1%
+  if (subjectPixels < minPixels) {
+    throw new ProcessingError(
+      "processing",
+      "No meaningful sticker artwork remains after background removal.",
+    );
+  }
+}
+
+/**
+ * Key out the background by flood-filling from the image borders. Only pixels
+ * connected to the edge and within `tolerance` of the sampled background color
+ * become transparent — interior colors similar to the background are preserved
+ * (unlike a naive global color match). Returns a new RGBA buffer.
+ */
+function keyOutBackgroundFlood(
+  rgba: Buffer,
+  width: number,
+  height: number,
+): Buffer | null {
+  const src = new Uint8Array(rgba);
+  if (src.length === 0 || !width || !height) return null;
+  const stride = width * 4;
+
+  const bgColor = getBgColor(rgba, width, height);
+  if (!bgColor) return null;
+  const [br, bgG, bb] = bgColor;
+
+  const tolerance = 48;
+  const nearBg = (i: number): boolean => {
+    const dr = src[i] - br;
+    const dg = src[i + 1] - bgG;
+    const db = src[i + 2] - bb;
+    return Math.sqrt(dr * dr + dg * dg + db * db) <= tolerance;
+  };
+
+  // Flood fill from every border pixel that matches the background.
+  const visited = new Uint8Array(width * height);
+  const stack: number[] = [];
+  for (let x = 0; x < width; x++) {
+    stack.push(x);
+    stack.push((height - 1) * width + x);
+  }
+  for (let y = 0; y < height; y++) {
+    stack.push(y * width);
+    stack.push(y * width + width - 1);
+  }
+
+  const out = Buffer.from(new Uint8Array(rgba));
+  while (stack.length > 0) {
+    const p = stack.pop()!;
+    if (visited[p]) continue;
+    visited[p] = 1;
+
+    const i = p * 4;
+    if (!nearBg(i)) continue;
+    out[i + 3] = 0; // make transparent
+
+    const x = p % width;
+    const y = (p - x) / width;
+    if (x > 0) stack.push(p - 1);
+    if (x < width - 1) stack.push(p + 1);
+    if (y > 0) stack.push(p - width);
+    if (y < height - 1) stack.push(p + width);
+  }
+
+  // Defringe: anti-aliased edge pixels adjacent to the keyed region are still
+  // blended with the background (white halo). Fade their alpha by how close
+  // they are to the background colour and de-matte them, so no fringe shows
+  // when the sticker is placed on dark chat backgrounds.
+  const clampByte = (v: number) => Math.max(0, Math.min(255, Math.round(v)));
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const i = (y * width + x) * 4;
+      if (out[i + 3] === 0) continue;
+
+      let isEdge = false;
+      if (x > 0 && out[i - 4 + 3] === 0) isEdge = true;
+      else if (x < width - 1 && out[i + 4 + 3] === 0) isEdge = true;
+      else if (y > 0 && out[i - stride + 3] === 0) isEdge = true;
+      else if (y < height - 1 && out[i + stride + 3] === 0) isEdge = true;
+      if (!isEdge) continue;
+
+      const dr = src[i] - br;
+      const dg = src[i + 1] - bgG;
+      const db = src[i + 2] - bb;
+      const d = Math.sqrt(dr * dr + dg * dg + db * db);
+
+      // Fully background-coloured → transparent; blends smoothly outward.
+      const a = clampByte((d / (tolerance * 1.25)) * 255);
+      out[i + 3] = Math.min(out[i + 3], a);
+
+      if (a > 0 && a < 255) {
+        // De-matte: recover subject colour assuming bg was blended over it.
+        const af = a / 255;
+        out[i] = clampByte((src[i] - (1 - af) * br) / af);
+        out[i + 1] = clampByte((src[i + 1] - (1 - af) * bgG) / af);
+        out[i + 2] = clampByte((src[i + 2] - (1 - af) * bb) / af);
+      }
+    }
   }
   return out;
 }
@@ -224,6 +452,7 @@ function findAlphaBounds(
   rgba: Buffer,
   width: number,
   height: number,
+  alphaThreshold = ALPHA_THRESHOLD,
 ): Bounds | null {
   const src = new Uint8Array(rgba);
   let minX = width;
@@ -233,7 +462,7 @@ function findAlphaBounds(
   for (let y = 0; y < height; y++) {
     const row = y * width * 4;
     for (let x = 0; x < width; x++) {
-      if (src[row + x * 4 + 3] >= ALPHA_THRESHOLD) {
+      if (src[row + x * 4 + 3] >= alphaThreshold) {
         if (x < minX) minX = x;
         if (x > maxX) maxX = x;
         if (y < minY) minY = y;
@@ -254,9 +483,8 @@ async function trimToBounds(
   const w = bounds.right - bounds.left;
   const h = bounds.bottom - bounds.top;
   const buffer = await sharp(rgba, { raw: { width, height, channels: 4 } })
+    // NOTE: keep the keyed alpha channel intact — do NOT removeAlpha/ensureAlpha.
     .extract({ left: bounds.left, top: bounds.top, width: w, height: h })
-    .removeAlpha()
-    .ensureAlpha()
     .png()
     .toBuffer();
   return { buffer, width: w, height: h };
@@ -275,39 +503,12 @@ async function fitSubject(
   const outH = Math.max(1, Math.round(subject.height * scale));
   const buffer = await sharp(subject.buffer)
     .resize({ width: outW, height: outH, fit: "fill" })
-    .removeAlpha()
-    .ensureAlpha()
+    // Preserve the keyed alpha — no removeAlpha/ensureAlpha here.
     .png()
     .toBuffer();
   return { buffer, width: outW, height: outH };
 }
 
-/**
- * thin white outline fully contained within its own (transparent) bounds.
- */
-async function applyOutline(
-  buffer: Buffer,
-  width: number,
-  height: number,
-): Promise<SizedBuffer> {
-  const outW = Math.round(width * 1.06);
-  const outH = Math.round(height * 1.06);
-
-  const matte = await whiteMatte(outW, outH);
-  const composited = await sharp(matte)
-    .composite([
-      {
-        input: buffer,
-        left: Math.round((outW - width) / 2),
-        top: Math.round((outH - height) / 2),
-        blend: "over",
-      },
-    ])
-    .png()
-    .toBuffer();
-
-  return { buffer: composited, width: outW, height: outH };
-}
 
 /** A solid white RGBA rect used as the outline base. */
 async function whiteMatte(width: number, height: number): Promise<Buffer> {
@@ -348,7 +549,13 @@ async function centerOnCanvas(
 /** A fully transparent RGBA canvas buffer. */
 async function sharpCanvas(size: number): Promise<Buffer> {
   return sharp({
-    create: { width: size, height: size, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 1 } },
+    create: {
+      width: size,
+      height: size,
+      channels: 4,
+      // sharp normalizes create-background alpha to 0..1 — 1 means OPAQUE.
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    },
   })
     .png()
     .toBuffer();

@@ -22,7 +22,6 @@ export type GenerateOneInput = {
     style: string;
     size: number;
     transparent: boolean;
-    outline: boolean;
     batchInstructions?: string | null;
     negativePrompt?: string | null;
   };
@@ -34,6 +33,17 @@ export type GenerateOneInput = {
 
 /** Human-friendly (non-secret) error message for the UI. */
 export function publicErrorMessage(err: unknown): string {
+  // Processing failures (cutout validation, no subject, corrupt image) get
+  // their own clear copy so users know it's a pipeline issue, not their key.
+  if (
+    typeof err === "object" &&
+    err !== null &&
+    "name" in err &&
+    (err as { name?: string }).name === "ProcessingError"
+  ) {
+    const msg = err instanceof Error ? err.message : "";
+    return `Automatic cutout processing failed. ${msg} Please retry — the provider image may not have been clean enough.`;
+  }
   if (err instanceof ProviderError) {
     let message: string;
     switch (err.kind) {
@@ -74,10 +84,13 @@ export type OneStickerResult = {
  * error — throws ProviderError or ProcessingError so routes map safely.
  */
 export async function generateOneSticker(input: GenerateOneInput): Promise<OneStickerResult> {
+  // No die-cut border: per spec, the output is a clean alpha cutout with NO
+  // white halo/matte — only genuine artwork pixels remain.
   const promptInput: StickerPromptInput = {
     theme: input.pack.theme,
     style: input.pack.style,
     itemName: input.itemName,
+    outline: false,
     batchInstructions: input.pack.batchInstructions,
     itemInstructions: input.item?.instructions,
     batchNegative: input.pack.negativePrompt,
@@ -90,14 +103,12 @@ export async function generateOneSticker(input: GenerateOneInput): Promise<OneSt
     negativePrompt: negative,
     size: input.pack.size,
     transparent: input.pack.transparent,
-    outline: input.pack.outline,
     provider: input.provider,
   });
 
   const processed = await processStickerImage(raw.buffer, {
     canvasSize: input.pack.size,
     transparent: input.pack.transparent,
-    outline: input.pack.outline,
   });
 
   return {

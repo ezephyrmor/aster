@@ -15,6 +15,8 @@ export interface StickerAssetDTO {
   width: number;
   height: number;
   mime: string;
+  /** Client-side cache-buster — bumped every time the image is regenerated. */
+  v?: number;
 }
 
 export interface StickerItemDTO {
@@ -38,6 +40,7 @@ export interface StickerPackDTO {
   size: number;
   transparent: boolean;
   outline: boolean;
+  outlineStrength?: string;
   batchInstructions?: string | null;
   negativePrompt?: string | null;
   items: StickerItemDTO[];
@@ -50,7 +53,6 @@ export interface PackConfig {
   provider: string;
   size: number;
   transparent: boolean;
-  outline: boolean;
   batchInstructions: string;
   negativePrompt: string;
 }
@@ -65,6 +67,7 @@ export interface PackSummaryDTO {
   size: number;
   transparent: boolean;
   outline: boolean;
+  outlineStrength?: string;
   batchInstructions?: string | null;
   negativePrompt?: string | null;
   createdAt: string;
@@ -81,9 +84,8 @@ export const DEFAULT_PACK_CONFIG: PackConfig = {
   theme: "coffee",
   style: "kawaii",
   provider: "mock",
-  size: 1024,
+  size: 512,
   transparent: true,
-  outline: false,
   batchInstructions: "",
   negativePrompt: "",
 };

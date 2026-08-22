@@ -54,7 +54,8 @@ export type GenerateStickerRequest = {
   negativePrompt?: string;
   size: number;
   transparent: boolean;
-  outline: boolean;
+  /** Unused by workers; kept for request symmetry. */
+  outline?: boolean;
   provider: StickerProviderName;
 };
 
@@ -202,8 +203,9 @@ async function responseToProviderError(
   console.error(
     `[sticker-ai] ${label} HTTP ${res.status}: ${snippet || "<empty body>"}`,
   );
-  // Short, UI-safe detail (same content as the log, trimmed further).
-  const detail = snippet.slice(0, 200) || undefined;
+  // Short, UI-safe detail — prefixed with provider + status so the toast
+  // itself identifies WHO rejected the request (no more guessing).
+  const detail = `[${label} · HTTP ${res.status}] ${snippet.slice(0, 180)}`;
 
   if (res.status === 429)
     return new ProviderError("rate-limit", `${label} rate limited`, undefined, detail);
@@ -249,12 +251,31 @@ async function postForImage(
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const res = await fetch(url, {
+    // Follow redirects MANUALLY so the Authorization header survives. Native
+    // fetch drops auth headers on cross-origin redirects, which some providers
+    // (HF router, CDNs) trigger — surfacing as 401 "Missing Authentication
+    // header" even though we sent a key.
+    let currentUrl: string = url;
+    let res: Response = await fetch(currentUrl, {
       method: "POST",
       headers: { Accept: "application/json", ...headers },
       body: JSON.stringify(body),
       signal: controller.signal,
+      redirect: "manual",
     });
+    for (let hop = 0; hop < 4 && res.status >= 300 && res.status < 400; hop++) {
+      const location = res.headers.get("location");
+      if (!location) break;
+      currentUrl = new URL(location, currentUrl).toString();
+      console.warn(`[sticker-ai] ${label} redirect ${res.status} → ${currentUrl}`);
+      res = await fetch(currentUrl, {
+        method: "POST",
+        headers: { Accept: "application/json", ...headers },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+        redirect: "manual",
+      });
+    }
     if (!res.ok) throw await responseToProviderError(res, label);
 
     const json = (await res.json()) as unknown;
@@ -275,7 +296,7 @@ async function postForImage(
     return Buffer.from(await imageRes.arrayBuffer());
   } catch (err) {
     clearTimeout(timer);
-    throw toProviderError(err, "provider");
+    throw toProviderError(err, label);
   } finally {
     clearTimeout(timer);
   }

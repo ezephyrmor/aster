@@ -73,7 +73,7 @@ export default function ConfigForm({ value, onChange, onSubmit }: ConfigFormProp
     <div className="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-5 space-y-4">
       <h2 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">1 · Configure Pack</h2>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4">
         <label className="block text-xs text-zinc-600 dark:text-zinc-400">
           Pack name
           <Input
@@ -162,7 +162,7 @@ export default function ConfigForm({ value, onChange, onSubmit }: ConfigFormProp
         </label>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4">
         <label className="flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-400">
           <input
             type="checkbox"
@@ -172,19 +172,10 @@ export default function ConfigForm({ value, onChange, onSubmit }: ConfigFormProp
           />
           Transparent background
         </label>
-        <label className="flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-400">
-          <input
-            type="checkbox"
-            checked={value.outline}
-            onChange={(e) => set({ outline: e.target.checked })}
-            className="h-4 w-4 accent-blue-600"
-          />
-          White outline
-        </label>
       </div>
 
-      <label className="block text-xs text-zinc-600 dark:text-zinc-400">
-        Batch-wide instructions (optional)
+      <details className="text-xs text-zinc-600 dark:text-zinc-400">
+        <summary className="cursor-pointer font-medium">Batch-wide instructions (optional)</summary>
         <textarea
           value={value.batchInstructions}
           onChange={(e) => set({ batchInstructions: e.target.value })}
@@ -192,7 +183,7 @@ export default function ConfigForm({ value, onChange, onSubmit }: ConfigFormProp
           placeholder="e.g. keep everything rounded and soft"
           className="mt-1 w-full rounded-md border border-input bg-transparent px-2.5 py-2 text-sm dark:bg-zinc-700 dark:border-zinc-600 dark:text-zinc-100"
         />
-      </label>
+      </details>
 
       <details className="text-xs text-zinc-600 dark:text-zinc-400">
         <summary className="cursor-pointer font-medium">Advanced — Additional Negative Prompt</summary>

@@ -40,6 +40,12 @@ export function Checkerboard({ src, alt }: { src: string; alt: string }) {
   );
 }
 
+const assetUrl = (packId: string | null, item: ClientItem, download = false): string => {
+  if (!packId || !item.asset) return "#";
+  const base = `/api/ai/stickers/pack/${packId}/asset/${item.asset.itemId}`;
+  return item.asset.v ? `${base}?v=${item.asset.v}${download ? "&dl=1" : ""}` : base;
+};
+
 export default function ResultGrid({
   items,
   packId,
@@ -86,7 +92,7 @@ export default function ResultGrid({
             <li key={item.key} className="rounded-md border border-zinc-200 dark:border-zinc-700 p-3 space-y-2">
               {item.asset ? (
                 <Checkerboard
-                  src={`/api/ai/stickers/pack/${packId}/asset/${item.asset.itemId}`}
+                  src={assetUrl(packId, item)}
                   alt={item.name}
                 />
               ) : (
@@ -116,7 +122,7 @@ export default function ResultGrid({
               <div className="flex flex-wrap gap-1.5">
                 {item.asset && packId && (
                   <a
-                    href={`/api/ai/stickers/pack/${packId}/asset/${item.asset.itemId}`}
+                    href={assetUrl(packId, item, true)}
                     download={item.asset.filename}
                     className="inline-flex items-center rounded-md bg-zinc-100 dark:bg-zinc-700 px-2 py-1 text-[10px] font-medium text-zinc-700 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-600"
                   >
