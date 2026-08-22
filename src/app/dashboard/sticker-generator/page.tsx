@@ -1,11 +1,12 @@
-"use client";
-
-import { useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import StickerGeneratorBoard from "@/components/sticker-generator/StickerGeneratorBoard";
+import StickerGeneratorTabs from "@/components/sticker-generator/StickerGeneratorTabs";
 
+// Server component: resolve the default AI provider from env so the client
+// dropdown starts with the real provider (never defaults silently to mock
+// when a provider is configured).
 export default function StickerGeneratorPage() {
-  const [key, setKey] = useState(0);
+  const defaultProvider = process.env.AI_PROVIDER || "mock";
+
   return (
     <DashboardLayout
       title="Sticker Generator"
@@ -26,7 +27,7 @@ export default function StickerGeneratorPage() {
         </svg>
       }
     >
-      <StickerGeneratorBoard key={key} onReset={() => setKey((k) => k + 1)} />
+      <StickerGeneratorTabs defaultProvider={defaultProvider} />
     </DashboardLayout>
   );
 }

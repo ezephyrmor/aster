@@ -10,19 +10,16 @@ import { DEFAULT_PACK_CONFIG, type StickerPackDTO } from "./types";
 
 const CONCURRENCY = 3;
 
-interface StickerGeneratorBoardProps {
-  onReset?: () => void;
-}
-
-export default function StickerGeneratorBoard({ onReset: _onReset }: StickerGeneratorBoardProps) {
+export default function StickerGeneratorBoard({ defaultProvider }: { defaultProvider?: string }) {
   const toast = useToast();
-  const [config, setConfig] = useState<PackConfig>(DEFAULT_PACK_CONFIG);
+  const [config, setConfig] = useState<PackConfig>({
+    ...DEFAULT_PACK_CONFIG,
+    provider: defaultProvider || DEFAULT_PACK_CONFIG.provider,
+  });
   const [items, setItems] = useState<ClientItem[]>([]);
   const [packId, setPackId] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
   const abortRef = useRef(false);
-  const itemsRef = useRef<ClientItem[]>([]);
-  itemsRef.current = items;
 
   const patchItem = useCallback((key: string, patch: Partial<ClientItem>) => {
     setItems((prev) => prev.map((it) => (it.key === key ? { ...it, ...patch } : it)));
@@ -48,16 +45,13 @@ export default function StickerGeneratorBoard({ onReset: _onReset }: StickerGene
   }, [config, items]);
 
   const generateOne = useCallback(
-    async (item: ClientItem, pid: string) => {
-      // Resolve the live id from the ref (ids are assigned after the batch snapshot).
-      const live = itemsRef.current.find((it) => it.key === item.key);
-      if (!live?.id) return;
-      patchItem(item.key, { status: "generating", error: null });
+    async (item: ClientItem, pid: string, itemId: string) => {
+      patchItem(item.key, { status: "generating", error: null, id: itemId });
       try {
         const res = await fetch("/api/ai/stickers/process", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ packId: pid, itemId: live.id }),
+          body: JSON.stringify({ packId: pid, itemId }),
         });
         const data = await res.json();
         if (!res.ok) {
@@ -80,19 +74,23 @@ export default function StickerGeneratorBoard({ onReset: _onReset }: StickerGene
     [patchItem],
   );
 
-  const runBatch = useCallback(async (targets: ClientItem[], pid: string) => {
-    setGenerating(true);
-    abortRef.current = false;
-    let index = 0;
-    const workers = Array.from({ length: CONCURRENCY }, async () => {
-      while (index < targets.length && !abortRef.current) {
-        const item = targets[index++];
-        await generateOne(item, pid);
-      }
-    });
-    await Promise.all(workers);
-    setGenerating(false);
-  }, [generateOne]);
+  // Targets carry an explicit, already-resolved server id — never a stale ref.
+  const runBatch = useCallback(
+    async (targets: Array<{ item: ClientItem; itemId: string }>, pid: string) => {
+      setGenerating(true);
+      abortRef.current = false;
+      let index = 0;
+      const workers = Array.from({ length: CONCURRENCY }, async () => {
+        while (index < targets.length && !abortRef.current) {
+          const { item, itemId } = targets[index++];
+          await generateOne(item, pid, itemId);
+        }
+      });
+      await Promise.all(workers);
+      setGenerating(false);
+    },
+    [generateOne],
+  );
 
   const handleCreateAndGenerate = async () => {
     const viable = items.filter((it) => it.name.trim());
@@ -104,16 +102,32 @@ export default function StickerGeneratorBoard({ onReset: _onReset }: StickerGene
     try {
       const pack = await createPack();
       setPackId(pack.id);
-      // Map the persisted server items back onto the client rows (by order).
-      const viableNames = viable.map((it) => it.name.trim());
+
+      // Resolve client rows → server ids synchronously (match by name, first
+      // unused match so duplicate names can't collide). The SAME resolved pairs
+      // are used for both state and the batch, so no stale-id race is possible.
+      const used = new Set<string>();
+      const resolved: Array<{ item: ClientItem; itemId: string }> = [];
+      for (const row of viable) {
+        const server = pack.items.find(
+          (s) => s.name.trim().toLowerCase() === row.name.trim().toLowerCase() && !used.has(s.id),
+        );
+        if (server) {
+          used.add(server.id);
+          resolved.push({ item: row, itemId: server.id });
+        }
+      }
+      if (resolved.length === 0) {
+        throw new Error("The pack was created without any items — please try again.");
+      }
+
       setItems((prev) =>
         prev.map((it) => {
-          const idx = viableNames.indexOf(it.name.trim());
-          const server = idx >= 0 ? pack.items[idx] : null;
-          return server ? { ...it, id: server.id } : it;
+          const match = resolved.find((r) => r.item.key === it.key);
+          return match ? { ...it, id: match.itemId } : it;
         }),
       );
-      await runBatch(viable, pack.id);
+      await runBatch(resolved, pack.id);
       toast.addToast("Batch complete.", "success");
     } catch (error) {
       toast.addToast((error as Error).message || "Failed to start batch", "error");
@@ -122,14 +136,32 @@ export default function StickerGeneratorBoard({ onReset: _onReset }: StickerGene
 
   const handleRegenerate = async (key: string) => {
     const item = items.find((it) => it.key === key);
-    if (!item || !packId) return;
-    await runBatch([item], packId);
+    if (!item || !packId || !item.id) return;
+    // Persist any local edits first so this regeneration uses them (spec:
+    // per-item instructions apply only to that item).
+    try {
+      await fetch(`/api/ai/stickers/pack/${packId}/item/${item.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: item.name.trim(),
+          instructions: item.instructions || undefined,
+          negativeInstructions: item.negativeInstructions || undefined,
+        }),
+      });
+    } catch {
+      // Non-fatal: regenerate with the last persisted instructions.
+    }
+    await runBatch([{ item, itemId: item.id }], packId);
   };
 
   const handleRetryFailed = async () => {
     if (!packId) return;
-    const failedItems = items.filter((it) => it.status === "failed");
-    await runBatch(failedItems, packId);
+    const targets = items
+      .filter((it) => it.status === "failed" && it.id)
+      .map((item) => ({ item, itemId: item.id! }));
+    if (targets.length === 0) return;
+    await runBatch(targets, packId);
   };
 
   const handleDelete = async (key: string) => {

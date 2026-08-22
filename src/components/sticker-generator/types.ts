@@ -48,7 +48,6 @@ export interface PackConfig {
   theme: string;
   style: string;
   provider: string;
-  count: number;
   size: number;
   transparent: boolean;
   outline: boolean;
@@ -56,12 +55,32 @@ export interface PackConfig {
   negativePrompt: string;
 }
 
+export interface PackSummaryDTO {
+  id: string;
+  name: string;
+  theme: string;
+  style: string;
+  provider?: string;
+  count: number;
+  size: number;
+  transparent: boolean;
+  outline: boolean;
+  batchInstructions?: string | null;
+  negativePrompt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  /** From the list endpoint (_count). */
+  itemCount?: number;
+  _count?: { items: number };
+  /** Present on the detail endpoint. */
+  items?: StickerItemDTO[];
+}
+
 export const DEFAULT_PACK_CONFIG: PackConfig = {
   name: "My Sticker Pack",
   theme: "coffee",
   style: "kawaii",
   provider: "mock",
-  count: 6,
   size: 1024,
   transparent: true,
   outline: false,

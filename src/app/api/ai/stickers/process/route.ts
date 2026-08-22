@@ -21,7 +21,17 @@ export const POST = withAuth(async (req: NextRequest, _ctx: any, _auth: any) => 
     const pack = await loadTenantPack(ctx, packId);
     const item = pack.items.find((it) => it.id === itemId);
     if (!item) {
-      return NextResponse.json({ error: "Sticker item not found" }, { status: 404 });
+      // Debuggable without leaking internals: distinguishes an empty pack from
+      // a stale/mismatched itemId (e.g. an id from a previous pack).
+      return NextResponse.json(
+        {
+          error:
+            pack.items.length === 0
+              ? "This pack has no sticker items — please re-create the batch."
+              : "Sticker item not found in this pack (it may belong to an earlier pack). Please regenerate the batch.",
+        },
+        { status: 404 },
+      );
     }
 
     // Mark as generating.

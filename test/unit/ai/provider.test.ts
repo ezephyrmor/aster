@@ -7,9 +7,10 @@ import {
 } from "@/lib/ai/provider";
 
 describe("supportsNativeNegative", () => {
-  it("maps stability and openrouter to native negative support", () => {
+  it("maps stability, openrouter and huggingface to native negative support", () => {
     expect(supportsNativeNegative("stability")).toBe(true);
     expect(supportsNativeNegative("openrouter")).toBe(true);
+    expect(supportsNativeNegative("huggingface")).toBe(true);
   });
 
   it("does not claim native negatives for text-injection providers", () => {
@@ -40,7 +41,14 @@ describe("extractFirstB64", () => {
 
 describe("STICKER_PROVIDERS", () => {
   it("includes every supported provider + mock", () => {
-    for (const p of ["openai", "stability", "google", "openrouter", "mock"]) {
+    for (const p of [
+      "openai",
+      "stability",
+      "google",
+      "openrouter",
+      "huggingface",
+      "mock",
+    ]) {
       expect(STICKER_PROVIDERS).toContain(p);
     }
   });

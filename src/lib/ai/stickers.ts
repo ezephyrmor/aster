@@ -35,18 +35,28 @@ export type GenerateOneInput = {
 /** Human-friendly (non-secret) error message for the UI. */
 export function publicErrorMessage(err: unknown): string {
   if (err instanceof ProviderError) {
+    let message: string;
     switch (err.kind) {
       case "not-configured":
-        return "The selected AI provider is not configured on this server.";
+        message = "The selected AI provider is not configured on this server.";
+        break;
       case "rate-limit":
-        return "The AI provider is rate-limiting requests. Please wait and retry.";
+        message = "The AI provider is rate-limiting requests. Please wait and retry.";
+        break;
       case "timeout":
-        return "The AI provider request timed out. Please retry.";
+        message = "The AI provider request timed out. Please retry.";
+        break;
       case "invalid-response":
-        return "The AI provider returned an unusable image. Please retry.";
+        message = "The AI provider rejected this request. See the details and retry.";
+        break;
       default:
-        return "The AI provider failed. Please retry.";
+        message = "The AI provider failed. Please retry.";
     }
+    // Hints/details are static or truncated provider text — no secrets/keys.
+    const parts = [message];
+    if (err.hint) parts.push(`Hint: ${err.hint}`);
+    if (err.detail) parts.push(`Provider said: ${err.detail}`);
+    return parts.join(" ");
   }
   return "Failed to generate this sticker. Please retry.";
 }

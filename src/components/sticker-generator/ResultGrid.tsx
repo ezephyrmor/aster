@@ -22,7 +22,8 @@ const statusLabel: Record<string, string> = {
   cancelled: "Cancelled",
 };
 
-function Checkerboard({ src, alt }: { src: string; alt: string }) {
+/** Shared transparent-preview tile (checkerboard is UI-only, never baked in). */
+export function Checkerboard({ src, alt }: { src: string; alt: string }) {
   return (
     <div
       className="w-full aspect-square rounded-md overflow-hidden"
@@ -107,7 +108,11 @@ export default function ResultGrid({
               >
                 {statusLabel[item.status] ?? item.status}
               </div>
-              {item.error && <div className="text-[10px] text-red-500 break-words">{item.error}</div>}
+              {item.error && (
+                <div className="text-[10px] text-red-500 break-words whitespace-pre-line leading-snug max-h-24 overflow-y-auto">
+                  {item.error}
+                </div>
+              )}
               <div className="flex flex-wrap gap-1.5">
                 {item.asset && packId && (
                   <a

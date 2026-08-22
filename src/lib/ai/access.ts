@@ -27,7 +27,14 @@ export async function getScopedCtx(): Promise<ScopedCtx> {
 export async function loadTenantPack(ctx: ScopedCtx, packId: string) {
   const pack = await ctx.prisma.stickerPack.findFirst({
     where: { id: packId, companyId: ctx.companyId },
-    include: { items: { include: { asset: true } }, assets: true },
+    include: {
+      items: {
+        include: { asset: true },
+        // Deterministic order — clients may map results positionally.
+        orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+      },
+      assets: true,
+    },
   });
   if (!pack) {
     throw new PackNotFoundError();

@@ -2,7 +2,14 @@ import { z } from "zod";
 import { STICKER_THEMES, STICKER_STYLES } from "@/lib/ai/sticker-prompts";
 
 /** Server-side provider allowlist (kept local so validations stay client-safe). */
-const PROVIDER_NAMES = ["openai", "stability", "google", "openrouter", "mock"];
+const PROVIDER_NAMES = [
+  "openai",
+  "stability",
+  "google",
+  "openrouter",
+  "huggingface",
+  "mock",
+];
 const providerKeys = PROVIDER_NAMES as [string, ...string[]];
 
 /** Limits enforced server-side for the sticker generator (spec: reasonable limits). */
@@ -17,6 +24,10 @@ export const STICKER_LIMITS = {
   imageSize: 1024,
 } as const;
 
+/** Output canvas sizes offered in the UI (server-validated). */
+export const STICKER_SIZES = [512, 768, 1024, 1536, 2048] as const;
+const sizeValues = STICKER_SIZES.map((s) => s);
+
 const themeKeys = Object.keys(STICKER_THEMES) as [string, ...string[]];
 const styleKeys = Object.keys(STICKER_STYLES) as [string, ...string[]];
 
@@ -26,7 +37,13 @@ export const StickerPackSchema = z.object({
   style: z.enum(styleKeys),
   provider: z.enum(providerKeys).optional(),
   count: z.number().int().min(1).max(STICKER_LIMITS.maxStickers).default(6),
-  size: z.number().int().default(STICKER_LIMITS.imageSize),
+  size: z
+    .number()
+    .int()
+    .refine((v) => (sizeValues as number[]).includes(v), {
+      message: `Size must be one of ${sizeValues.join(", ")}`,
+    })
+    .default(STICKER_LIMITS.imageSize),
   transparent: z.boolean().default(true),
   outline: z.boolean().default(false),
   batchInstructions: z.string().trim().max(STICKER_LIMITS.batchInstructions).optional(),

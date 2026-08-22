@@ -41,11 +41,12 @@ The sticker generator's `src/lib/ai/provider.ts` supports several providers; eac
 | `stability` | `STABILITY_API_KEY` | native `negative_prompt` |
 | `google` (Imagen) | `GOOGLE_API_KEY` | injected into the prompt text |
 | `openrouter` | `OPENROUTER_API_KEY` | native `negative_prompt` |
+| `huggingface` | `HUGGINGFACE_API_KEY` | native (`parameters.negative_prompt`) |
 | `mock` | *(none)* | n/a — renders a placeholder image |
 
 - `AI_PROVIDER` selects the default provider (`mock` when unset); a saved pack may override it.
-- `AI_MODEL` overrides the model id used by the OpenRouter worker.
-- Provider responses may return **base64 or an image URL** — the shared fetch helper handles both (`extractFirstB64` → `extractFirstImageUrl`, downloading the URL when needed).
+- `AI_MODEL` overrides the model id used by the OpenRouter worker; `HUGGINGFACE_MODEL` picks the HF text-to-image model.
+- Provider responses may return **base64, raw bytes, or an image URL** — the shared fetch helpers handle all three (`extractFirstB64` → `extractFirstImageUrl`, downloading the URL when needed).
 
 ---
 

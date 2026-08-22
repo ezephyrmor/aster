@@ -38,7 +38,7 @@ export const POST = withAuth(async (request: NextRequest, _ctx: any, _auth: any)
         theme: parsed.data.theme,
         style: parsed.data.style,
         provider: parsed.data.provider ?? "mock",
-        count: parsed.data.count,
+        count: items.length || parsed.data.count,
         size: parsed.data.size,
         transparent: parsed.data.transparent,
         outline: parsed.data.outline,
@@ -63,7 +63,12 @@ export const POST = withAuth(async (request: NextRequest, _ctx: any, _auth: any)
 
     const full = await ctx.prisma.stickerPack.findFirst({
       where: { id: pack.id, companyId: ctx.companyId },
-      include: { items: { include: { asset: true } } },
+      include: {
+        items: {
+          include: { asset: true },
+          orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+        },
+      },
     });
 
     return NextResponse.json(full, { status: 201 });
