@@ -59,6 +59,14 @@ export const THEMES: Record<string, string> = {
   sleep: "sleep, rest, dreams",
   shopping: "shopping, retail",
   chores: "household chores, cleaning",
+  music: "music, instruments, sound",
+  sports: "sports, athletics, competition",
+  space: "space, planets, astronomy, sci-fi",
+  ocean: "ocean animals and sea creatures",
+  vehicles: "vehicles, cars, transportation",
+  celebration: "parties, holidays, celebrations, gifts",
+  tech: "technology, gadgets, computing",
+  holiday: "seasonal holidays, christmas, halloween, easter",
 };
 
 /**
@@ -76,6 +84,12 @@ export const STYLE_PROMPTS: Record<string, string> = {
   "cute-3d": "cute 3D render, glossy, soft plastic, subtle depth",
   watercolor: "watercolor wash, soft organic edges, translucent color",
   "pixel-art": "pixel art, crisp pixels, retro game style",
+  neon: "neon glow style, vivid saturated colors, glowing outlines, dark-friendly brightness",
+  claymation: "claymation clay model look, soft matte texture, handmade charm, subtle fingerprints",
+  papercut: "layered paper cut craft, visible paper texture, soft drop shadow between layers",
+  "line-art": "clean monoline black line art, minimal, no fill color",
+  "retro-vintage": "retro 1970s vintage style, warm faded palette, groovy rounded shapes",
+  emoji: "glossy emoji style, bright saturated colors, smooth rounded shapes, expressive face",
 };
 
 /** Optional style-specific negatives — only added when they make sense. */
@@ -87,6 +101,12 @@ export const STYLE_NEGATIVES: Record<string, string> = {
   doodle: "gradients, shading, heavy 3D depth",
   "hand-drawn": "perfectly straight lines, vector-smooth edges",
   flat: "texture, noise, photorealism, gradient",
+  neon: "muted earth tones, pastel palette, flat daylight lighting",
+  claymation: "flat vector shapes, photorealism, glossy plastic shine",
+  papercut: "photorealism, smooth digital gradients, metallic surfaces",
+  "line-art": "solid color fills, heavy shading, gradients, 3D depth",
+  "retro-vintage": "modern minimalist design, neon colors, futuristic elements",
+  emoji: "hand-sketched roughness, muted colors, complex backgrounds",
 };
 
 export type StickerPromptInput = {
@@ -206,6 +226,14 @@ export const SUGGEST_BY_THEME: Record<string, string[]> = {
   sleep: ["moon", "pillow", "bed", "pajamas", "zzz", "dream cloud"],
   shopping: ["shopping bag", "price tag", "shopping cart", "gift box", "receipt", "sunglasses"],
   chores: ["broom", "sponge", "laundry basket", "bucket", "dish soap", "vacuum"],
+  music: ["electric guitar", "headphones", "vinyl record", "microphone", "piano keys", "music note"],
+  sports: ["soccer ball", "basketball", "trophy", "whistle", "stopwatch", "medal"],
+  space: ["rocket ship", "planet saturn", "astronaut helmet", "telescope", "shooting star", "ufo"],
+  ocean: ["dolphin", "whale", "octopus", "seashell", "starfish", "submarine"],
+  vehicles: ["race car", "scooter", "hot air balloon", "fire truck", "bicycle", "sailboat"],
+  celebration: ["party popper", "balloon", "birthday cake", "confetti cannon", "pinata", "gift bow"],
+  tech: ["smartphone", "robot", "usb drive", "server rack", "game cartridge", "circuit chip"],
+  holiday: ["pumpkin lantern", "christmas tree", "easter egg", "santa hat", "snow globe", "menorah"],
 };
 
 /** Returns a themed suggestion list (default count). */

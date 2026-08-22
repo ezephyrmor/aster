@@ -52,4 +52,17 @@ describe("StickerPackSchema — output sizes", () => {
     const bad = StickerPackSchema.safeParse({ ...basePack, size: 300 });
     expect(bad.success).toBe(false);
   });
+
+  it("accepts the extended theme and style catalogs", () => {
+    const newThemes = ["music", "sports", "space", "ocean", "vehicles", "celebration", "tech", "holiday"];
+    for (const theme of newThemes) {
+      const parsed = StickerPackSchema.safeParse({ ...basePack, theme });
+      expect(parsed.success, `theme "${theme}" should parse`).toBe(true);
+    }
+    const newStyles = ["neon", "claymation", "papercut", "line-art", "retro-vintage", "emoji"];
+    for (const style of newStyles) {
+      const parsed = StickerPackSchema.safeParse({ ...basePack, style, size: MIN_STANDARD_SIZE });
+      expect(parsed.success, `style "${style}" should parse`).toBe(true);
+    }
+  });
 });

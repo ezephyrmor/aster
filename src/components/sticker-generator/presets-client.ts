@@ -22,6 +22,14 @@ export const STICKER_THEMES: Record<string, string> = {
   sleep: "Sleep",
   shopping: "Shopping",
   chores: "Chores",
+  music: "Music",
+  sports: "Sports",
+  space: "Space",
+  ocean: "Ocean",
+  vehicles: "Vehicles",
+  celebration: "Celebration",
+  tech: "Tech",
+  holiday: "Holiday",
 };
 
 export const STICKER_DISPLAY_STYLES: Record<string, string> = {
@@ -35,6 +43,12 @@ export const STICKER_DISPLAY_STYLES: Record<string, string> = {
   "cute-3d": "Cute 3D",
   watercolor: "Watercolor",
   "pixel-art": "Pixel Art",
+  neon: "Neon Glow",
+  claymation: "Claymation",
+  papercut: "Paper Cut",
+  "line-art": "Line Art",
+  "retro-vintage": "Retro Vintage",
+  emoji: "Emoji",
 };
 
 export const THEME_KEYS = Object.keys(STICKER_THEMES);
