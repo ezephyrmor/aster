@@ -17,7 +17,23 @@
 import sharp from "sharp";
 
 export const STICKER_CANVAS = 1024;
-const ALPHA_THRESHOLD = 12; // a pixel is "visible" if its alpha is above this
+// A pixel is "visible" if its alpha is above this. Spec: α < 8 → transparent.
+const ALPHA_THRESHOLD = 8;
+
+// --- Cutout cleanup parameters (see sticker-cleanup spec) ---
+// Near-white residue: RGB all ≥ this → background remnant on edges.
+const NEAR_WHITE_THRESHOLD = 245;
+// Near-gray residue: channels ≥ this with very low saturation.
+const NEAR_GRAY_THRESHOLD = 230;
+const NEAR_GRAY_MAX_SATURATION = 24;
+// How many pixels deep (from transparency) an outline residue can sit.
+const OUTLINE_DEPTH = 3;
+// A residue-colored connected region extending deeper than this from the
+// cutout edge is genuine white/gray ARTWORK (highlights, thick shapes) —
+// never remove it. Thin halos/outlines never reach this depth.
+const ARTWORK_MIN_DEPTH = 6;
+// Connected visible clusters smaller than this many pixels are stray dots.
+const DESPECKLE_MIN_CLUSTER = 16;
 
 export type ProcessOptions = {
   canvasSize?: number;
@@ -86,11 +102,20 @@ export async function processStickerImage(
     if (keyed) rgba = keyed;
   }
 
-  // 2b. Edge decontamination / de-fringing: pixels bordering transparency that
-  //     still carry background color (white halo, green spill, gray matte) get
-  //     their color unmixed and alpha feathered, so no fringe ring survives.
+  // 2b. Residual outline removal FIRST: absolute near-white / near-gray halo
+  //     pixels near transparency are zeroed, while deep residue-colored
+  //     regions (genuine artwork) are detected and protected.
   if (opts.transparent) {
-    rgba = decontaminateEdges(rgba, srcW, srcH, 2);
+    const { out: deOutlined, protectedPx } = removeResidualOutlines(rgba, srcW, srcH);
+    // 2c. Edge decontamination / de-fringing: pixels bordering transparency
+    //     that still carry background color get unmixed and alpha feathered,
+    //     skipping protected genuine-artwork pixels.
+    rgba = decontaminateEdges(deOutlined, srcW, srcH, 2, protectedPx);
+    // 2d. Alpha refinement: anything below the visibility floor is truly
+    //     transparent; no semi-transparent haze may remain.
+    refineAlpha(rgba, ALPHA_THRESHOLD);
+    // 2e. Despeckle: isolated pixel clusters outside the subject are removed.
+    rgba = despeckle(rgba, srcW, srcH, DESPECKLE_MIN_CLUSTER);
   }
 
   // 3. Find visible-alpha bounds (configurable threshold) and trim.
@@ -238,6 +263,7 @@ function decontaminateEdges(
   width: number,
   height: number,
   passes = 2,
+  protectedPx?: Uint8Array,
 ): Buffer {
   const bg = getBgColor(rgba, width, height);
   if (!bg) return rgba;
@@ -256,8 +282,8 @@ function decontaminateEdges(
         const p = y * width + x;
         const i = p * 4;
         if (src[i + 3] === 0) continue;
-
-        // Only process pixels that border transparency.
+        // Never de-fringe genuine artwork pixels.
+        if (protectedPx && protectedPx[p]) continue;
         const touchesTransparent =
           (x > 0 && src[(p - 1) * 4 + 3] === 0) ||
           (x < width - 1 && src[(p + 1) * 4 + 3] === 0) ||
@@ -348,6 +374,37 @@ export async function validateCutout(
     throw new ProcessingError(
       "processing",
       "No meaningful sticker artwork remains after background removal.",
+    );
+  }
+
+  // 3. Halo / stray-pixel audit: visible residue-colored pixels (near-white or
+  //    near-gray) sitting directly on the transparency boundary indicate an
+  //    outline remnant the cleanup stages failed to remove. Pixels belonging
+  //    to protected deep artwork regions are exempt.
+  const stride = canvas * 4;
+  const { protectedPx } = analyzeResidue(raw as unknown as Buffer, canvas, canvas);
+  let haloViolations = 0;
+  for (let y = 2; y < canvas - 2; y++) {
+    for (let x = 2; x < canvas - 2; x++) {
+      const p = y * canvas + x;
+      const i = p * 4;
+      if (raw[i + 3] <= alphaThreshold) continue;
+      const touchesTransparent =
+        raw[i - 4 + 3] <= alphaThreshold ||
+        raw[i + 4 + 3] <= alphaThreshold ||
+        raw[i - stride + 3] <= alphaThreshold ||
+        raw[i + stride + 3] <= alphaThreshold;
+      if (!touchesTransparent) continue;
+      if (protectedPx[p]) continue;
+      if (isResidueColor(raw[i], raw[i + 1], raw[i + 2])) haloViolations++;
+    }
+  }
+  // ~64px on a 1024 canvas: well below a visible ring, above pixel noise.
+  const haloTolerance = Math.max(16, Math.floor(canvas * canvas * 0.00006));
+  if (haloViolations > haloTolerance) {
+    throw new ProcessingError(
+      "transparency-failed",
+      `Cutout validation failed: ${haloViolations} residual outline/halo pixels around the subject.`,
     );
   }
 }
@@ -443,6 +500,188 @@ function keyOutBackgroundFlood(
         out[i + 2] = clampByte((src[i + 2] - (1 - af) * bb) / af);
       }
     }
+  }
+  return out;
+}
+
+/**
+ * True if the color is near-white residue (RGB ≥ NEAR_WHITE_THRESHOLD) or
+ * near-gray low-saturation residue (channels ≥ NEAR_GRAY_THRESHOLD with
+ * max-min spread ≤ NEAR_GRAY_MAX_SATURATION).
+ */
+function isResidueColor(r: number, g: number, b: number): boolean {
+  if (r >= NEAR_WHITE_THRESHOLD && g >= NEAR_WHITE_THRESHOLD && b >= NEAR_WHITE_THRESHOLD) {
+    return true;
+  }
+  const min = Math.min(r, g, b);
+  const max = Math.max(r, g, b);
+  return min >= NEAR_GRAY_THRESHOLD && max - min <= NEAR_GRAY_MAX_SATURATION;
+}
+
+/**
+ * Shared geometry for residue handling:
+ * - `depth`: BFS distance (px) of every pixel from the transparent region
+ *   (0 = transparent, -1 unreachable/full frame).
+ * - `protectedPx`: residue-colored connected regions whose maximum depth
+ *   exceeds ARTWORK_MIN_DEPTH — i.e. genuine white/gray artwork, not outlines.
+ */
+function analyzeResidue(
+  rgba: Buffer,
+  width: number,
+  height: number,
+): { depth: Int16Array; protectedPx: Uint8Array } {
+  const src = new Uint8Array(rgba);
+  const n = width * height;
+
+  const depth = new Int16Array(n).fill(-1);
+  const queue = new Int32Array(n);
+  let head = 0;
+  let tail = 0;
+  for (let p = 0; p < n; p++) {
+    if (src[p * 4 + 3] === 0) {
+      depth[p] = 0;
+      queue[tail++] = p;
+    }
+  }
+  while (head < tail) {
+    const p = queue[head++];
+    const x = p % width;
+    const neighbors = [
+      x > 0 ? p - 1 : -1,
+      x < width - 1 ? p + 1 : -1,
+      p - width,
+      p + width,
+    ];
+    for (const q of neighbors) {
+      if (q < 0 || q >= n || depth[q] !== -1) continue;
+      depth[q] = depth[p] + 1;
+      queue[tail++] = q;
+    }
+  }
+
+  const protectedPx = new Uint8Array(n);
+  const visited = new Uint8Array(n);
+  const region = new Int32Array(n);
+  for (let start = 0; start < n; start++) {
+    if (visited[start] || depth[start] <= 0) continue;
+    const i = start * 4;
+    if (!isResidueColor(src[i], src[i + 1], src[i + 2])) continue;
+
+    // Collect this connected residue-colored region via BFS.
+    let rTail = 0;
+    let maxDepth = 0;
+    region[rTail++] = start;
+    visited[start] = 1;
+    let h = 0;
+    while (h < rTail) {
+      const p = region[h++];
+      const x = p % width;
+      maxDepth = Math.max(maxDepth, depth[p]);
+      const push = (q: number) => {
+        if (q < 0 || q >= n || visited[q] || depth[q] <= 0) return;
+        const j = q * 4;
+        if (!isResidueColor(src[j], src[j + 1], src[j + 2])) return;
+        visited[q] = 1;
+        region[rTail++] = q;
+      };
+      push(x > 0 ? p - 1 : -1);
+      push(x < width - 1 ? p + 1 : -1);
+      push(p - width);
+      push(p + width);
+    }
+    // Deep residue-colored regions are genuine artwork, not outlines.
+    if (maxDepth > ARTWORK_MIN_DEPTH) {
+      for (let k = 0; k < rTail; k++) protectedPx[region[k]] = 1;
+    }
+  }
+
+  return { depth, protectedPx };
+}
+
+/**
+ * Residual outline / halo removal (spec step: "Remove Residual Outlines").
+ *
+ * Visible pixels within OUTLINE_DEPTH of transparency whose color is
+ * near-white/near-gray are zeroed — except pixels belonging to protected
+ * deep residue regions (genuine artwork).
+ */
+function removeResidualOutlines(
+  rgba: Buffer,
+  width: number,
+  height: number,
+): { out: Buffer; protectedPx: Uint8Array } {
+  const { depth, protectedPx } = analyzeResidue(rgba, width, height);
+  const n = width * height;
+
+  const out = Buffer.from(new Uint8Array(rgba));
+  for (let p = 0; p < n; p++) {
+    if (depth[p] <= 0 || depth[p] > OUTLINE_DEPTH || protectedPx[p]) continue;
+    const i = p * 4;
+    if (isResidueColor(out[i], out[i + 1], out[i + 2])) {
+      out[i + 3] = 0;
+    }
+  }
+  return { out, protectedPx };
+}
+
+/** Alpha refinement: any pixel below the visibility floor becomes α = 0. */
+function refineAlpha(rgba: Buffer, floor: number): void {
+  const out = new Uint8Array(rgba);
+  for (let i = 3; i < out.length; i += 4) {
+    if (out[i] > 0 && out[i] < floor) out[i] = 0;
+  }
+}
+
+/**
+ * Despeckle (spec step: "Remove Isolated Pixels"): connected components of
+ * visible pixels smaller than `minCluster` are made fully transparent —
+ * stray dots left outside the main subject never survive to the final PNG.
+ */
+function despeckle(rgba: Buffer, width: number, height: number, minCluster: number): Buffer {
+  const src = new Uint8Array(rgba);
+  const n = width * height;
+  const label = new Int32Array(n).fill(-1); // -1 = unvisited, -2 = background
+  const component = new Int32Array(n);
+  const remove = new Uint8Array(n);
+
+  for (let start = 0; start < n; start++) {
+    if (label[start] !== -1) continue;
+    if (src[start * 4 + 3] < ALPHA_THRESHOLD) {
+      label[start] = -2;
+      continue;
+    }
+    // Flood this visible component.
+    let tail = 0;
+    let h = 0;
+    component[tail++] = start;
+    label[start] = 0;
+    let size = 0;
+    while (h < tail) {
+      const p = component[h++];
+      size++;
+      const x = p % width;
+      const visit = (q: number) => {
+        if (q < 0 || q >= n || label[q] !== -1) return;
+        if (src[q * 4 + 3] < ALPHA_THRESHOLD) {
+          label[q] = -2;
+          return;
+        }
+        label[q] = 0;
+        component[tail++] = q;
+      };
+      visit(x > 0 ? p - 1 : -1);
+      visit(x < width - 1 ? p + 1 : -1);
+      visit(p - width);
+      visit(p + width);
+    }
+    if (size < minCluster) {
+      for (let k = 0; k < tail; k++) remove[component[k]] = 1;
+    }
+  }
+
+  const out = Buffer.from(new Uint8Array(rgba));
+  for (let p = 0; p < n; p++) {
+    if (remove[p]) out[p * 4 + 3] = 0;
   }
   return out;
 }

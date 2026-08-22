@@ -16,20 +16,35 @@ function nextKey() {
   return `client-${Date.now()}-${localKeyCounter++}`;
 }
 
-export default function ItemListEditor({ items, onItemsChange, theme }: ItemListEditorProps) {
+export default function ItemListEditor({
+  items,
+  onItemsChange,
+  theme,
+}: ItemListEditorProps) {
   const [suggestCount, setSuggestCount] = useState(6);
   const [suggesting, setSuggesting] = useState(false);
 
   const update = (key: string, patch: Partial<ClientItem>) =>
-    onItemsChange(items.map((it) => (it.key === key ? { ...it, ...patch, destroyed: false } : it)));
+    onItemsChange(
+      items.map((it) =>
+        it.key === key ? { ...it, ...patch, destroyed: false } : it,
+      ),
+    );
 
   const addItem = () =>
     onItemsChange([
       ...items,
-      { key: nextKey(), name: "", instructions: "", negativeInstructions: "", status: "pending" },
+      {
+        key: nextKey(),
+        name: "",
+        instructions: "",
+        negativeInstructions: "",
+        status: "pending",
+      },
     ]);
 
-  const removeItem = (key: string) => onItemsChange(items.filter((it) => it.key !== key));
+  const removeItem = (key: string) =>
+    onItemsChange(items.filter((it) => it.key !== key));
 
   const applySuggestions = (names: string[]) => {
     const fresh = names.map((n) => ({
@@ -64,7 +79,9 @@ export default function ItemListEditor({ items, onItemsChange, theme }: ItemList
   return (
     <div className="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-5 space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">2 · Sticker Items</h2>
+        <h2 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+          2 · Sticker Items
+        </h2>
         <div className="flex items-center gap-2">
           <Input
             type="number"
@@ -75,7 +92,12 @@ export default function ItemListEditor({ items, onItemsChange, theme }: ItemList
             className="!w-20"
             aria-label="Suggestion count"
           />
-          <Button variant="outline" onClick={handleSuggest} disabled={suggesting} size="sm">
+          <Button
+            variant="blue"
+            onClick={handleSuggest}
+            disabled={suggesting}
+            size="sm"
+          >
             {suggesting ? "Suggesting…" : "Suggest Items"}
           </Button>
           <Button variant="green" onClick={addItem} size="sm">
@@ -86,12 +108,16 @@ export default function ItemListEditor({ items, onItemsChange, theme }: ItemList
 
       {items.length === 0 ? (
         <p className="text-xs text-zinc-500 dark:text-zinc-400">
-          No items yet. Add a sticker item (e.g. “coffee mug”) or use Suggest Items.
+          No items yet. Add a sticker item (e.g. “coffee mug”) or use Suggest
+          Items.
         </p>
       ) : (
         <ul className="space-y-3">
           {items.map((item) => (
-            <li key={item.key} className="rounded-md border border-zinc-200 dark:border-zinc-700 p-3 space-y-2">
+            <li
+              key={item.key}
+              className="rounded-md border border-zinc-200 dark:border-zinc-700 p-3 space-y-2"
+            >
               <div className="flex gap-2">
                 <Input
                   value={item.name}
@@ -99,7 +125,12 @@ export default function ItemListEditor({ items, onItemsChange, theme }: ItemList
                   placeholder="Sticker item name"
                   className="flex-1"
                 />
-                <Button variant="ghost" size="icon-sm" onClick={() => removeItem(item.key)} aria-label="Remove item">
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => removeItem(item.key)}
+                  aria-label="Remove item"
+                >
                   ✕
                 </Button>
               </div>
@@ -107,20 +138,26 @@ export default function ItemListEditor({ items, onItemsChange, theme }: ItemList
                 <summary className="cursor-pointer select-none font-medium">
                   Optional instructions
                   {(item.instructions || item.negativeInstructions) && (
-                    <span className="ml-1 text-blue-500 dark:text-blue-400">• set</span>
+                    <span className="ml-1 text-blue-500 dark:text-blue-400">
+                      • set
+                    </span>
                   )}
                 </summary>
                 <div className="mt-2 space-y-2">
                   <textarea
                     value={item.instructions}
-                    onChange={(e) => update(item.key, { instructions: e.target.value })}
+                    onChange={(e) =>
+                      update(item.key, { instructions: e.target.value })
+                    }
                     rows={1}
                     placeholder="Custom instructions for this item"
                     className="w-full rounded-md border border-input bg-transparent px-2.5 py-1.5 text-xs dark:bg-zinc-700 dark:border-zinc-600 dark:text-zinc-100"
                   />
                   <textarea
                     value={item.negativeInstructions}
-                    onChange={(e) => update(item.key, { negativeInstructions: e.target.value })}
+                    onChange={(e) =>
+                      update(item.key, { negativeInstructions: e.target.value })
+                    }
                     rows={1}
                     placeholder="Additional negative prompt for this item"
                     className="w-full rounded-md border border-input bg-transparent px-2.5 py-1.5 text-xs dark:bg-zinc-700 dark:border-zinc-600 dark:text-zinc-100"
@@ -128,7 +165,9 @@ export default function ItemListEditor({ items, onItemsChange, theme }: ItemList
                 </div>
               </details>
               {item.status === "failed" && item.error && (
-                <p className="text-xs text-red-600 dark:text-red-400">{item.error}</p>
+                <p className="text-xs text-red-600 dark:text-red-400">
+                  {item.error}
+                </p>
               )}
             </li>
           ))}

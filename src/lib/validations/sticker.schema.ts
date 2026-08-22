@@ -25,7 +25,7 @@ export const STICKER_LIMITS = {
 } as const;
 
 /** Output canvas sizes offered in the UI (server-validated). */
-export const STICKER_SIZES = [512, 768, 1024, 1536, 2048] as const;
+export const STICKER_SIZES = [256, 512, 768, 1024, 1536, 2048] as const;
 const sizeValues = STICKER_SIZES.map((s) => s);
 
 /** White outline strengths (post-processing die-cut border width). */
