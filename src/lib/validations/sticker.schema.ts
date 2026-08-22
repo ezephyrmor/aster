@@ -45,6 +45,8 @@ export const StickerPackSchema = z.object({
   theme: z.enum(themeKeys),
   style: z.enum(styleKeys),
   provider: z.enum(providerKeys).optional(),
+  /** Model id from the per-provider catalog (src/lib/ai/models.ts). */
+  model: z.string().trim().max(120).optional(),
   count: z.number().int().min(1).max(STICKER_LIMITS.maxStickers).default(6),
   size: z
     .number()

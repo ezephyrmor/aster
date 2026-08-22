@@ -14,6 +14,18 @@ vi.mock("@/lib/ai/provider", () => ({
   isProviderConfigured: (p: string) => p === "mock" || p === "openrouter",
 }));
 
+vi.mock("@/lib/ai/models", () => ({
+  PROVIDER_MODELS: {
+    openai: [{ id: "gpt-image-1", label: "GPT Image 1", tier: "paid" }],
+    openrouter: [
+      { id: "google/gemini-2.5-flash-image", label: "Gemini 2.5 Flash Image", tier: "paid" },
+    ],
+    mock: [{ id: "mock", label: "Placeholder renderer", tier: "free" }],
+  },
+  defaultModelFor: (p: string) =>
+    p === "openai" ? "gpt-image-1" : p === "openrouter" ? "google/gemini-2.5-flash-image" : "mock",
+}));
+
 describe("GET /api/ai/stickers/providers", () => {
   beforeEach(() => {
     vi.stubEnv("AI_PROVIDER", "openrouter");
@@ -28,9 +40,30 @@ describe("GET /api/ai/stickers/providers", () => {
 
     expect(data.defaultProvider).toBe("openrouter");
     expect(data.providers).toEqual([
-      { id: "openai", configured: false },
-      { id: "openrouter", configured: true },
-      { id: "mock", configured: true },
+      {
+        id: "openai",
+        configured: false,
+        models: [{ id: "gpt-image-1", label: "GPT Image 1", tier: "paid" }],
+        defaultModel: "gpt-image-1",
+      },
+      {
+        id: "openrouter",
+        configured: true,
+        models: [
+          {
+            id: "google/gemini-2.5-flash-image",
+            label: "Gemini 2.5 Flash Image",
+            tier: "paid",
+          },
+        ],
+        defaultModel: "google/gemini-2.5-flash-image",
+      },
+      {
+        id: "mock",
+        configured: true,
+        models: [{ id: "mock", label: "Placeholder renderer", tier: "free" }],
+        defaultModel: "mock",
+      },
     ]);
   });
 });

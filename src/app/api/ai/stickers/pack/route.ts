@@ -38,6 +38,7 @@ export const POST = withAuth(async (request: NextRequest, _ctx: any, _auth: any)
         theme: parsed.data.theme,
         style: parsed.data.style,
         provider: parsed.data.provider ?? "mock",
+        model: parsed.data.model ?? null,
         count: items.length || parsed.data.count,
         size: parsed.data.size,
         transparent: parsed.data.transparent,

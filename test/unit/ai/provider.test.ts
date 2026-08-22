@@ -1,10 +1,28 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import {
   extractFirstB64,
   extractFirstImageUrl,
+  generateSticker,
   supportsNativeNegative,
   STICKER_PROVIDERS,
 } from "@/lib/ai/provider";
+import { defaultModelFor, isValidModel, PROVIDER_MODELS, resolveModel } from "@/lib/ai/models";
+
+function mockResponse(status: number, body: unknown): Response {
+  return {
+    ok: status >= 200 && status < 300,
+    status,
+    text: async () => JSON.stringify(body),
+    json: async () => body,
+    headers: new Headers(),
+  } as unknown as Response;
+}
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
+});
+
 
 describe("supportsNativeNegative", () => {
   it("maps stability, openrouter and huggingface to native negative support", () => {
@@ -67,4 +85,93 @@ describe("extractFirstImageUrl", () => {
   it("does not match non-image URLs", () => {
     expect(extractFirstImageUrl("https://example.com/page")).toBeNull();
   });
+});
+
+describe("model catalog", () => {
+  it("categorizes every provider with at least one model", () => {
+    for (const p of STICKER_PROVIDERS) {
+      expect(PROVIDER_MODELS[p].length).toBeGreaterThan(0);
+      for (const m of PROVIDER_MODELS[p]) {
+        expect(["free", "free-tier", "paid"]).toContain(m.tier);
+      }
+    }
+  });
+
+  it("offers a truly free model for huggingface and none for openrouter", () => {
+    expect(PROVIDER_MODELS.huggingface.some((m) => m.tier === "free")).toBe(true);
+    expect(PROVIDER_MODELS.openrouter.every((m) => m.tier === "paid")).toBe(true);
+  });
+
+  it("validates model ids against the provider allowlist", () => {
+    expect(isValidModel("openrouter", "google/gemini-2.5-flash-image")).toBe(true);
+    expect(isValidModel("openrouter", "black-forest-labs/flux-1.1-pro")).toBe(false);
+    expect(isValidModel("huggingface", "google/gemini-2.5-flash-image")).toBe(false);
+  });
+
+  it("resolveModel prefers request → env → default and falls back on unknown ids", () => {
+    expect(resolveModel("openrouter", "openai/gpt-5-image")).toBe("openai/gpt-5-image");
+    vi.stubEnv("AI_MODEL", "google/gemini-3-pro-image");
+    expect(resolveModel("openrouter")).toBe("google/gemini-3-pro-image");
+    expect(resolveModel("openrouter", "made-up/model")).toBe(defaultModelFor("openrouter"));
+  });
+});
+
+describe("generateSticker fallback", () => {
+  const baseReq = {
+    positivePrompt: "a cute cat sticker",
+    size: 512,
+    transparent: true,
+  };
+
+  function stubSequence(responses: Response[]) {
+    let i = 0;
+    const fetchMock = vi.fn(() =>
+      Promise.resolve(responses[Math.min(i++, responses.length - 1)]),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    return fetchMock;
+  }
+
+  it("falls back to a configured free provider on hard failures (402)", async () => {
+    // OpenRouter: 402 → HF worker uses @huggingface/inference, not fetch; stub
+    // env so only google remains reachable via fetch.
+    vi.stubEnv("OPENROUTER_API_KEY", "sk-or-v1-test");
+    vi.stubEnv("GOOGLE_API_KEY", "google-key");
+    delete (process.env as Record<string, unknown>).HUGGINGFACE_API_KEY;
+    const fetchMock = stubSequence([
+      mockResponse(402, { error: { message: "Insufficient credits" } }),
+      mockResponse(200, {
+        predictions: [
+          { bytesBase64Encoded: "AAAAAAABBBBBBCCCCCCDDDDDDEEEEEEFFFFGGGG==" },
+        ],
+      }),
+    ]);
+
+    const result = await generateSticker({
+      ...baseReq,
+      provider: "openrouter",
+      model: "google/gemini-2.5-flash-image",
+    });
+    expect(result.provider).toBe("google");
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  }, 15_000);
+
+  it("does not fall back on transient errors (timeout / rate-limit)", async () => {
+    vi.stubEnv("GOOGLE_API_KEY", "google-key");
+    delete (process.env as Record<string, unknown>).HUGGINGFACE_API_KEY;
+    const fetchMock = stubSequence([
+      mockResponse(429, { error: { message: "Rate limited" } }),
+    ]);
+
+    await expect(
+      generateSticker({ ...baseReq, provider: "google" }),
+    ).rejects.toThrow();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  }, 15_000);
+
+  it("reports the requested provider when it succeeds directly", async () => {
+    const result = await generateSticker({ ...baseReq, provider: "mock" });
+    expect(result.provider).toBe("mock");
+    expect(result.buffer.length).toBeGreaterThan(0);
+  }, 15_000);
 });

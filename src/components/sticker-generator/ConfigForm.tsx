@@ -7,7 +7,18 @@ import type { PackConfig } from "./types";
 import { STICKER_THEMES, STICKER_DISPLAY_STYLES } from "./presets-client";
 import { STICKER_SIZES } from "@/lib/validations";
 
-type ProviderInfo = { id: string; configured: boolean };
+type ProviderInfo = {
+  id: string;
+  configured: boolean;
+  models?: { id: string; label: string; tier: "free" | "free-tier" | "paid"; note?: string }[];
+  defaultModel?: string;
+};
+
+const TIER_GROUPS: { tier: "free" | "free-tier" | "paid"; label: string }[] = [
+  { tier: "free", label: "Free" },
+  { tier: "free-tier", label: "Free tier (rate-limited)" },
+  { tier: "paid", label: "Paid" },
+];
 
 /** Static fallback until the server tells us what's actually configured. */
 const FALLBACK_PROVIDERS: ProviderInfo[] = [
@@ -50,6 +61,12 @@ export default function ConfigForm({ value, onChange, onSubmit }: ConfigFormProp
   }, []);
 
   const selectedInfo = providers.find((p) => p.id === value.provider);
+
+  /** Keep the selected model valid when the provider changes. */
+  function switchProvider(nextProvider: string) {
+    const info = providers.find((p) => p.id === nextProvider);
+    set({ provider: nextProvider, model: info?.defaultModel });
+  }
 
   /** Env var name per provider — for the "no key" hint only. */
   function keyEnvName(provider: string): string {
@@ -118,7 +135,7 @@ export default function ConfigForm({ value, onChange, onSubmit }: ConfigFormProp
           AI Provider
           <select
             value={value.provider}
-            onChange={(e) => set({ provider: e.target.value })}
+            onChange={(e) => switchProvider(e.target.value)}
             className="mt-1 h-8 w-full rounded-md border border-input bg-transparent px-2.5 text-sm dark:bg-zinc-700 dark:border-zinc-600 dark:text-zinc-100"
           >
             {providers.map((p) => (
@@ -130,6 +147,32 @@ export default function ConfigForm({ value, onChange, onSubmit }: ConfigFormProp
             ))}
           </select>
         </label>
+
+        {selectedInfo?.models && selectedInfo.models.length > 0 && (
+          <label className="block text-xs text-zinc-600 dark:text-zinc-400">
+            Model
+            <select
+              value={value.model || selectedInfo.defaultModel || selectedInfo.models[0].id}
+              onChange={(e) => set({ model: e.target.value })}
+              className="mt-1 h-8 w-full rounded-md border border-input bg-transparent px-2.5 text-sm dark:bg-zinc-700 dark:border-zinc-600 dark:text-zinc-100"
+            >
+              {TIER_GROUPS.map(({ tier, label }) => {
+                const group = selectedInfo.models!.filter((m) => m.tier === tier);
+                if (group.length === 0) return null;
+                return (
+                  <optgroup key={tier} label={label}>
+                    {group.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.label}
+                        {m.note ? ` — ${m.note}` : ""}
+                      </option>
+                    ))}
+                  </optgroup>
+                );
+              })}
+            </select>
+          </label>
+        )}
 
         {value.provider === "mock" && (
           <p className="sm:col-span-2 -mt-2 rounded-md bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 px-3 py-2 text-[11px] text-amber-700 dark:text-amber-300">

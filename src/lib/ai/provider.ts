@@ -11,6 +11,7 @@
  *    positive prompt text as hard instructions.
  */
 import { renderMockSticker } from "./image-processor";
+import { MODEL_FALLBACK_CHAIN, resolveModel } from "./models";
 
 export type StickerProviderName =
   | "openai"
@@ -57,11 +58,15 @@ export type GenerateStickerRequest = {
   /** Unused by workers; kept for request symmetry. */
   outline?: boolean;
   provider: StickerProviderName;
+  /** Optional catalog model id (validated by resolveModel). */
+  model?: string;
 };
 
 export type GenerateStickerResult = {
   buffer: Buffer;
   mimeType: "image/png" | "image/webp";
+  /** Which provider actually produced this image (differs on fallback). */
+  provider?: StickerProviderName;
 };
 
 /** Map a thrown value into a typed ProviderError. */
@@ -230,6 +235,13 @@ async function responseToProviderError(
       "The model is warming up — retry in a few seconds.",
       detail,
     );
+  if (res.status === 402)
+    return new ProviderError(
+      "invalid-response",
+      `${label} account has insufficient credits`,
+      "Top up credits on the provider, or rely on the free fallback providers.",
+      detail,
+    );
   if (res.status >= 500)
     return new ProviderError("provider", `${label} provider error`, undefined, detail);
   return new ProviderError(
@@ -339,31 +351,32 @@ async function openAiWorker(req: GenerateStickerRequest): Promise<GenerateSticke
   const key = providerKey("openai");
   if (!key) throw new ProviderError("not-configured", "OpenAI key not configured");
   const prompt = injectNegative(req.positivePrompt, req.negativePrompt);
-  const buffer = await postForImage(
-    "https://api.openai.com/v1/images/generations",
-    { Authorization: `Bearer ${key}` },
-    {
-          model: "gpt-image-1",
-      prompt,
-      size: `${req.size}x${req.size}`,
-      n: 1,
-      response_format: "b64_json",
-    },
-    "openai",
-  );
+    const buffer = await postForImage(
+      "https://api.openai.com/v1/images/generations",
+      { Authorization: `Bearer ${key}` },
+      {
+        model: resolveModel("openai", req.model),
+        prompt,
+        size: `${req.size}x${req.size}`,
+        n: 1,
+        response_format: "b64_json",
+      },
+      "openai",
+    );
   return { buffer, mimeType: "image/png" };
 }
 
 async function stabilityWorker(req: GenerateStickerRequest): Promise<GenerateStickerResult> {
   const key = process.env.STABILITY_API_KEY;
   if (!key) throw new ProviderError("not-configured", "Stability key not configured");
+  const engine = resolveModel("stability", req.model);
   const buffer = await postMultipartImage(
-    "https://api.stability.ai/v2beta/stable-image/generate/core",
+    `https://api.stability.ai/v2beta/stable-image/generate/${engine}`,
     { Authorization: `Bearer ${key}` },
     {
       prompt: req.positivePrompt,
       negative_prompt: req.negativePrompt ?? "",
-            output_format: "png",
+      output_format: "png",
       width: req.size,
       height: req.size,
     },
@@ -376,8 +389,9 @@ async function googleWorker(req: GenerateStickerRequest): Promise<GenerateSticke
   const key = process.env.GOOGLE_API_KEY;
   if (!key) throw new ProviderError("not-configured", "Google key not configured");
   const prompt = injectNegative(req.positivePrompt, req.negativePrompt);
+  const model = resolveModel("google", req.model);
   const buffer = await postForImage(
-    `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${encodeURIComponent(key)}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:predict?key=${encodeURIComponent(key)}`,
     {},
     {
       instances: [{ prompt }],
@@ -391,9 +405,9 @@ async function googleWorker(req: GenerateStickerRequest): Promise<GenerateSticke
 async function openrouterWorker(req: GenerateStickerRequest): Promise<GenerateStickerResult> {
   const key = process.env.OPENROUTER_API_KEY;
   if (!key) throw new ProviderError("not-configured", "OpenRouter key not configured");
-  // Model is configurable via env (default to a strong image model). Providers
+  // Model resolution: request → env (AI_MODEL) → catalog default. Providers
   // without native negative support receive it via text injection.
-  const model = process.env.AI_MODEL || "black-forest-labs/flux-1.1-pro";
+  const model = resolveModel("openrouter", req.model);
   const buffer = await postForImage(
     "https://openrouter.ai/api/v1/images/generations",
     { Authorization: `Bearer ${key}` },
@@ -421,11 +435,7 @@ async function openrouterWorker(req: GenerateStickerRequest): Promise<GenerateSt
 async function huggingFaceWorker(req: GenerateStickerRequest): Promise<GenerateStickerResult> {
   const key = process.env.HUGGINGFACE_API_KEY;
   if (!key) throw new ProviderError("not-configured", "Hugging Face key not configured");
-  const model =
-    process.env.HUGGINGFACE_MODEL ||
-    process.env.AI_MODEL ||
-    // FLUX.1-schnell is Apache-2.0 and not gated — a safe default.
-    "black-forest-labs/FLUX.1-schnell";
+  const model = resolveModel("huggingface", req.model);
 
   const { InferenceClient } = await import("@huggingface/inference");
   const client = new InferenceClient(key);
@@ -471,8 +481,24 @@ async function huggingFaceWorker(req: GenerateStickerRequest): Promise<GenerateS
 }
 
 /**
+ * Hard failures that will not fix themselves on retry with the same
+ * provider/model — these trigger the free-first fallback chain.
+ */
+function isFallbackWorthy(err: unknown): boolean {
+  if (!(err instanceof ProviderError)) return false;
+  if (err.kind === "not-configured") return true;
+  const text = `${err.message} ${err.hint ?? ""} ${err.detail ?? ""}`;
+  return /insufficient credits|rejected the credentials|not found|model or endpoint/i.test(text);
+}
+
+/**
  * Primary entry point used by routes. Dispatches to the selected provider and
  * guarantees a typed ProviderError (never a raw client/network error).
+ *
+ * Free-first fallback: when the chosen provider fails with a hard error (no
+ * key, bad credentials, insufficient credits, unknown model), the remaining
+ * configured providers in MODEL_FALLBACK_CHAIN are tried in order. The result
+ * reports which provider actually served the request.
  */
 export async function generateSticker(
   req: GenerateStickerRequest,
@@ -483,32 +509,42 @@ export async function generateSticker(
     throw new ProviderError("not-configured", `Unknown provider "${provider}"`);
   }
 
-  let worker: (r: GenerateStickerRequest) => Promise<GenerateStickerResult>;
-  switch (provider) {
-    case "openai":
-      worker = openAiWorker;
-      break;
-    case "stability":
-      worker = stabilityWorker;
-      break;
-    case "google":
-      worker = googleWorker;
-      break;
-    case "openrouter":
-      worker = openrouterWorker;
-      break;
-    case "huggingface":
-      worker = huggingFaceWorker;
-      break;
-    case "mock":
-      worker = mockProvider;
-      break;
-  }
+  const workerFor = (p: StickerProviderName) => {
+    switch (p) {
+      case "openai":
+        return openAiWorker;
+      case "stability":
+        return stabilityWorker;
+      case "google":
+        return googleWorker;
+      case "openrouter":
+        return openrouterWorker;
+      case "huggingface":
+        return huggingFaceWorker;
+      case "mock":
+        return mockProvider;
+    }
+  };
 
-  try {
-    return await worker(req);
-  } catch (err) {
-    if (err instanceof ProviderError) throw err;
-    throw toProviderError(err, provider);
+  const chain = [
+    provider,
+    ...MODEL_FALLBACK_CHAIN.filter(
+      (p) => p !== provider && isProviderConfigured(p),
+    ),
+  ];
+
+  let firstError: unknown;
+  for (const p of chain) {
+    try {
+      const result = await workerFor(p)({ ...req, provider: p });
+      return { ...result, provider: p };
+    } catch (err) {
+      const mapped = err instanceof ProviderError ? err : toProviderError(err, p);
+      if (!firstError) firstError = mapped;
+      // Only hard failures move down the chain; transient errors rethrow.
+      if (!isFallbackWorthy(mapped) || p === chain[chain.length - 1]) throw mapped;
+      console.warn(`[sticker-ai] ${p} failed (${mapped.message}) — falling back`);
+    }
   }
+  throw firstError;
 }

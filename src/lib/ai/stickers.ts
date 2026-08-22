@@ -22,6 +22,7 @@ export type GenerateOneInput = {
     style: string;
     size: number;
     transparent: boolean;
+    model?: string | null;
     batchInstructions?: string | null;
     negativePrompt?: string | null;
   };
@@ -104,6 +105,7 @@ export async function generateOneSticker(input: GenerateOneInput): Promise<OneSt
     size: input.pack.size,
     transparent: input.pack.transparent,
     provider: input.provider,
+    model: input.pack.model ?? undefined,
   });
 
   const processed = await processStickerImage(raw.buffer, {

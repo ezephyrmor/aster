@@ -39,6 +39,7 @@ export interface StickerPackDTO {
   count: number;
   size: number;
   transparent: boolean;
+  model?: string | null;
   outline: boolean;
   outlineStrength?: string;
   batchInstructions?: string | null;
@@ -53,6 +54,7 @@ export interface PackConfig {
   provider: string;
   size: number;
   transparent: boolean;
+  model?: string;
   batchInstructions: string;
   negativePrompt: string;
 }
@@ -66,6 +68,7 @@ export interface PackSummaryDTO {
   count: number;
   size: number;
   transparent: boolean;
+  model?: string | null;
   outline: boolean;
   outlineStrength?: string;
   batchInstructions?: string | null;

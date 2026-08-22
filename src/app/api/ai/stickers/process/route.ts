@@ -49,6 +49,7 @@ export const POST = withAuth(async (req: NextRequest, _ctx: any, _auth: any) => 
           style: pack.style,
           size: pack.size,
           transparent: pack.transparent,
+          model: pack.model,
           batchInstructions: pack.batchInstructions,
           negativePrompt: pack.negativePrompt,
         },

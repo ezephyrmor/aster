@@ -69,9 +69,14 @@ export default function BatchesBrowser() {
 
   const handleDeletePack = async (id: string) => {
     const pack = packs.find((p) => p.id === id);
-    if (!window.confirm(`Delete pack "${pack?.name ?? id}" and all its stickers?`)) return;
+    if (
+      !window.confirm(`Delete pack "${pack?.name ?? id}" and all its stickers?`)
+    )
+      return;
     try {
-      const res = await fetch(`/api/ai/stickers/pack/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/ai/stickers/pack/${id}`, {
+        method: "DELETE",
+      });
       if (!res.ok) throw new Error();
       toast.addToast("Pack deleted.", "success");
       if (selectedId === id) {
@@ -102,22 +107,32 @@ export default function BatchesBrowser() {
   };
 
   const detailItems = detail?.items ?? [];
-  const completedCount = detailItems.filter((i) => i.status === "completed").length;
+  const completedCount = detailItems.filter(
+    (i) => i.status === "completed",
+  ).length;
 
   return (
     <div className="grid gap-4 lg:grid-cols-2 items-start">
       {/* Pack list */}
       <div className="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-5 space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Generated Batches</h2>
-          <Button variant="outline" size="sm" onClick={() => void loadPacks()} disabled={loadingList}>
+          <h2 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+            Generated Batches
+          </h2>
+          <Button
+            variant="green"
+            size="sm"
+            onClick={() => void loadPacks()}
+            disabled={loadingList}
+          >
             {loadingList ? "Loading…" : "Refresh"}
           </Button>
         </div>
 
         {!loadingList && packs.length === 0 && (
           <p className="text-xs text-zinc-500 dark:text-zinc-400">
-            No batches yet — generate a pack in the Generator tab and it will appear here.
+            No batches yet — generate a pack in the Generator tab and it will
+            appear here.
           </p>
         )}
 
@@ -132,7 +147,9 @@ export default function BatchesBrowser() {
                     : "border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700/60"
                 }`}
               >
-                <div className="text-sm font-medium text-zinc-800 dark:text-zinc-100 truncate">{p.name}</div>
+                <div className="text-sm font-medium text-zinc-800 dark:text-zinc-100 truncate">
+                  {p.name}
+                </div>
                 <div className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
                   {p.theme} · {p.style} · {p.provider ?? "mock"}
                 </div>
@@ -156,16 +173,26 @@ export default function BatchesBrowser() {
               {detail && (
                 <p className="text-xs text-zinc-500 dark:text-zinc-400">
                   {completedCount} / {detailItems.length} ready ·{" "}
-                  {detail.transparent ? "transparent" : "opaque"} · {detail.size}px ·{" "}
-                  {detail.provider ?? "mock"} · {formatDate(detail.createdAt)}
+                  {detail.transparent ? "transparent" : "opaque"} ·{" "}
+                  {detail.size}px · {detail.provider ?? "mock"} ·{" "}
+                  {formatDate(detail.createdAt)}
                 </p>
               )}
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="blue" size="sm" onClick={handleDownloadZip} disabled={completedCount === 0}>
+              <Button
+                variant="blue"
+                size="sm"
+                onClick={handleDownloadZip}
+                disabled={completedCount === 0}
+              >
                 Download ZIP
               </Button>
-              <Button variant="destructive" size="sm" onClick={() => handleDeletePack(detail!.id)}>
+              <Button
+                variant="red"
+                size="sm"
+                onClick={() => handleDeletePack(detail!.id)}
+              >
                 Delete Pack
               </Button>
             </div>
