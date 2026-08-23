@@ -32,8 +32,20 @@ const OUTLINE_DEPTH = 3;
 // cutout edge is genuine white/gray ARTWORK (highlights, thick shapes) —
 // never remove it. Thin halos/outlines never reach this depth.
 const ARTWORK_MIN_DEPTH = 6;
-// Connected visible clusters smaller than this many pixels are stray dots.
-const DESPECKLE_MIN_CLUSTER = 16;
+// --- Subject-component keep (replaces the old fixed 16px despeckle cap) ---
+// A secondary connected component is only kept as genuine art when it is at
+// least this many pixels AND at least this fraction of the main subject AND
+// over this fraction of its pixels are fully opaque. Ghost outlines,
+// fragments, disconnected blobs and speckles — no matter how large — never
+// satisfy all three, so they are removed in full. The subject (largest
+// component) is always kept.
+const KEEP_ART_MIN_SIZE = 4;
+const KEEP_ART_FRACTION = 0.1;
+const KEEP_ART_OPAQUE = 0.95;
+// A visible pixel directly bordering transparency with alpha at/below this is
+// semi-transparent fringe (faint halo of any inherited colour). It is erased
+// so no low-opacity rim survives outside the true subject edge.
+const RESIDUAL_FRINGE_MAX_ALPHA = 96;
 
 export type ProcessOptions = {
   canvasSize?: number;
@@ -92,9 +104,10 @@ export async function processStickerImage(
   const srcW = meta.width;
   const srcH = meta.height;
 
-  // Working RGBA buffer (always fully opaque at this stage).
+  // Working RGBA buffer. Keep the source alpha intact — some models already
+  // return a real (partially transparent) cutout, and flattening it here would
+  // let detached semi-transparent fragments survive the cleanup below.
   let rgba: Buffer = await sharp(input)
-    .removeAlpha()
     .ensureAlpha()
     .raw()
     .toBuffer();
@@ -119,8 +132,14 @@ export async function processStickerImage(
     // 2d. Alpha refinement: anything below the visibility floor is truly
     //     transparent; no semi-transparent haze may remain.
     refineAlpha(rgba, ALPHA_THRESHOLD);
-    // 2e. Despeckle: isolated pixel clusters outside the subject are removed.
-    rgba = despeckle(rgba, srcW, srcH, DESPECKLE_MIN_CLUSTER);
+    // 2e. Subject-component keep: every connected region that is not the
+    //     subject (or solid, large genuine art) is removed — ghost outlines,
+    //     fragments, stray dots, colored blobs and shadows of ANY size.
+    rgba = keepSubjectComponents(rgba, srcW, srcH);
+    // 2f. Residual-fringe erasure: semi-transparent halo/haze pixels hugging
+    //     the true boundary are deleted so no faint rim of any colour remains
+    //     outside the anti-aliased subject edge.
+    rgba = eraseResidualFringe(rgba, srcW, srcH);
   }
 
   // 3. Find visible-alpha bounds (configurable threshold) and trim.
@@ -682,16 +701,26 @@ function refineAlpha(rgba: Buffer, floor: number): void {
 }
 
 /**
- * Despeckle (spec step: "Remove Isolated Pixels"): connected components of
- * visible pixels smaller than `minCluster` are made fully transparent —
- * stray dots left outside the main subject never survive to the final PNG.
+ * Keep only the subject (and any genuinely separate solid/large artwork).
+ *
+ * Labels every connected visible component and removes all components that are
+ * not clearly the subject: the largest component is always kept; any other is
+ * kept only if it is a solid (≥ KEEP_ART_OPAQUE opaque) region that is both ≥
+ * KEEP_ART_MIN_SIZE pixels and ≥ KEEP_ART_FRACTION of the largest. Ghost
+ * outlines, stray blobs, speckles, disconnected fragments and shadows — of any
+ * size — never satisfy all three, so they are removed in full. Nothing outside
+ * the true subject boundary survives to the final PNG.
  */
-function despeckle(rgba: Buffer, width: number, height: number, minCluster: number): Buffer {
+export function keepSubjectComponents(
+  rgba: Buffer,
+  width: number,
+  height: number,
+): Buffer {
   const src = new Uint8Array(rgba);
   const n = width * height;
   const label = new Int32Array(n).fill(-1); // -1 = unvisited, -2 = background
-  const component = new Int32Array(n);
-  const remove = new Uint8Array(n);
+  const compSize: number[] = [];
+  const compOpaque: number[] = [];
 
   for (let start = 0; start < n; start++) {
     if (label[start] !== -1) continue;
@@ -699,15 +728,15 @@ function despeckle(rgba: Buffer, width: number, height: number, minCluster: numb
       label[start] = -2;
       continue;
     }
-    // Flood this visible component.
-    let tail = 0;
-    let h = 0;
-    component[tail++] = start;
-    label[start] = 0;
-    let size = 0;
-    while (h < tail) {
-      const p = component[h++];
-      size++;
+    const id = compSize.length;
+    label[start] = id;
+    compSize.push(0);
+    compOpaque.push(0);
+    const stack: number[] = [start];
+    while (stack.length) {
+      const p = stack.pop()!;
+      compSize[id]++;
+      if (src[p * 4 + 3] >= 250) compOpaque[id]++;
       const x = p % width;
       const visit = (q: number) => {
         if (q < 0 || q >= n || label[q] !== -1) return;
@@ -715,22 +744,70 @@ function despeckle(rgba: Buffer, width: number, height: number, minCluster: numb
           label[q] = -2;
           return;
         }
-        label[q] = 0;
-        component[tail++] = q;
+        label[q] = id;
+        stack.push(q);
       };
       visit(x > 0 ? p - 1 : -1);
       visit(x < width - 1 ? p + 1 : -1);
       visit(p - width);
       visit(p + width);
     }
-    if (size < minCluster) {
-      for (let k = 0; k < tail; k++) remove[component[k]] = 1;
-    }
+  }
+
+  let largest = 0;
+  for (const size of compSize) largest = Math.max(largest, size);
+
+  const keep = new Uint8Array(compSize.length);
+  for (let id = 0; id < compSize.length; id++) {
+    const size = compSize[id];
+    const isLargest = size === largest;
+    const opaqueFrac = compOpaque[id] / Math.max(1, size);
+    const solidLargeArt =
+      size >= KEEP_ART_MIN_SIZE &&
+      size >= KEEP_ART_FRACTION * largest &&
+      opaqueFrac >= KEEP_ART_OPAQUE;
+    if (isLargest || solidLargeArt) keep[id] = 1;
   }
 
   const out = Buffer.from(new Uint8Array(rgba));
   for (let p = 0; p < n; p++) {
-    if (remove[p]) out[p * 4 + 3] = 0;
+    const id = label[p];
+    if (id >= 0 && !keep[id]) out[p * 4 + 3] = 0;
+  }
+  return out;
+}
+
+/**
+ * Residual-fringe erasure (spec step: "Contract the mask ~1px inward").
+ *
+ * A visible pixel that borders fully-transparent neighbors but carries low
+ * alpha is semi-transparent fringe — a faint halo of whatever background color
+ * was originally behind the subject. Deleting it removes the haze and pulls
+ * the visible edge inward by ~1px, leaving only the harder true outline and
+ * any stronger anti-aliasing directly on the subject boundary. Background
+ * pixels outside that boundary end up fully transparent (alpha = 0).
+ */
+export function eraseResidualFringe(
+  rgba: Buffer,
+  width: number,
+  height: number,
+): Buffer {
+  const src = new Uint8Array(rgba);
+  const out = Buffer.from(new Uint8Array(rgba));
+  for (let y = 0; y < height; y++) {
+    const row = y * width;
+    for (let x = 0; x < width; x++) {
+      const p = row + x;
+      const i = p * 4;
+      if (src[i + 3] === 0 || src[i + 3] >= 255) continue;
+      if (src[i + 3] > RESIDUAL_FRINGE_MAX_ALPHA) continue;
+      const touchesTransparent =
+        (x > 0 && src[i - 4 + 3] === 0) ||
+        (x < width - 1 && src[i + 4 + 3] === 0) ||
+        (y > 0 && src[i - width * 4 + 3] === 0) ||
+        (y < height - 1 && src[i + width * 4 + 3] === 0);
+      if (touchesTransparent) out[i + 3] = 0;
+    }
   }
   return out;
 }

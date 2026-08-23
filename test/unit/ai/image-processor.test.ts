@@ -4,6 +4,8 @@ import {
   processStickerImage,
   renderMockSticker,
   validateCutout,
+  keepSubjectComponents,
+  eraseResidualFringe,
   ProcessingError,
 } from "@/lib/ai/image-processor";
 
@@ -230,6 +232,171 @@ describe("processStickerImage — cutout cleanup", () => {
       if (raw[i + 3] > 200 && raw[i] > 180 && raw[i + 1] < 120) red++;
     }
     expect(red).toBeGreaterThan(500);
+  });
+});
+
+describe("keepSubjectComponents", () => {
+  it("removes a large disconnected ghost blob (beyond the old 16px despeckle cap)", () => {
+    const size = 64;
+    const buf = Buffer.alloc(size * size * 4);
+    // Large opaque red subject block in the middle.
+    for (let y = 16; y < 48; y++) {
+      for (let x = 16; x < 48; x++) {
+        const i = (y * size + x) * 4;
+        buf[i] = 220;
+        buf[i + 1] = 40;
+        buf[i + 2] = 40;
+        buf[i + 3] = 255;
+      }
+    }
+    // A 10x10 (100px) semi-transparent ghost blob — bigger than the old 16px
+    // despeckle ceiling, so it would previously have survived as a visible
+    // detached fragment. It is not opaque, so it must be removed in full.
+    for (let y = 2; y < 12; y++) {
+      for (let x = 2; x < 12; x++) {
+        const i = (y * size + x) * 4;
+        buf[i] = 200;
+        buf[i + 1] = 200;
+        buf[i + 2] = 200;
+        buf[i + 3] = 120;
+      }
+    }
+
+    const out = keepSubjectComponents(buf, size, size);
+    const raw = new Uint8Array(out);
+    // Ghost blob → fully transparent.
+    for (let y = 2; y < 12; y++) {
+      for (let x = 2; x < 12; x++) {
+        expect(raw[(y * size + x) * 4 + 3]).toBe(0);
+      }
+    }
+    // Subject intact.
+    expect(raw[(24 * size + 24) * 4 + 3]).toBe(255);
+  });
+
+  it("keeps the largest subject but drops small speck components", () => {
+    const size = 32;
+    const buf = Buffer.alloc(size * size * 4);
+    // 12x12 solid opaque subject.
+    for (let y = 10; y < 22; y++) {
+      for (let x = 10; x < 22; x++) {
+        const i = (y * size + x) * 4;
+        buf[i] = 60;
+        buf[i + 1] = 120;
+        buf[i + 2] = 200;
+        buf[i + 3] = 255;
+      }
+    }
+    // Two tiny opaque dots far away and not touching the subject.
+    const dots = [
+      [2, 2],
+      [28, 28],
+    ];
+    for (const [dx, dy] of dots) {
+      const i = (dy * size + dx) * 4;
+      buf[i] = 255;
+      buf[i + 1] = 255;
+      buf[i + 2] = 255;
+      buf[i + 3] = 255;
+    }
+
+    const out = keepSubjectComponents(buf, size, size);
+    const raw = new Uint8Array(out);
+    expect(raw[(11 * size + 11) * 4 + 3]).toBe(255);
+    expect(raw[(2 * size + 2) * 4 + 3]).toBe(0);
+    expect(raw[(28 * size + 28) * 4 + 3]).toBe(0);
+  });
+});
+
+describe("eraseResidualFringe", () => {
+  it("erases a low-alpha halo around the subject but keeps the opaque core", () => {
+    const size = 16;
+    const buf = Buffer.alloc(size * size * 4);
+    const set = (x: number, y: number, r: number, g: number, b: number, a: number) => {
+      const i = (y * size + x) * 4;
+      buf[i] = r;
+      buf[i + 1] = g;
+      buf[i + 2] = b;
+      buf[i + 3] = a;
+    };
+    // Opaque red core (x 6..9, y 6..9).
+    for (let y = 6; y < 10; y++) {
+      for (let x = 6; x < 10; x++) set(x, y, 200, 30, 30, 255);
+    }
+    // A 1px semi-transparent halo ring (alpha 80) wrapped around the core.
+    for (let y = 5; y <= 10; y++) {
+      for (let x = 5; x <= 10; x++) {
+        const isCore = x >= 6 && x < 10 && y >= 6 && y < 10;
+        if (!isCore) set(x, y, 230, 200, 200, 80);
+      }
+    }
+
+    const out = eraseResidualFringe(buf, size, size);
+    const raw = new Uint8Array(out);
+    // Every fringe pixel outside the core is now fully transparent.
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        const a = raw[(y * size + x) * 4 + 3];
+        const isCore = x >= 6 && x < 10 && y >= 6 && y < 10;
+        if (isCore) {
+          expect(a).toBe(255);
+        } else {
+          expect(a).toBe(0);
+        }
+      }
+    }
+  });
+});
+
+describe("processStickerImage — detached fragment on an already-transparent input", () => {
+  it("removes a large disconnected fragment even when the provider already returns alpha", async () => {
+    const size = 128;
+    const buf = Buffer.alloc(size * size * 4); // default alpha 0 (transparent)
+    const set = (x: number, y: number, r: number, g: number, b: number, a: number) => {
+      const i = (y * size + x) * 4;
+      buf[i] = r;
+      buf[i + 1] = g;
+      buf[i + 2] = b;
+      buf[i + 3] = a;
+    };
+    // Subject block (opaque red).
+    for (let y = 40; y < 88; y++) {
+      for (let x = 40; x < 88; x++) set(x, y, 220, 40, 40, 255);
+    }
+    // A large disconnected ghost blob (20x20) with partial alpha in the corner.
+    for (let y = 8; y < 28; y++) {
+      for (let x = 8; x < 28; x++) set(x, y, 200, 200, 200, 120);
+    }
+
+    const input = await sharp(buf, { raw: { width: size, height: size, channels: 4 } })
+      .png()
+      .toBuffer();
+    const result = await processStickerImage(input, { canvasSize: 256, transparent: true });
+    const raw = await toRawPng(result.buffer);
+
+    // Count connected visible components — only the subject may remain.
+    const visible = new Uint8Array(256 * 256);
+    for (let p = 0; p < visible.length; p++) if (raw[p * 4 + 3] >= 8) visible[p] = 1;
+    const seen = new Uint8Array(visible.length);
+    const stack: number[] = [];
+    let components = 0;
+    for (let start = 0; start < visible.length; start++) {
+      if (!visible[start] || seen[start]) continue;
+      components++;
+      stack.push(start);
+      seen[start] = 1;
+      while (stack.length) {
+        const p = stack.pop()!;
+        const x = p % 256;
+        for (const q of [x > 0 ? p - 1 : -1, x < 255 ? p + 1 : -1, p - 256, p + 256]) {
+          if (q >= 0 && q < visible.length && visible[q] && !seen[q]) {
+            seen[q] = 1;
+            stack.push(q);
+          }
+        }
+      }
+    }
+    expect(components).toBe(1);
   });
 });
 
