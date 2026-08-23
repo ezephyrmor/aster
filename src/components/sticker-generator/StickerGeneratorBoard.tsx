@@ -7,6 +7,7 @@ import ItemListEditor from "./ItemListEditor";
 import ResultGrid from "./ResultGrid";
 import type { PackConfig, ClientItem, StickerAssetDTO } from "./types";
 import { DEFAULT_PACK_CONFIG, type StickerPackDTO } from "./types";
+import { shouldDiscardFailedBatch } from "./discard-decision";
 
 const CONCURRENCY = 3;
 
@@ -52,7 +53,7 @@ export default function StickerGeneratorBoard({
   }, [config, items]);
 
   const generateOne = useCallback(
-    async (item: ClientItem, pid: string, itemId: string) => {
+    async (item: ClientItem, pid: string, itemId: string): Promise<boolean> => {
       patchItem(item.key, { status: "generating", error: null, id: itemId });
       try {
         const res = await fetch("/api/ai/stickers/process", {
@@ -75,27 +76,40 @@ export default function StickerGeneratorBoard({
             v: Date.now(), // bust the browser cache so the new image renders
           } as StickerAssetDTO,
         });
+        return true;
       } catch (err) {
         patchItem(item.key, { status: "failed", error: (err as Error).message || "Failed" });
+        return false;
       }
     },
     [patchItem],
   );
 
-  // Targets carry an explicit, already-resolved server id — never a stale ref.
+  // Runs a set of generation targets. Returns the count of successes vs failures
+  // so the caller can decide whether to keep the pack (independent of the async
+  // setItems renders, which would lag the closure `items`).
   const runBatch = useCallback(
-    async (targets: Array<{ item: ClientItem; itemId: string }>, pid: string) => {
+    async (
+      targets: Array<{ item: ClientItem; itemId: string }>,
+      pid: string,
+    ): Promise<{ succeeded: number; failed: number }> => {
       setGenerating(true);
       abortRef.current = false;
+      let succeeded = 0;
+      let failed = 0;
       let index = 0;
       const workers = Array.from({ length: CONCURRENCY }, async () => {
         while (index < targets.length && !abortRef.current) {
           const { item, itemId } = targets[index++];
-          await generateOne(item, pid, itemId);
+          const ok = await generateOne(item, pid, itemId);
+          if (ok) succeeded++;
+          else failed++;
         }
+
       });
       await Promise.all(workers);
       setGenerating(false);
+      return { succeeded, failed };
     },
     [generateOne],
   );
@@ -135,7 +149,25 @@ export default function StickerGeneratorBoard({
           return match ? { ...it, id: match.itemId } : it;
         }),
       );
-      await runBatch(resolved, pack.id);
+      const { succeeded, failed } = await runBatch(resolved, pack.id);
+
+      // Success threshold: keep the pack unless every generation failed (the
+      // user wants at least one usable sticker before a pack survives).
+      if (shouldDiscardFailedBatch(succeeded, failed)) {
+        try {
+          await fetch(`/api/ai/stickers/pack/${pack.id}`, { method: "DELETE" });
+        } catch {
+          // Best-effort — if the delete fails the pack stays but the user can
+          // still remove it manually from "My Batches".
+        }
+        setPackId(null);
+        setItems((prev) =>
+          prev.map((it) => ({ ...it, id: null, status: "pending", error: null, asset: null })),
+        );
+        toast.addToast("All stickers failed — the pack was discarded.", "error");
+        return;
+      }
+
       toast.addToast("Batch complete.", "success");
     } catch (error) {
       toast.addToast((error as Error).message || "Failed to start batch", "error");

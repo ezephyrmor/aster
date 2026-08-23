@@ -8,6 +8,17 @@ import {
 } from "@/lib/ai/provider";
 import { defaultModelFor, isValidModel, PROVIDER_MODELS, resolveModel } from "@/lib/ai/models";
 
+// Stub the Hugging Face SDK so the fallback provider can be made to fail
+// without a network call. Only the HF worker dynamically imports this, and
+// other tests in this file delete HUGGINGFACE_API_KEY so they never reach it.
+vi.mock("@huggingface/inference", () => ({
+  InferenceClient: class {
+    textToImage() {
+      throw new Error("You have depleted your monthly included credits.");
+    }
+  },
+}));
+
 function mockResponse(status: number, body: unknown): Response {
   return {
     ok: status >= 200 && status < 300,
@@ -25,15 +36,17 @@ afterEach(() => {
 
 
 describe("supportsNativeNegative", () => {
-  it("maps stability, openrouter and huggingface to native negative support", () => {
+  it("maps stability and huggingface to native negative support", () => {
     expect(supportsNativeNegative("stability")).toBe(true);
-    expect(supportsNativeNegative("openrouter")).toBe(true);
     expect(supportsNativeNegative("huggingface")).toBe(true);
   });
 
   it("does not claim native negatives for text-injection providers", () => {
+    // OpenRouter's image API has no negative_prompt field — negatives are
+    // injected into the prompt, same as OpenAI and Google/Imagen.
     expect(supportsNativeNegative("openai")).toBe(false);
     expect(supportsNativeNegative("google")).toBe(false);
+    expect(supportsNativeNegative("openrouter")).toBe(false);
     expect(supportsNativeNegative("mock")).toBe(false);
   });
 });
@@ -173,5 +186,26 @@ describe("generateSticker fallback", () => {
     const result = await generateSticker({ ...baseReq, provider: "mock" });
     expect(result.provider).toBe("mock");
     expect(result.buffer.length).toBeGreaterThan(0);
+  }, 15_000);
+
+  it("attributes the failure to the chosen provider when the free fallback also fails", async () => {
+    // User picks Google (no Google key configured → hard "not configured" error).
+    vi.stubEnv("GOOGLE_API_KEY", "");
+    // Hugging Face is configured and reachable, but it fails (credits depleted) —
+    // its failure must NOT be surfaced in place of Google's.
+    vi.stubEnv("HUGGINGFACE_API_KEY", "hf_fake");
+    delete (process.env as Record<string, unknown>).OPENROUTER_API_KEY;
+
+    await expect(
+      generateSticker({
+        ...baseReq,
+        provider: "google",
+        model: "imagen-3.0-generate-002",
+      }),
+    ).rejects.toMatchObject({
+      name: "ProviderError",
+      kind: "not-configured",
+      message: expect.stringContaining("Google"),
+    });
   }, 15_000);
 });

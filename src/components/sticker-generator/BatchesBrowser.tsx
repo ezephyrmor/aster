@@ -1,10 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/lib/toast";
 import { Checkerboard } from "./ResultGrid";
-import type { PackSummaryDTO, StickerItemDTO } from "./types";
+import type { PackSummaryDTO } from "./types";
+
+const PAGE_SIZE = 12;
 
 const statusLabel: Record<string, string> = {
   pending: "Pending",
@@ -33,14 +36,24 @@ export default function BatchesBrowser() {
   const [detail, setDetail] = useState<PackSummaryDTO | null>(null);
   const [loadingList, setLoadingList] = useState(true);
   const [loadingDetail, setLoadingDetail] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPacks, setTotalPacks] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
-  const loadPacks = useCallback(async () => {
+  const loadPacks = useCallback(async (targetPage = 1) => {
     setLoadingList(true);
     try {
-      const res = await fetch("/api/ai/stickers/pack");
+      const params = new URLSearchParams({
+        page: String(targetPage),
+        limit: String(PAGE_SIZE),
+      });
+      const res = await fetch(`/api/ai/stickers/pack?${params.toString()}`);
       if (res.ok) {
         const data = await res.json();
         setPacks((data.packs ?? []) as PackSummaryDTO[]);
+        setPage(data.pagination?.page ?? targetPage);
+        setTotalPacks(data.pagination?.total ?? 0);
+        setTotalPages(data.pagination?.totalPages ?? 1);
       }
     } finally {
       setLoadingList(false);
@@ -84,6 +97,11 @@ export default function BatchesBrowser() {
         setDetail(null);
       }
       await loadPacks();
+      // If the last item on the last page was deleted, step back a page so the
+      // user isn't left staring at an empty page.
+      if (packs.length === 1 && page > 1) {
+        await loadPacks(page - 1);
+      }
     } catch {
       toast.addToast("Failed to delete pack.", "error");
     }
@@ -122,7 +140,7 @@ export default function BatchesBrowser() {
           <Button
             variant="green"
             size="sm"
-            onClick={() => void loadPacks()}
+            onClick={() => void loadPacks(page)}
             disabled={loadingList}
           >
             {loadingList ? "Loading…" : "Refresh"}
@@ -160,6 +178,38 @@ export default function BatchesBrowser() {
             </li>
           ))}
         </ul>
+
+        {/* Pagination */}
+        {!loadingList && totalPacks > 0 && (
+          <div className="flex items-center justify-between pt-1 text-xs text-zinc-500 dark:text-zinc-400">
+            <span>
+              {totalPacks} batch{totalPacks === 1 ? "" : "es"}
+            </span>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page <= 1 || loadingList}
+                onClick={() => void loadPacks(page - 1)}
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Prev
+              </Button>
+              <span>
+                Page {page} of {Math.max(1, totalPages)}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page >= totalPages || loadingList}
+                onClick={() => void loadPacks(page + 1)}
+              >
+                Next
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Selected pack detail */}

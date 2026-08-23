@@ -5,7 +5,7 @@ import { getScopedCtx } from "@/lib/ai/access";
 import { StickerPackSchema, StickerItemSchema } from "@/lib/validations";
 
 // POST /api/ai/stickers/pack — create a new pack (with optional items)
-export const POST = withAuth(async (request: NextRequest, _ctx: any, _auth: any) => {
+export const POST = withAuth(async (request: NextRequest, _ctx: unknown, _auth: unknown) => {
   try {
     const ctx = await getScopedCtx();
     const body = await request.json();
@@ -80,18 +80,36 @@ export const POST = withAuth(async (request: NextRequest, _ctx: any, _auth: any)
   }
 });
 
-// GET /api/ai/stickers/pack — list packs for the tenant
-export const GET = withAuth(async (request: NextRequest, _ctx: any, _auth: any) => {
+// GET /api/ai/stickers/pack — list packs for the tenant (paginated)
+export const GET = withAuth(async (request: NextRequest, _ctx: unknown, _auth: unknown) => {
   try {
     const ctx = await getScopedCtx();
+    const url = new URL(request.url);
+    const page = Math.max(1, parseInt(url.searchParams.get("page") ?? "1", 10) || 1);
+    const limit = Math.min(
+      50,
+      Math.max(1, parseInt(url.searchParams.get("limit") ?? "12", 10) || 12),
+    );
+    const where = { companyId: ctx.companyId };
+    const total = await ctx.prisma.stickerPack.count({ where });
     const packs = await ctx.prisma.stickerPack.findMany({
-      where: { companyId: ctx.companyId },
+      where,
       orderBy: { createdAt: "desc" },
+      skip: (page - 1) * limit,
+      take: limit,
       include: {
         _count: { select: { items: true } },
       },
     });
-    return NextResponse.json({ packs });
+    return NextResponse.json({
+      packs,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.max(1, Math.ceil(total / limit)),
+      },
+    });
   } catch (error) {
     console.error("Error listing sticker packs:", error);
     return NextResponse.json({ error: "Failed to list sticker packs" }, { status: 500 });

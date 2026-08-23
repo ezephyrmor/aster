@@ -40,7 +40,7 @@ The sticker generator's `src/lib/ai/provider.ts` supports several providers; eac
 | `openai` | `OPENAI_API_KEY` | injected into the prompt text |
 | `stability` | `STABILITY_API_KEY` | native `negative_prompt` |
 | `google` (Imagen) | `GOOGLE_API_KEY` | injected into the prompt text |
-| `openrouter` | `OPENROUTER_API_KEY` | native `negative_prompt` |
+| `openrouter` | `OPENROUTER_API_KEY` | injected into the prompt text (its image API has no `negative_prompt` field) |
 | `huggingface` | `HUGGINGFACE_API_KEY` | native (`parameters.negative_prompt`) |
 | `mock` | *(none)* | n/a — renders a placeholder image |
 

@@ -1,4 +1,4 @@
-import type { StickerProviderName } from "./provider";
+import type { StickerProviderName } from "./providers/_common";
 
 /**
  * Curated model catalog per provider, categorized by freeness of use.
@@ -36,10 +36,12 @@ export const PROVIDER_MODELS: Record<StickerProviderName, CatalogModel[]> = {
   ],
   google: [
     {
-      id: "imagen-3.0-generate-002",
-      label: "Imagen 3",
+      // Native Gemini image model (imagen-3.0-generate-002 / the legacy
+      // :predict path are retired). Uses generateContent + responseModalities.
+      id: "gemini-3.1-flash-image",
+      label: "Gemini 3.1 Flash Image",
       tier: "free-tier",
-      note: "Free daily quota on AI Studio keys.",
+      note: "Requires a Google AI Studio key; usage may incur quota/billing.",
     },
   ],
   openrouter: [
