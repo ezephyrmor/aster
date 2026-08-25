@@ -104,3 +104,16 @@ export interface ClientItem {
   asset?: StickerAssetDTO | null;
   destroyed?: boolean;
 }
+
+/** One row in the "Error Logs" tab — a failed sticker generation. */
+export interface ErrorLogDTO {
+  id: string;
+  sticker: string;
+  status: string;
+  error: string;
+  packId: string | null;
+  packName: string | null;
+  theme: string;
+  provider: string;
+  updatedAt: string;
+}

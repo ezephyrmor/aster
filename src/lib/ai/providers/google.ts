@@ -1,11 +1,11 @@
 /**
  * Google (Gemini/Imagen) provider worker.
  *
- * Uses the Gemini REST `:predict` endpoint for Imagen models
- * (`.../v1beta/models/{model}:predict`). Imagen has no native negative param —
- * negatives are injected into the prompt. Extra parameters are set so sticker
- * scenes don't get rejected for adult content and exactly one image is asked
- * for.
+ * Uses the Gemini REST `:generateContent` endpoint with native image output
+ * (`responseModalities: ["IMAGE"]`). Gemini image models have no native
+ * negative param — negatives are injected into the prompt. The response image
+ * comes back as base64 in `candidates[].content.parts[].inlineData.data`, which
+ * `postForImage` already unwraps.
  */
 import { resolveModel } from "../models";
 import {

@@ -37,6 +37,7 @@ export function getScopedPrisma(companyId: string) {
     "stickerPack",
     "stickerItem",
     "stickerAsset",
+    "stickerErrorLog",
   ];
 
   const scopedPrisma = new Proxy(prisma, {

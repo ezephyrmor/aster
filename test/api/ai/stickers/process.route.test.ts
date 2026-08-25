@@ -6,9 +6,20 @@ const mocks = vi.hoisted(() => ({
   stickerItemUpdate: vi.fn(),
   stickerAssetDelete: vi.fn(),
   stickerAssetCreate: vi.fn(),
+  stickerErrorLogDelete: vi.fn(),
+  stickerErrorLogDeleteTx: vi.fn(),
+  stickerErrorLogCreateTx: vi.fn(),
   generateOne: vi.fn(),
 }));
-const { stickerItemUpdate, stickerAssetDelete, stickerAssetCreate, generateOne } = mocks;
+const {
+  stickerItemUpdate,
+  stickerAssetDelete,
+  stickerAssetCreate,
+  stickerErrorLogDelete,
+  stickerErrorLogDeleteTx,
+  stickerErrorLogCreateTx,
+  generateOne,
+} = mocks;
 
 // Mock auth guard.
 vi.mock("@/lib/api-auth", () => ({
@@ -24,9 +35,14 @@ vi.mock("@/lib/ai/access", () => ({
     userId: "u1",
     prisma: {
       stickerItem: { update: mocks.stickerItemUpdate },
+      stickerErrorLog: { deleteMany: mocks.stickerErrorLogDelete },
       $transaction: vi.fn(async (cb: (tx: any) => Promise<void>) => {
         await cb({
           stickerAsset: { deleteMany: mocks.stickerAssetDelete, create: mocks.stickerAssetCreate },
+          stickerErrorLog: {
+            deleteMany: mocks.stickerErrorLogDeleteTx,
+            create: mocks.stickerErrorLogCreateTx,
+          },
         });
       }),
     },
@@ -90,6 +106,7 @@ describe("POST /api/ai/stickers/process", () => {
     stickerAssetCreate.mockResolvedValue({});
     stickerAssetDelete.mockResolvedValue({});
     stickerItemUpdate.mockResolvedValue({});
+    stickerErrorLogDelete.mockResolvedValue({ count: 0 });
 
     const res = await POST(new Request("http://localhost:3000/api/ai/stickers/process", {
       method: "POST",
@@ -109,6 +126,8 @@ describe("POST /api/ai/stickers/process", () => {
   it("returns a safe error and marks the item failed when generation fails", async () => {
     generateOne.mockRejectedValue(new Error("The AI provider rate-limited requests. Please wait and retry."));
     stickerItemUpdate.mockResolvedValue({});
+    stickerErrorLogDeleteTx.mockResolvedValue({ count: 0 });
+    stickerErrorLogCreateTx.mockResolvedValue({ id: "log-1" });
 
     const res = await POST(new Request("http://localhost:3000/api/ai/stickers/process", {
       method: "POST",

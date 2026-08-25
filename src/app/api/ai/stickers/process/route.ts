@@ -82,6 +82,11 @@ export const POST = withAuth(async (req: NextRequest, _ctx: any, _auth: any) => 
         data: { status: "completed", error: null },
       });
 
+      // A successful generation clears any prior durable failure for this item.
+      await ctx.prisma.stickerErrorLog.deleteMany({
+        where: { companyId: ctx.companyId, itemId },
+      });
+
       return NextResponse.json({
         ok: true,
         itemId,
@@ -91,11 +96,31 @@ export const POST = withAuth(async (req: NextRequest, _ctx: any, _auth: any) => 
         imageData: result.buffer.toString("base64"),
       });
     } catch (err) {
+      const message = publicErrorMessage(err);
       await ctx.prisma.stickerItem.update({
         where: { id: itemId },
-        data: { status: "failed", error: publicErrorMessage(err) },
+        data: { status: "failed", error: message },
       });
-      return NextResponse.json({ error: publicErrorMessage(err) }, { status: 502 });
+      // Durable error log — survives even if the whole pack is auto-discarded
+      // (deleting cascade's the item row above but not this log table).
+      await ctx.prisma.$transaction(async (tx) => {
+        // Clear any earlier failure for this same generation then record it,
+        // so the log reflects the latest attempt (regenerate/retry).
+        await tx.stickerErrorLog.deleteMany({ where: { companyId: ctx.companyId, itemId } });
+        await tx.stickerErrorLog.create({
+          data: {
+            companyId: ctx.companyId,
+            packId,
+            itemId,
+            packName: pack.name,
+            theme: pack.theme,
+            provider: pack.provider || "mock",
+            sticker: item.name,
+            error: message,
+          },
+        });
+      });
+      return NextResponse.json({ error: message }, { status: 502 });
     }
   } catch (error) {
     if (error instanceof PackNotFoundError) {

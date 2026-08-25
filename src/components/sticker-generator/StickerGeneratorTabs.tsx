@@ -3,12 +3,14 @@
 import { useState } from "react";
 import StickerGeneratorBoard from "./StickerGeneratorBoard";
 import BatchesBrowser from "./BatchesBrowser";
+import ErrorLogsBrowser from "./ErrorLogsBrowser";
 
-type Tab = "generator" | "batches";
+type Tab = "generator" | "batches" | "errors";
 
 const tabs: Array<{ id: Tab; label: string }> = [
   { id: "generator", label: "Generator" },
   { id: "batches", label: "My Batches" },
+  { id: "errors", label: "Error Logs" },
 ];
 
 interface StickerGeneratorTabsProps {
@@ -48,8 +50,10 @@ export default function StickerGeneratorTabs({
           defaultProvider={defaultProvider}
           defaultPackName={defaultPackName}
         />
-      ) : (
+      ) : tab === "batches" ? (
         <BatchesBrowser />
+      ) : (
+        <ErrorLogsBrowser />
       )}
     </>
   );

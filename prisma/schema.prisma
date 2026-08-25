@@ -111,6 +111,7 @@ model Company {
   stickerPacks              StickerPack[]
   stickerItems              StickerItem[]
   stickerAssets             StickerAsset[]
+  stickerErrorLogs          StickerErrorLog[]
 
   @@map("companies")
 }
@@ -779,4 +780,30 @@ model StickerAsset {
   @@index([packId])
   @@index([companyId])
   @@map("sticker_assets")
+}
+
+// Durable record of a failed sticker generation.
+// Unlike StickerItem/StickerPack (which cascade-delete each other), this table
+// intentionally has NO FK to the pack or item. When a pack's entire batch fails
+// and the client auto-discards it (deleting the pack + its StickerItem error
+// rows), these log rows survive so the reason is still visible in "Error Logs".
+// A generation is snapshotted at failure time (sticker + pack name/theme/provider)
+// so the log stays meaningful even after the pack is gone.
+model StickerErrorLog {
+  id        String   @id @default(uuid())
+  companyId String   @map("company_id")
+  packId    String?  @map("pack_id")
+  itemId    String?  @map("item_id")
+  packName  String?  @map("pack_name") @db.VarChar(120)
+  theme     String?  @map("theme") @db.VarChar(80)
+  provider  String   @default("mock") @db.VarChar(40)
+  sticker   String   @db.VarChar(120)
+  error     String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@map("sticker_error_logs")
 }
